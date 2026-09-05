@@ -12,4 +12,4 @@ Plano calculado: origin{x,y,lat,lon,radius}, polygons, communities (métricas), 
 
 Projeto exportado: schemaVersion, savedAt, crs, meta, polygons, communities, instrumentCount, selectedScenario, messageTemplate. Importação deve validar versão e todos os campos antes de processar.
 
-PDF/PNG: relatório do cenário selecionado, nome ENAEX-SMP-AAAAMMDD-cenario-N. TXT: mensagem UTF-8 customizada para o cenário atual, sem envio automático. Logs JSON: eventos com timestamp, tipo e descrição.
+DOCX/PDF/PNG: relatório do cenário selecionado, nome ENAEX-SMP-AAAAMMDD-cenario-N. O DOCX é OOXML válido com a página A4 renderizada preservando a aparência do relatório. TXT: mensagem UTF-8 customizada para o cenário atual, sem envio automático. Logs JSON: eventos com timestamp, tipo e descrição.

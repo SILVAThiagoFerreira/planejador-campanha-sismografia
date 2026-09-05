@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {buildWhatsAppMessage, coordinateDMM} from '../src/reports.js';
+import {buildDocxParts} from '../src/docx.js';
 import {validateProject} from '../src/project.js';
 import fs from 'node:fs';
 
@@ -23,6 +24,14 @@ test('coordinate DMM carries rounded minutes into the next degree',()=>{
 
 test('unknown WhatsApp token is rejected instead of silently disappearing',()=>{
   assert.throws(()=>buildWhatsAppMessage(data,'{data} {token_inventado}'),/Campo desconhecido/);
+});
+
+test('DOCX package parts contain a valid image relationship and escaped title',()=>{
+  const parts=buildDocxParts('iVBORw0KGgo=','Sismografia <REG>');
+  assert.ok(parts['word/media/report.png']);
+  assert.match(parts['word/document.xml'],/Sismografia &lt;REG&gt;/);
+  assert.match(parts['word/document.xml'],/r:embed="rIdImage"/);
+  assert.match(parts['word/_rels/document.xml.rels'],/media\/report\.png/);
 });
 
 test('project validation keeps schema, all communities and exact instrument count',()=>{
