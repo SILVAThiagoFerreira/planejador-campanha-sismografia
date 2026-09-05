@@ -1,0 +1,12 @@
+{
+  "name": "planejador-campanha-sismografia",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "test": "node --test tests/*.test.js",
+    "start": "python -m http.server 8765 --bind 127.0.0.1"
+  },
+  "dependencies": {"leaflet": "1.9.4", "proj4": "2.19.10", "jspdf": "3.0.3"}
+}

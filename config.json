@@ -1,0 +1,188 @@
+{
+  "schemaVersion": 1,
+  "version": "1.0.0",
+  "title": "Planejador de campanha de sismografia",
+  "defaults": {
+    "operation": "MINA SERROTE - MINERAÇÃO VALE VERDE",
+    "region": "REG",
+    "responsible": "Equipe Técnica Enaex",
+    "instrumentCount": 3,
+    "crs": "EPSG:31984"
+  },
+  "crs": [
+    {
+      "id": "EPSG:31984",
+      "name": "SIRGAS 2000 / UTM 24S",
+      "definition": "+proj=utm +zone=24 +south +ellps=GRS80 +units=m +no_defs"
+    },
+    {
+      "id": "EPSG:32724",
+      "name": "WGS 84 / UTM 24S",
+      "definition": "+proj=utm +zone=24 +south +datum=WGS84 +units=m +no_defs"
+    }
+  ],
+  "communities": [
+    {
+      "id": "P01",
+      "name": "Barragem de Rejeitos",
+      "lat": -9.667233333333334,
+      "lon": -36.7714,
+      "enabled": true,
+      "priority": 1
+    },
+    {
+      "id": "P02",
+      "name": "Comunidade de Pixilinga",
+      "lat": -9.65285,
+      "lon": -36.74908333333333,
+      "enabled": true,
+      "priority": 1
+    },
+    {
+      "id": "P03",
+      "name": "Comunidade de Lagoa do Mel",
+      "lat": -9.656316666666667,
+      "lon": -36.73126666666667,
+      "enabled": true,
+      "priority": 1
+    },
+    {
+      "id": "P04",
+      "name": "Comunidade de Torrões",
+      "lat": -9.664966666666666,
+      "lon": -36.718183333333336,
+      "enabled": true,
+      "priority": 1
+    },
+    {
+      "id": "P05",
+      "name": "Comunidade de Itapicuru",
+      "lat": -9.67635,
+      "lon": -36.719683333333336,
+      "enabled": true,
+      "priority": 1
+    },
+    {
+      "id": "P06",
+      "name": "Comunidade de Corredor",
+      "lat": -9.68685,
+      "lon": -36.732683333333334,
+      "enabled": true,
+      "priority": 1
+    },
+    {
+      "id": "P07",
+      "name": "Comunidade de Pau-Ferro",
+      "lat": -9.680633333333333,
+      "lon": -36.74503333333333,
+      "enabled": true,
+      "priority": 1
+    }
+  ],
+  "validation": {
+    "maxVertices": 20000,
+    "maxPolygons": 100,
+    "maxRadiusMeters": 50000,
+    "maxFileBytes": 20000000,
+    "regionBounds": [
+      -37.2,
+      -10.2,
+      -36.2,
+      -9.1
+    ],
+    "maxNotesLength": 350,
+    "maxLabelLength": 100
+  },
+  "planner": {
+    "distanceWeight": 0.55,
+    "directionWeight": 0.3,
+    "coverageWeight": 0.7
+  },
+  "map": {
+    "center": [
+      -9.6703,
+      -36.735
+    ],
+    "zoom": 14,
+    "tileUrl": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    "exportUrl": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export",
+    "attribution": "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community",
+    "maxZoom": 19,
+    "fetchTimeoutMs": 15000
+  },
+  "report": {
+    "width": 1240,
+    "height": 1754,
+    "scale": 2,
+    "fontFamily": "Arial",
+    "accent": "#ff1734",
+    "ink": "#253442",
+    "muted": "#637180",
+    "brandAsset": "assets/report-brand.jpg",
+    "margin": 64,
+    "headerHeight": 208,
+    "footerHeight": 80,
+    "maxDirectionRows": 4,
+    "whatsappTemplate": "*SISMOGRAFIA | DESMONTE {data}*\n\n*{operacao}*\nRegião: {regiao}\nHorário: {horario}\nCampanha com {quantidade} sismógrafo(s) — cenário {cenario}.\n\n*ORIGEM DO DESMONTE*\nCentro do círculo envolvente das poligonais importadas.\nLatitude: {latitude}\nLongitude: {longitude}\nUTM — Zona {zona} Sul\nNorte (Y): {norte} m\nLeste (X): {leste} m\n\n*MONITORAMENTO PROPOSTO*\n{pontos}\n\n*OBSERVAÇÕES*\n{observacoes}\n\nResponsável: {responsavel}"
+  },
+  "visual": {
+    "accent": "#f71938",
+    "ink": "#253442",
+    "green": "#087f68",
+    "background": "#f3f5f6",
+    "logo": "assets/enaex-white.png"
+  },
+  "paths": {
+    "manifest": "data/manifest.json",
+    "config": "config.json"
+  },
+  "storageKey": "enaex-sismografia-campaign-v1",
+  "example": {
+    "origin": {
+      "x": 749069.108,
+      "y": 8930215.4153
+    },
+    "offsets": [
+      [
+        [
+          -100,
+          -50
+        ],
+        [
+          -30,
+          -60
+        ],
+        [
+          -20,
+          20
+        ],
+        [
+          -90,
+          30
+        ]
+      ],
+      [
+        [
+          40,
+          -10
+        ],
+        [
+          110,
+          0
+        ],
+        [
+          100,
+          80
+        ],
+        [
+          30,
+          60
+        ]
+      ]
+    ],
+    "directions": [
+      90,
+      135
+    ]
+  }
+}

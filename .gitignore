@@ -1,0 +1,7 @@
+node_modules/
+VISUAL/
+output/
+tmp/
+.playwright-cli/
+.playwright-mcp/
+*.log
