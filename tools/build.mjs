@@ -1,6 +1,8 @@
 import {readFile,writeFile,mkdir,cp} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
-const raw=await readFile('config.json','utf8');
+// Hash the canonical LF representation so Windows checkouts and the Pages Linux
+// runner produce the same stable manifest.
+const raw=(await readFile('config.json','utf8')).replace(/\r\n/g,'\n');
 const config=JSON.parse(raw);
 if(config.schemaVersion!==1||config.communities.length!==7||!config.crs.length) throw Error('Configuração inválida.');
 for(const c of config.communities) if(!Number.isFinite(c.lat)||!Number.isFinite(c.lon)) throw Error('Comunidade inválida.');
