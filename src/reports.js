@@ -100,7 +100,7 @@ export async function renderReport(data) {
   validate(data);
   const { config, meta, plan, scenario } = data, style = config.report;
   if (document.fonts?.ready) await document.fonts.ready;
-  const brand = await loadImage(style.brandAsset);
+  const [brand, footerLogo] = await Promise.all([loadImage(style.brandAsset), loadImage(style.footerLogoAsset)]);
   const W = style.width, H = style.height, scale = style.scale;
   const canvas = document.createElement('canvas'); canvas.width = Math.round(W * scale); canvas.height = Math.round(H * scale);
   const ctx = canvas.getContext('2d'); ctx.scale(scale, scale); ctx.textBaseline = 'top';
@@ -135,9 +135,13 @@ export async function renderReport(data) {
   text(meta.operation || config.defaults.operation, W * .28, style.headerHeight * .65, W * .68, 19, '#fff');
   let y = style.headerHeight + 31 * unit;
   y = heading(`SISMOGRAFIA - ${reportDate(meta.date)}`, m, y);
-  y = text(`CENÁRIO ${scenario.id} · ${scenario.title}`,m,y,col,18,style.ink,true) + 25 * unit;
+  y += 25 * unit;
   y = heading('AVANÇO PLANEJADO',m,y);
-  y = text(`Monitoramento sismográfico com ${scenario.points.length} instrumento(s). Desmonte: ${meta.blastName || `${plan.polygons?.length || 0} áreas importadas`}. Horário: ${meta.time || 'A definir'}.`,m,y,col,18) + 23*unit;
+  const count = scenario.points.length;
+  const schedule = meta.time ? `para as ${meta.time}` : 'com horário a definir';
+  const instruments = count === 1 ? '1 sismógrafo instalado no ponto selecionado' : `${count} sismógrafos distribuídos nos pontos selecionados`;
+  y = text(`Monitoramento sismográfico programado ${schedule}, com ${instruments}.`,m,y,col,18) + 9*unit;
+  y = text(`Desmonte: ${meta.blastName || `${plan.polygons?.length || 0} áreas importadas`}.`,m,y,col,18) + 23*unit;
   y = heading('LOCALIZAÇÃO DO PONTO',m,y);
   y = text('Origem no centro do menor círculo que contém todas as poligonais importadas.',m,y,col,18) + 23*unit;
   y = heading('COORDENADAS - ORIGEM DO DESMONTE',m,y);
@@ -163,12 +167,12 @@ export async function renderReport(data) {
   const directions = (plan.polygons || []).slice(0, directionLimit).map(p=>`${p.name.length > 42 ? p.name.slice(0, 39) + '…' : p.name}: ${p.azimuth === null || p.azimuth === undefined ? 'não informado' : `${number(p.azimuth,0)}°`}`);
   if ((plan.polygons || []).length > directionLimit) directions.push(`+ ${plan.polygons.length - directionLimit} áreas. Relação completa de direções no projeto JSON e na mensagem TXT.`);
   ry = text(directions.join('\n') || 'Não informado',right,ry,col,16)+16*unit;
-  ry = text('O sentido de saída é um parâmetro de planejamento; não prevê a direção real, a amplitude ou a segurança da vibração. Validar o plano com o responsável técnico.',right,ry,col,15,style.muted);
   const footerTop=H-style.footerHeight;
   if (Math.max(y,ry)>footerTop-36*unit) throw new Error('O conteúdo excede a página. Reduza as observações ou os nomes das áreas para exportar sem cortes.');
   ctx.fillStyle=style.ink;ctx.fillRect(0,footerTop,W,style.footerHeight);
-  ctx.drawImage(brand,0,0,brand.width*.19,brand.height*.70,0,footerTop,W*.17,style.footerHeight);
-  text(`${meta.responsible || 'ENAEX'} · ${reportDate(meta.date)} · Cenário ${scenario.id}`,W*.23,footerTop+27*unit,W*.71,16,'#fff');
+  const logoBox = style.footerLogoBox;
+  fitImage(ctx,footerLogo,logoBox.x*unit,footerTop+logoBox.y*unit,logoBox.width*unit,logoBox.height*unit);
+  text(meta.responsible || config.defaults.responsible,W*.23,footerTop+27*unit,W*.71,16,'#fff');
   return canvas;
 }
 export function downloadBlob(blob, filename) {

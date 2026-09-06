@@ -1,13 +1,17 @@
 {
   "schemaVersion": 1,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "title": "Planejador de campanha de sismografia",
   "defaults": {
     "operation": "MINA SERROTE - MINERAÇÃO VALE VERDE",
     "region": "REG",
-    "responsible": "Equipe Técnica Enaex",
+    "responsible": "Setor Técnico de Operações - Enaex Brasil",
     "instrumentCount": 3,
-    "crs": "EPSG:31984"
+    "crs": "EPSG:31984",
+    "time": "12:00",
+    "legacyResponsible": [
+      "Equipe Técnica Enaex"
+    ]
   },
   "crs": [
     {
@@ -123,7 +127,14 @@
     "headerHeight": 208,
     "footerHeight": 80,
     "maxDirectionRows": 4,
-    "whatsappTemplate": "*SISMOGRAFIA | DESMONTE {data}*\n\n*{operacao}*\nRegião: {regiao}\nHorário: {horario}\nCampanha com {quantidade} sismógrafo(s) — cenário {cenario}.\n\n*ORIGEM DO DESMONTE*\nCentro do círculo envolvente das poligonais importadas.\nLatitude: {latitude}\nLongitude: {longitude}\nUTM — Zona {zona} Sul\nNorte (Y): {norte} m\nLeste (X): {leste} m\n\n*MONITORAMENTO PROPOSTO*\n{pontos}\n\n*OBSERVAÇÕES*\n{observacoes}\n\nResponsável: {responsavel}"
+    "whatsappTemplate": "*SISMOGRAFIA | DESMONTE {data}*\n\n*{operacao}*\nRegião: {regiao}\nHorário: {horario}\nCampanha com {quantidade} sismógrafo(s) — cenário {cenario}.\n\n*ORIGEM DO DESMONTE*\nCentro do círculo envolvente das poligonais importadas.\nLatitude: {latitude}\nLongitude: {longitude}\nUTM — Zona {zona} Sul\nNorte (Y): {norte} m\nLeste (X): {leste} m\n\n*MONITORAMENTO PROPOSTO*\n{pontos}\n\n*OBSERVAÇÕES*\n{observacoes}\n\nResponsável: {responsavel}",
+    "footerLogoAsset": "assets/enaex-white.png",
+    "footerLogoBox": {
+      "x": 24,
+      "y": 14,
+      "width": 170,
+      "height": 52
+    }
   },
   "visual": {
     "accent": "#f71938",
