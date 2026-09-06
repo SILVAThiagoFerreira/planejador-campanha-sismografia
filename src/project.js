@@ -4,8 +4,8 @@ export function validateProject(value,config){
   if(!config.crs.some(c=>c.id===value.crs)) throw Error('Sistema de coordenadas desconhecido.');
   if(!Array.isArray(value.communities)||value.communities.length!==config.communities.length) throw Error('O projeto deve conter as sete comunidades cadastradas.');
   const ids=new Set(config.communities.map(c=>c.id));
-  for(const c of value.communities){if(!ids.has(c.id)||typeof c.enabled!=='boolean')throw Error('Cadastro de comunidade inválido.');if(c.name.length>config.validation.maxLabelLength)throw Error('Nome de comunidade muito longo.');}
-  validateCommunities(value.communities,1);
+  for(const c of value.communities){if(!ids.has(c.id)||typeof c.enabled!=='boolean'||(c.fixed!==undefined&&typeof c.fixed!=='boolean'))throw Error('Cadastro de comunidade inválido.');if(c.fixed===true&&c.enabled===false)throw Error('Um ponto fixo também deve estar habilitado.');if(c.name.length>config.validation.maxLabelLength)throw Error('Nome de comunidade muito longo.');}
+  validateCommunities(value.communities,value.communities.length);
   const enabled=value.communities.filter(c=>c.enabled);
   validateCommunities(enabled,value.instrumentCount);
   if(!Array.isArray(value.polygons))throw Error('Geometrias do projeto inválidas.');
@@ -17,5 +17,7 @@ export function validateProject(value,config){
   if(value.meta.notes.length>config.validation.maxNotesLength)throw Error('Observação excede o limite de caracteres.');
   if(typeof value.messageTemplate!=='string'||value.messageTemplate.length>10000)throw Error('Modelo de mensagem inválido.');
   if(![1,2,3].includes(value.selectedScenario))throw Error('Cenário do projeto inválido.');
-  return structuredClone(value);
+  const validated=structuredClone(value);
+  for(const community of validated.communities)community.fixed=community.fixed===true;
+  return validated;
 }

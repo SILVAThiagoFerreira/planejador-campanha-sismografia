@@ -6,9 +6,9 @@ data/manifest.json (gerado): schemaVersion, version, configPath, configSha256. N
 
 Área: id, name, layer, vertices[{x,y}], direction (azimute graus ou null), source (nome DXF). Coordenadas UTM em metros.
 
-Comunidade: id, name, lat, lon (graus decimais), enabled (boolean), priority (número positivo). Coordenadas fornecidas em graus e minutos decimais são convertidas sem reinterpretar minutos como segundos.
+Comunidade: id, name, lat, lon (graus decimais), enabled (boolean), fixed (boolean) e priority (número positivo). `fixed=true` obriga o ponto a integrar todos os cenários e o ponto continua contando na quantidade total de instrumentos. Projetos antigos sem `fixed` são migrados para `false`. Coordenadas fornecidas em graus e minutos decimais são convertidas sem reinterpretar minutos como segundos.
 
-Plano calculado: origin{x,y,lat,lon,radius}, polygons, communities (métricas), scenarios[{id,title,description,points,score,coincidentWith}], warnings.
+Plano calculado: origin{x,y,lat,lon,radius}, polygons, communities (métricas, incluindo fixed), scenarios[{id,title,description,points,score,coincidentWith}], instrumentCount, fixedPointCount, warnings.
 
 Projeto exportado: schemaVersion, savedAt, crs, meta, polygons, communities, instrumentCount, selectedScenario, messageTemplate. Importação deve validar versão e todos os campos antes de processar.
 

@@ -4,7 +4,7 @@
 2. Navegador carrega manifesto e configuração, registra início e apresenta comunidades.
 3. Importação valida tamanho e tipo, lê DXF e valida áreas antes de alterar o estado.
 4. Transforma coordenadas para SRC escolhido e verifica região, direções e quantidade.
-5. Calcula círculo envolvente, centro, distâncias e cenários.
+5. Calcula círculo envolvente, centro e distâncias; inclui os pontos fixos em todos os cenários e seleciona as vagas restantes por estratégia.
 6. Renderiza mapa, critérios e relatório do cenário selecionado.
 7. Exporta PDF, PNG, TXT ou projeto JSON com identificação; registra evento no log.
 8. Testes e build precedem publicação Pages; publicação é conferida no endereço servido.

@@ -4,6 +4,8 @@ Entrada DXF ASCII: polilinhas fechadas LWPOLYLINE e POLYLINE com segmentos retos
 
 Origem: centro do menor círculo envolvente de todos os vértices das poligonais. Distâncias são planimétricas em metros, tanto da origem quanto da borda mais próxima. Cenários usam quantidade inteira exata de instrumentos dentro do conjunto de pontos habilitados. Estratégias: proximidade, direção informada por área e cobertura espacial. Cenários podem coincidir quando o conjunto ou os critérios não permitem alternativas; isto deve ser indicado.
 
+Cada ponto habilitado pode ser marcado como ponto fixo. Um ponto fixo deve integrar os três cenários e consumir uma posição da quantidade total de sismógrafos; cada estratégia seleciona apenas as posições restantes. A quantidade de pontos fixos não pode ultrapassar a quantidade de instrumentos. Desabilitar um ponto também remove sua condição fixa.
+
 Direção de saída é informação do usuário, não modelo de propagação, velocidade, PPV ou conformidade normativa. Ausência de direção gera aviso. Cadastro original tem sete comunidades; usuário pode ajustar coordenadas e disponibilidade. Coordenadas geográficas devem ser válidas e as áreas devem estar na região configurada.
 
 PDF e PNG reproduzem o relatório de referência: cabeçalho/faixa Enaex grafite, títulos vermelhos, tabelas de origem e pontos, mapa e esquema de distâncias. Incluem cenário, SRC, metodologia e observações. TXT permite personalização e não envia mensagens. Projeto JSON preserva parâmetros e geometrias; importação valida antes de aplicar. Logs auditam processamento e exportações sem transmissão externa.

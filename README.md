@@ -10,6 +10,8 @@ config.json contém projeções, comunidades, limites, critérios, textos, ident
 
 O motor calcula o menor círculo que contém todos os vértices das áreas fechadas. O centro é a origem comum. Não confundir com centroide de área. O azimute de saída é informado por área, de 0° (Norte) a menos de 360°, sentido horário. O critério direcional ajuda a comparar posições e não prevê amplitude ou trajetória da vibração.
 
+No cadastro de pontos, **Ponto fixo** inclui obrigatoriamente a comunidade nos três cenários. O ponto fixo faz parte da quantidade total informada; por exemplo, com três instrumentos e um ponto fixo, cada estratégia escolhe mais dois pontos. O sistema impede uma quantidade de pontos fixos maior que a quantidade de instrumentos.
+
 Na validação do projeto foram importadas duas amostras fornecidas pela operação: `holes-string-PP490826.dxf` e `r280826.dxf`, da pasta de versões 20260828. O primeiro gerou uma poligonal com 184 vértices e o segundo uma poligonal com 25 vértices; a entidade auxiliar `VIEWPORT` do segundo arquivo foi reportada e ignorada. Os arquivos continuam no computador do usuário e não são copiados para o Pages.
 
 Dependências: Leaflet para mapa navegável; proj4 para transformação de coordenadas; jsPDF para PDF; JSZip para o pacote DOCX local. Versões fixadas e cópias locais mantêm cálculo e exportação independentes de CDNs. Imagens de satélite exigem conexão; falhas são indicadas e o mapa vetorial continua disponível. Não há autenticação fictícia ou backend de publicação de dados operacionais.

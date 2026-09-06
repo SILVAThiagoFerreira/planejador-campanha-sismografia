@@ -32,7 +32,7 @@ export function buildWhatsAppMessage(data, template) {
     operacao: meta.operation || data.config.defaults?.operation || '', cenario: `${scenario.id} - ${scenario.title}`,
     quantidade: String(scenario.points.length), latitude: coordinateDMM(plan.origin.lat, 'lat'), longitude: coordinateDMM(plan.origin.lon, 'lon'),
     leste: number(plan.origin.x, 4), norte: number(plan.origin.y, 4), zona: String(meta.crsZone || 24),
-    pontos: scenario.points.map((p, i) => `${i + 1}. ${p.name}\n   ${coordinateDMM(p.lat, 'lat')} | ${coordinateDMM(p.lon, 'lon')}\n   Distância à origem: ${number(p.distance, 0)} m`).join('\n'),
+    pontos: scenario.points.map((p, i) => `${i + 1}. ${p.name}${p.fixed ? ' (FIXO)' : ''}\n   ${coordinateDMM(p.lat, 'lat')} | ${coordinateDMM(p.lon, 'lon')}\n   Distância à origem: ${number(p.distance, 0)} m`).join('\n'),
     observacoes: meta.notes || '', responsavel: meta.responsible || '',
   };
   const source = template ?? meta.whatsappTemplate ?? data.config.report.whatsappTemplate;
@@ -86,7 +86,7 @@ export function renderDistanceDiagram(data, width = 1100, height = 750) {
     ctx.fillStyle = selected.has(p.id) ? style.accent : '#d5dde3'; ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fill();
     const labelX = x < ox ? x - 10 : x + 10;
     ctx.textAlign = x < ox ? 'right' : 'left'; ctx.font = `bold ${width * .015}px ${style.fontFamily}`; ctx.fillStyle = '#ffffff';
-    const name = p.name.replace(/comunidade de /i, '').replace(/barragem de /i, 'B. ');
+    const name = `${p.name.replace(/comunidade de /i, '').replace(/barragem de /i, 'B. ')}${p.fixed ? ' (FIXO)' : ''}`;
     ctx.fillText(name, labelX, y - 11, Math.max(40, Math.min(width * .25, x < ox ? labelX - 12 : width - labelX - 12)));
     ctx.font = `${width * .014}px ${style.fontFamily}`;
     ctx.fillText(`${number(p.distance, 0)} m`, labelX, y + 10);
@@ -148,7 +148,7 @@ export async function renderReport(data) {
   y = table(['Eixo','Coordenada'],[['Latitude',coordinateDMM(plan.origin.lat,'lat')],['Longitude',coordinateDMM(plan.origin.lon,'lon')],['Norte (Y)',`${number(plan.origin.y,4)} m`],['Leste (X)',`${number(plan.origin.x,4)} m`]],m,y,[col*.34,col*.66]);
   y = text(`${meta.crsName || config.crs.find(item => item.id === (meta.crs || config.defaults.crs))?.name || meta.crs} · Raio envolvente: ${number(plan.origin.radius,1)} m`,m,y+10*unit,col,15,style.muted) + 24*unit;
   y = heading('MONITORAMENTO PROPOSTO',m,y);
-  y = table(['Ponto fixo','Coordenadas / distância'],scenario.points.map(p=>[p.name,`${coordinateDMM(p.lat,'lat')}\n${coordinateDMM(p.lon,'lon')}\n${number(p.distance,0)} m da origem`]),m,y,[col*.45,col*.55],scenario.points.length>4?15:17);
+  y = table(['Ponto de monitoramento','Coordenadas / distância'],scenario.points.map(p=>[`${p.name}${p.fixed ? ' (FIXO)' : ''}`,`${coordinateDMM(p.lat,'lat')}\n${coordinateDMM(p.lon,'lon')}\n${number(p.distance,0)} m da origem`]),m,y,[col*.45,col*.55],scenario.points.length>4?15:17);
   let ry = style.headerHeight+31*unit;
   ry = heading('SITUAÇÃO ESPACIAL DO DESMONTE',right,ry);
   const diagram = data.diagramCanvas || renderDistanceDiagram(data);

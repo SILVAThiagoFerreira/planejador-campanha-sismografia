@@ -17,6 +17,11 @@ test('WhatsApp template renders date, DMM, UTM and selected point',()=>{
   assert.match(message,/Área norte: 90°/);
 });
 
+test('WhatsApp message identifies a fixed point',()=>{
+  const fixedData={...data,scenario:{...data.scenario,points:[{...point,fixed:true}]}};
+  assert.match(buildWhatsAppMessage(fixedData,'{pontos}'),/Barragem de Rejeitos \(FIXO\)/);
+});
+
 test('coordinate DMM carries rounded minutes into the next degree',()=>{
   assert.equal(coordinateDMM(-9.9999999,'lat'),'010 00.000 S');
   assert.equal(coordinateDMM(36.5,'lon'),'036 30.000 E');
@@ -37,6 +42,11 @@ test('DOCX package parts contain a valid image relationship and escaped title',(
 test('project validation keeps schema, all communities and exact instrument count',()=>{
   const project={schemaVersion:1,savedAt:new Date().toISOString(),crs:'EPSG:31984',meta:{date:'2026-09-04',blastName:'REG',operation:'MINA',responsible:'Equipe',time:'',notes:''},polygons:[],communities:config.communities.map(c=>({...c})),instrumentCount:3,selectedScenario:1,messageTemplate:config.report.whatsappTemplate};
   assert.equal(validateProject(project,config).communities.length,7);
+  assert.ok(validateProject(project,config).communities.every(c=>c.fixed===false));
+  const withFixed={...project,communities:project.communities.map((c,i)=>({...c,fixed:i<2}))};
+  assert.equal(validateProject(withFixed,config).communities.filter(c=>c.fixed).length,2);
+  assert.throws(()=>validateProject({...withFixed,instrumentCount:1},config),/2 pontos fixos/);
+  assert.throws(()=>validateProject({...project,communities:project.communities.map((c,i)=>({...c,fixed:i===0,enabled:i!==0}))},config),/também deve estar habilitado/);
   assert.throws(()=>validateProject({...project,instrumentCount:8},config),/Informe de 1 a 7/);
   assert.throws(()=>validateProject({...project,communities:project.communities.map(c=>({...c,enabled:false}))},config),/Nenhum ponto/);
 });

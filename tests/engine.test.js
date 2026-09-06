@@ -22,6 +22,21 @@ test('reject crossing and zero-area polygons',()=>{assert.throws(()=>validatePol
 const communities=[{id:'n',name:'Norte',lon:0,lat:10},{id:'e',name:'Leste',lon:10,lat:0},{id:'s',name:'Sul',lon:0,lat:-10},{id:'w',name:'Oeste',lon:-10,lat:0},{id:'ne',name:'NE',lon:10,lat:10},{id:'sw',name:'SO',lon:-10,lat:-10},{id:'se',name:'SE',lon:10,lat:-10}];
 const options={polygons:[{id:'p',name:'Área',vertices:square,direction:90}],communities,project:(lon,lat)=>({x:lon,y:lat}),unproject:(x,y)=>({lon:x,lat:y}),config:{}};
 test('three complete scenarios for every instrument count 1 through 7',()=>{for(let n=1;n<=7;n++){const plan=buildPlan({...options,instrumentCount:n});assert.equal(plan.scenarios.length,3);for(const s of plan.scenarios){assert.equal(s.points.length,n);assert.equal(new Set(s.points.map(p=>p.id)).size,n);}if(n===7)assert.deepEqual(plan.scenarios[0].coincidentWith,[2,3]);}});
+test('fixed points are present in every scenario and count against instruments',()=>{
+ const fixedCommunities=communities.map(p=>({...p,fixed:['n','sw'].includes(p.id)}));
+ const plan=buildPlan({...options,communities:fixedCommunities,instrumentCount:3});
+ for(const scenario of plan.scenarios){
+   assert.equal(scenario.points.length,3);
+   assert.ok(scenario.points.some(p=>p.id==='n'));
+   assert.ok(scenario.points.some(p=>p.id==='sw'));
+ }
+ const allFixed=buildPlan({...options,communities:fixedCommunities.filter(p=>p.fixed),instrumentCount:2});
+ for(const scenario of allFixed.scenarios)assert.deepEqual(new Set(scenario.points.map(p=>p.id)),new Set(['n','sw']));
+});
+test('more fixed points than instruments and malformed fixed flags are rejected',()=>{
+ assert.throws(()=>buildPlan({...options,communities:communities.map((p,i)=>({...p,fixed:i<2})),instrumentCount:1}),/2 pontos fixos/);
+ assert.throws(()=>buildPlan({...options,communities:communities.map((p,i)=>({...p,fixed:i===0?'sim':false})),instrumentCount:3}),/ponto fixo inválida/);
+});
 test('direction uses North clockwise azimuth; changing 90 to 270 changes ranking',()=>{let p=buildPlan({...options,instrumentCount:1});assert.equal(p.scenarios[1].points[0].id,'e');p=buildPlan({...options,polygons:[{...options.polygons[0],direction:270}],instrumentCount:1});assert.equal(p.scenarios[1].points[0].id,'w');});
 test('missing direction is explicit, invalid count and direction stop processing',()=>{const plan=buildPlan({...options,polygons:[{...options.polygons[0],direction:null}],instrumentCount:3});assert.ok(plan.warnings.some(w=>w.includes('nenhuma direção')));for(const n of [0,8,1.5,NaN])assert.throws(()=>buildPlan({...options,instrumentCount:n}));assert.throws(()=>buildPlan({...options,polygons:[{...options.polygons[0],direction:360}],instrumentCount:1}));});
 test('coverage rewards distinct bearings; coincident bearings do not create a full circle',()=>{
