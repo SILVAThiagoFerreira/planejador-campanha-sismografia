@@ -2,8 +2,8 @@ import {applyCampaignPresets} from './src/presets.js';
 import {parseDXF} from './src/dxf.js';
 import {buildPlan} from './src/planner.js';
 import {createCampaignMap} from './src/map.js';
-import {renderReport,exportReport,buildWhatsAppMessage,downloadText,downloadBlob,coordinateDMM} from './src/reports.js?v=1.1.2';
-import {exportDocx} from './src/docx.js?v=1.1.2';
+import {renderReport,exportReport,buildWhatsAppMessage,downloadText,downloadBlob,coordinateDMM} from './src/reports.js?v=1.1.3';
+import {exportDocx} from './src/docx.js?v=1.1.3';
 import {validateProject} from './src/project.js';
 import {logEvent,exportLogs} from './src/logger.js';
 

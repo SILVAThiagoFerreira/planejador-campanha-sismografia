@@ -11,7 +11,8 @@ const point={id:'P01',name:'Barragem de Rejeitos',lat:-9.6672333,lon:-36.7714,x:
 const data={config,meta:{date:'2026-09-04',blastName:'REG',time:'08:30',operation:'MINA SERROTE',responsible:'Equipe técnica',notes:'Acesso confirmado'},plan:{origin,polygons:[{name:'Área norte',azimuth:90}],communities:[point]},scenario:{id:2,title:'Direcionamento',points:[point]}};
 
 test('report omits the demonstration notice but keeps campaign notes',()=>{
-  assert.equal(reportNotes('DEMONSTRAÇÃO: áreas fictícias para conhecer a ferramenta. Importe as poligonais reais antes de planejar uma campanha.', 'fallback'), '');
+  assert.equal(reportNotes('DEMONSTRAÇÃO: áreas fictícias para conhecer a ferramenta. Importe as poligonais reais antes de planejar uma campanha.'), '');
+  assert.equal(reportNotes('DEMONSTRAÇÃO: áreas fictícias para conhecer a ferramenta. Importe as poligonais reais antes de planejar uma campanha.', 'fallback'), 'fallback');
   assert.equal(reportNotes('Acesso confirmado', 'fallback'), 'Acesso confirmado');
   assert.equal(reportNotes('DEMONSTRAÇÃO: áreas fictícias para conhecer a ferramenta. Importe as poligonais reais antes de planejar uma campanha. Observação adicional.', 'fallback'), 'DEMONSTRAÇÃO: áreas fictícias para conhecer a ferramenta. Importe as poligonais reais antes de planejar uma campanha. Observação adicional.');
   assert.equal(reportNotes('', 'fallback'), 'fallback');
@@ -20,7 +21,7 @@ test('report omits the demonstration notice but keeps campaign notes',()=>{
 test('WhatsApp omits the demonstration notice from observations',()=>{
   const demoData={...data,meta:{...data.meta,notes:'DEMONSTRAÇÃO: áreas fictícias para conhecer a ferramenta. Importe as poligonais reais antes de planejar uma campanha.'}};
   const message=buildWhatsAppMessage(demoData,'*OBSERVAÇÕES*\n{observacoes}');
-  assert.equal(message,'*OBSERVAÇÕES*');
+  assert.match(message,/\*OBSERVAÇÕES\*\nConfirmar acesso, autorização de instalação e acoplamento dos instrumentos antes da campanha\./);
   assert.doesNotMatch(message,/DEMONSTRAÇÃO|fictícias/i);
 });
 
