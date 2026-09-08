@@ -13,6 +13,12 @@ function reportDate(value) {
   const [year, month, day] = value.split('-');
   return `${day}/${month}/${year}`;
 }
+export function reportNotes(value, fallback = '') {
+  const notes = String(value ?? '').trim();
+  const demonstrationNotice = 'DEMONSTRAÇÃO: áreas fictícias para conhecer a ferramenta. Importe as poligonais reais antes de planejar uma campanha.';
+  if (notes === demonstrationNotice) return '';
+  return notes || fallback;
+}
 function validate(data) {
   if (!data?.config?.report) throw new Error('Configuração visual do relatório indisponível.');
   if (!data.plan?.origin || !data.scenario?.points?.length) throw new Error('Calcule e selecione um cenário antes de exportar.');
@@ -161,7 +167,10 @@ export async function renderReport(data) {
   }
   ry = heading('OBSERVAÇÕES',right,ry);
   ry = text(scenario.description || '',right,ry,col,17)+14*unit;
-  ry = text(meta.notes || 'Confirmar acesso, autorização de instalação e acoplamento dos instrumentos antes da campanha.',right,ry,col,17)+20*unit;
+  const notes = reportNotes(meta.notes, 'Confirmar acesso, autorização de instalação e acoplamento dos instrumentos antes da campanha.');
+  if (notes) {
+    ry = text(notes,right,ry,col,17)+20*unit;
+  }
   ry = heading('DIRECIONAMENTO INFORMADO',right,ry);
   const directionLimit = style.maxDirectionRows || 4;
   const directions = (plan.polygons || []).slice(0, directionLimit).map(p=>`${p.name.length > 42 ? p.name.slice(0, 39) + '…' : p.name}: ${p.azimuth === null || p.azimuth === undefined ? 'não informado' : `${number(p.azimuth,0)}°`}`);

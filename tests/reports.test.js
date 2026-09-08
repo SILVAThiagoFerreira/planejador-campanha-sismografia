@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {buildWhatsAppMessage, coordinateDMM} from '../src/reports.js';
+import {buildWhatsAppMessage, coordinateDMM, reportNotes} from '../src/reports.js';
 import {buildDocxParts} from '../src/docx.js';
 import {validateProject} from '../src/project.js';
 import fs from 'node:fs';
@@ -9,6 +9,13 @@ const config=JSON.parse(fs.readFileSync(new URL('../config.json',import.meta.url
 const origin={x:749069.108,y:8930215.4153,lat:-9.6702667,lon:-36.7302,radius:100};
 const point={id:'P01',name:'Barragem de Rejeitos',lat:-9.6672333,lon:-36.7714,x:744500,y:8930550,distance:1200};
 const data={config,meta:{date:'2026-09-04',blastName:'REG',time:'08:30',operation:'MINA SERROTE',responsible:'Equipe técnica',notes:'Acesso confirmado'},plan:{origin,polygons:[{name:'Área norte',azimuth:90}],communities:[point]},scenario:{id:2,title:'Direcionamento',points:[point]}};
+
+test('report omits the demonstration notice but keeps campaign notes',()=>{
+  assert.equal(reportNotes('DEMONSTRAÇÃO: áreas fictícias para conhecer a ferramenta. Importe as poligonais reais antes de planejar uma campanha.', 'fallback'), '');
+  assert.equal(reportNotes('Acesso confirmado', 'fallback'), 'Acesso confirmado');
+  assert.equal(reportNotes('DEMONSTRAÇÃO: áreas fictícias para conhecer a ferramenta. Importe as poligonais reais antes de planejar uma campanha. Observação adicional.', 'fallback'), 'DEMONSTRAÇÃO: áreas fictícias para conhecer a ferramenta. Importe as poligonais reais antes de planejar uma campanha. Observação adicional.');
+  assert.equal(reportNotes('', 'fallback'), 'fallback');
+});
 
 test('WhatsApp template renders date, DMM, UTM and selected point',()=>{
   const message=buildWhatsAppMessage(data,'{data}|{latitude}|{longitude}|{norte}|{leste}|{quantidade}|{pontos}|{areas}');
