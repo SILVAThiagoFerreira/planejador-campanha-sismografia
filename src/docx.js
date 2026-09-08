@@ -1,4 +1,4 @@
-import {renderReport,downloadBlob} from './reports.js?v=1.1.1';
+import {renderReport,downloadBlob} from './reports.js?v=1.1.2';
 
 const xmlEscape=value=>String(value??'').replace(/[<>&'\"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','\"':'&quot;'}[c]));
 const packageRels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>

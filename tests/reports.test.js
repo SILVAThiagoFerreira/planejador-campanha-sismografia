@@ -17,6 +17,13 @@ test('report omits the demonstration notice but keeps campaign notes',()=>{
   assert.equal(reportNotes('', 'fallback'), 'fallback');
 });
 
+test('WhatsApp omits the demonstration notice from observations',()=>{
+  const demoData={...data,meta:{...data.meta,notes:'DEMONSTRAÇÃO: áreas fictícias para conhecer a ferramenta. Importe as poligonais reais antes de planejar uma campanha.'}};
+  const message=buildWhatsAppMessage(demoData,'*OBSERVAÇÕES*\n{observacoes}');
+  assert.equal(message,'*OBSERVAÇÕES*');
+  assert.doesNotMatch(message,/DEMONSTRAÇÃO|fictícias/i);
+});
+
 test('WhatsApp template renders date, DMM, UTM and selected point',()=>{
   const message=buildWhatsAppMessage(data,'{data}|{latitude}|{longitude}|{norte}|{leste}|{quantidade}|{pontos}|{areas}');
   assert.match(message,/04\/09\/2026\|009 40\.216 S\|036 43\.812 W/);

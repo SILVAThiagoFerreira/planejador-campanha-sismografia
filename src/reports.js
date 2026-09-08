@@ -39,7 +39,7 @@ export function buildWhatsAppMessage(data, template) {
     quantidade: String(scenario.points.length), latitude: coordinateDMM(plan.origin.lat, 'lat'), longitude: coordinateDMM(plan.origin.lon, 'lon'),
     leste: number(plan.origin.x, 4), norte: number(plan.origin.y, 4), zona: String(meta.crsZone || 24),
     pontos: scenario.points.map((p, i) => `${i + 1}. ${p.name}${p.fixed ? ' (FIXO)' : ''}\n   ${coordinateDMM(p.lat, 'lat')} | ${coordinateDMM(p.lon, 'lon')}\n   Distância à origem: ${number(p.distance, 0)} m`).join('\n'),
-    observacoes: meta.notes || '', responsavel: meta.responsible || '',
+    observacoes: reportNotes(meta.notes), responsavel: meta.responsible || '',
   };
   const source = template ?? meta.whatsappTemplate ?? data.config.report.whatsappTemplate;
   if (typeof source !== 'string' || !source.trim()) throw new Error('Informe o modelo da mensagem para WhatsApp.');
