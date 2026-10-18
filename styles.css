@@ -33,3 +33,19 @@
 .map-legend{box-shadow:none;border-color:var(--line)}
 .form-section h2{font-size:20px}
 .map-metrics>div{border-right:0}
+
+/* Redesign v3b: espaçamento compacto entre seções. */
+.workspace{margin-top:20px;gap:20px}
+.form-section{padding:16px 0}
+.form-section:first-of-type{padding-top:14px}
+.form-section h2{margin-bottom:12px}
+.panel-intro{padding-bottom:14px}
+label{margin:9px 0 5px}
+.section-heading{margin:0 0 14px}
+.map-metrics{padding:11px 0}
+.scenarios-section,.report-section{margin-top:20px}
+.report-section{padding-top:16px}
+.scenario-card{padding:14px}
+.scenario-card h3{margin:6px 0}
+.app-footer{margin-top:20px;padding:14px 0 18px}
+.form-section h2>span{flex-shrink:0;min-width:18px;overflow:visible}
