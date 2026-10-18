@@ -19,3 +19,17 @@
 @keyframes project-load-sweep{from{transform:translateX(-110%);opacity:.55}to{transform:translateX(310%);opacity:1}}
 @media(max-width:760px){.project-load-progress{padding:12px 13px}.project-load-progress__copy{align-items:flex-start;flex-direction:column;gap:1px}.project-load-progress__copy span{max-width:100%}}
 @media(prefers-reduced-motion:reduce){.status-banner{transition:none}.project-load-progress__track span{width:55%;transform:translateX(35%);animation:none}}
+
+/* Redesign v3: página branca, fios finos e menos caixas. */
+.app-header{background:#fff;color:var(--ink);border-bottom:1px solid var(--line);padding:14px 32px}
+.brand{color:var(--ink)}
+.brand-divider{background:var(--line)}
+.header-status{color:var(--muted)}
+.local-badge{background:transparent;color:var(--green);border:1px solid #bfe0d4;padding:3px 8px;margin-left:8px}
+.control-panel{border:0;border-top:1px solid var(--line);box-shadow:none;background:transparent;padding:4px 0 0}
+.map-frame,.report-preview{box-shadow:none;border-color:var(--line)}
+.scenario-card{box-shadow:none}
+.scenario-card.selected,.scenario-card.active,.scenario-card[aria-pressed=true]{box-shadow:none;border-color:var(--green)}
+.map-legend{box-shadow:none;border-color:var(--line)}
+.form-section h2{font-size:20px}
+.map-metrics>div{border-right:0}

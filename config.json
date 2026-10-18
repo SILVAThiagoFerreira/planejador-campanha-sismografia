@@ -126,9 +126,9 @@
     "height": 1754,
     "scale": 2,
     "fontFamily": "Arial",
-    "accent": "#ff1734",
-    "ink": "#253442",
-    "muted": "#637180",
+    "accent": "#B5121B",
+    "ink": "#3D4148",
+    "muted": "#4A4F55",
     "brandAsset": "assets/report-brand.jpg",
     "margin": 64,
     "headerHeight": 208,
@@ -144,8 +144,8 @@
     }
   },
   "visual": {
-    "accent": "#f71938",
-    "ink": "#253442",
+    "accent": "#B5121B",
+    "ink": "#3D4148",
     "green": "#087f68",
     "background": "#f3f5f6",
     "logo": "assets/planejador-logo.png",
