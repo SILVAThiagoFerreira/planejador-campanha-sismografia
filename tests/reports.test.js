@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {buildWhatsAppMessage, coordinateDMM, reportNotes} from '../src/reports.js';
+import {buildWhatsAppMessage, coordinateDMM, reportNotes, situationBlock} from '../src/reports.js';
 import {buildDocxParts} from '../src/docx.js';
 import {validateProject} from '../src/project.js';
 import fs from 'node:fs';
@@ -35,6 +35,16 @@ test('WhatsApp template renders date, DMM, UTM and selected point',()=>{
 test('WhatsApp message identifies a fixed point',()=>{
   const fixedData={...data,scenario:{...data.scenario,points:[{...point,fixed:true}]}};
   assert.match(buildWhatsAppMessage(fixedData,'{pontos}'),/Barragem de Rejeitos \(FIXO\)/);
+});
+
+test('situation diagram and map share one block rectangle from config',()=>{
+  const block=situationBlock(config.report,537);
+  assert.equal(block.width,537);
+  assert.equal(block.height,537*config.report.situationBlock.heightRatio);
+  assert.equal(block.diagramWidth,config.report.situationBlock.diagramWidth);
+  assert.ok(Math.abs(block.diagramWidth/block.diagramHeight-block.width/block.height)<0.01);
+  assert.throws(()=>situationBlock({...config.report,situationBlock:{heightRatio:0,diagramWidth:1100}},537),/report\.situationBlock/);
+  assert.throws(()=>situationBlock({...config.report,situationBlock:undefined},537),/report\.situationBlock/);
 });
 
 test('coordinate DMM carries rounded minutes into the next degree',()=>{

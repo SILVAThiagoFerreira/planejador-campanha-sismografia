@@ -71,6 +71,22 @@ function fitImage(ctx, source, x, y, w, h) {
   const ratio = Math.min(w / source.width, h / source.height);
   ctx.drawImage(source, x + (w - source.width * ratio) / 2, y + (h - source.height * ratio) / 2, source.width * ratio, source.height * ratio);
 }
+function coverImage(ctx, source, x, y, w, h) {
+  const ratio = Math.max(w / source.width, h / source.height);
+  const sw = w / ratio, sh = h / ratio;
+  ctx.drawImage(source, (source.width - sw) / 2, (source.height - sh) / 2, sw, sh, x, y, w, h);
+}
+/** Shared rectangle for the diagram and the satellite map in the "SITUAÇÃO ESPACIAL" section. */
+export function situationBlock(style, columnWidth) {
+  const cfg = style.situationBlock;
+  if (!Number.isFinite(cfg?.heightRatio) || cfg.heightRatio <= 0 || !Number.isFinite(cfg?.diagramWidth) || cfg.diagramWidth <= 0) {
+    throw new Error('Configuração do bloco de situação inválida em config.json (report.situationBlock).');
+  }
+  return {
+    width: columnWidth, height: columnWidth * cfg.heightRatio,
+    diagramWidth: cfg.diagramWidth, diagramHeight: Math.round(cfg.diagramWidth * cfg.heightRatio),
+  };
+}
 export function renderDistanceDiagram(data, width = 1100, height = 750) {
   const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
   const ctx = canvas.getContext('2d');
@@ -157,12 +173,11 @@ export async function renderReport(data) {
   y = table(['Ponto de monitoramento','Coordenadas / distância'],scenario.points.map(p=>[`${p.name}${p.fixed ? ' (FIXO)' : ''}`,`${coordinateDMM(p.lat,'lat')}\n${coordinateDMM(p.lon,'lon')}\n${number(p.distance,0)} m da origem`]),m,y,[col*.45,col*.55],scenario.points.length>4?15:17);
   let ry = style.headerHeight+31*unit;
   ry = heading('SITUAÇÃO ESPACIAL DO DESMONTE',right,ry);
-  const diagram = data.diagramCanvas || renderDistanceDiagram(data);
-  const diagramH = col * .65;
-  fitImage(ctx,diagram,right,ry,col,diagramH); ry+=diagramH+20*unit;
+  const block = situationBlock(style, col);
+  const diagram = data.diagramCanvas || renderDistanceDiagram(data, block.diagramWidth, block.diagramHeight);
+  coverImage(ctx,diagram,right,ry,block.width,block.height); ry+=block.height+20*unit;
   if (data.mapCanvas) {
-    const mapH = col*.78; ctx.fillStyle='#f1f4f4';ctx.fillRect(right,ry,col,mapH);
-    fitImage(ctx,data.mapCanvas,right,ry,col,mapH);ry+=mapH+9*unit;
+    coverImage(ctx,data.mapCanvas,right,ry,block.width,block.height);ry+=block.height+9*unit;
     ry = text(data.mapCaption || 'Posição do desmonte e dos pontos de monitoramento. Distâncias em planta.',right,ry,col,14,style.muted)+20*unit;
   }
   ry = heading('OBSERVAÇÕES',right,ry);
