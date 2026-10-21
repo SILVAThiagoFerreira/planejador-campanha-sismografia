@@ -75,7 +75,7 @@ export function renderDistanceDiagram(data, width = 1100, height = 750) {
   const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
   const ctx = canvas.getContext('2d');
   const { plan, scenario } = data, style = data.config.report;
-  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = style.ink; ctx.fillRect(0, 0, width, height);
   const points = plan.communities || scenario.points;
   const all = [...points, plan.origin];
   const xs = all.map(p => p.x), ys = all.map(p => p.y);
@@ -91,14 +91,14 @@ export function renderDistanceDiagram(data, width = 1100, height = 750) {
     ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(x, y); ctx.stroke();
     ctx.fillStyle = selected.has(p.id) ? style.accent : '#d5dde3'; ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fill();
     const labelX = x < ox ? x - 10 : x + 10;
-    ctx.textAlign = x < ox ? 'right' : 'left'; ctx.font = `bold ${width * .015}px ${style.fontFamily}`; ctx.fillStyle = style.ink;
+    ctx.textAlign = x < ox ? 'right' : 'left'; ctx.font = `bold ${width * .015}px ${style.fontFamily}`; ctx.fillStyle = '#ffffff';
     const name = `${p.name.replace(/comunidade de /i, '').replace(/barragem de /i, 'B. ')}${p.fixed ? ' (FIXO)' : ''}`;
     ctx.fillText(name, labelX, y - 11, Math.max(40, Math.min(width * .25, x < ox ? labelX - 12 : width - labelX - 12)));
     ctx.font = `${width * .014}px ${style.fontFamily}`;
-    ctx.fillStyle = style.muted; ctx.fillText(`${number(p.distance, 0)} m`, labelX, y + 10);
+    ctx.fillText(`${number(p.distance, 0)} m`, labelX, y + 10);
   }
   ctx.fillStyle = style.accent; ctx.beginPath(); ctx.arc(px(plan.origin.x), py(plan.origin.y), 9, 0, Math.PI * 2); ctx.fill();
-  ctx.textAlign = 'left'; ctx.fillStyle = style.muted; ctx.font = `${width * .017}px ${style.fontFamily}`;
+  ctx.textAlign = 'left'; ctx.fillStyle = '#fff'; ctx.font = `${width * .017}px ${style.fontFamily}`;
   ctx.fillText('N ↑', width * .04, height * .06); ctx.fillText('DISTÂNCIAS À ORIGEM · ESQUEMA EM PLANTA', width * .04, height * .95);
   return canvas;
 }
@@ -106,7 +106,7 @@ export async function renderReport(data) {
   validate(data);
   const { config, meta, plan, scenario } = data, style = config.report;
   if (document.fonts?.ready) await document.fonts.ready;
-  const headerLogo = await loadImage(config.visual?.logo || style.brandAsset);
+  const [brand, footerLogo] = await Promise.all([loadImage(style.brandAsset), loadImage(style.footerLogoAsset)]);
   const W = style.width, H = style.height, scale = style.scale;
   const canvas = document.createElement('canvas'); canvas.width = Math.round(W * scale); canvas.height = Math.round(H * scale);
   const ctx = canvas.getContext('2d'); ctx.scale(scale, scale); ctx.textBaseline = 'top';
@@ -119,30 +119,26 @@ export async function renderReport(data) {
     for (const line of lines) { ctx.fillText(line, x, y); y += step; }
     return y;
   }
-  function heading(str, x, y, width = col) {
-    font(16, true); ctx.fillStyle = style.muted; ctx.fillText(str, x, y);
-    ctx.fillStyle = '#e3e3e3'; ctx.fillRect(x, y + 26 * unit, width, 1.2 * unit);
-    return y + 38 * unit;
-  }
+  function heading(str, x, y, width = col) { return text(str, x, y, width, 20, style.accent, true) + 9 * unit; }
   function table(headers, rows, x, y, widths, bodySize = 17) {
     const total = widths.reduce((a,b) => a+b,0); font(bodySize, true);
     const headerHeight = 42 * unit;
+    ctx.fillStyle = style.ink; ctx.fillRect(x, y, total, headerHeight);
     let dx = x;
-    headers.forEach((h,i) => { text(h,dx+9*unit,y+11*unit,widths[i]-18*unit,bodySize,style.ink,true);dx+=widths[i]; });
-    ctx.fillStyle = style.muted; ctx.fillRect(x, y + headerHeight - 1.2*unit, total, 1.2*unit);
+    headers.forEach((h,i) => { text(h,dx+9*unit,y+11*unit,widths[i]-18*unit,bodySize,'#fff',true);dx+=widths[i]; });
     y += headerHeight;
     for (const row of rows) {
       font(bodySize); const rowHeight = Math.max(43 * unit, ...row.map((cell, i) => (wrapped(ctx, cell, widths[i] - 18 * unit).length * bodySize * 1.3 + 16) * unit));
-      dx = x;
-      row.forEach((cell,i) => { text(cell,dx+9*unit,y+8*unit,widths[i]-18*unit,bodySize);dx+=widths[i]; });
-      ctx.fillStyle = '#e3e3e3'; ctx.fillRect(x, y + rowHeight - 1*unit, total, 1*unit);
+      ctx.fillStyle = '#f3f4f5'; ctx.fillRect(x,y,total,rowHeight); dx = x;
+      row.forEach((cell,i) => { ctx.strokeStyle='#bcc3c8';ctx.lineWidth=.8;ctx.strokeRect(dx,y,widths[i],rowHeight);text(cell,dx+9*unit,y+8*unit,widths[i]-18*unit,bodySize);dx+=widths[i]; });
       y += rowHeight;
     }
     return y;
   }
-  fitImage(ctx, headerLogo, W - m - 96 * unit, 30 * unit, 96 * unit, 96 * unit);
-  text('SISMOGRAFIA', m, 46 * unit, W * .6, 46, style.accent, true);
-  text(`MONITORAMENTO PROPOSTO · ${meta.operation || config.defaults.operation}`, m, 104 * unit, W * .8, 19, style.muted);
+  ctx.drawImage(brand, 0, 0, W, style.headerHeight);
+  text('SISMOGRAFIA', W * .28, style.headerHeight * .25, W * .5, 38, style.accent, true);
+  text('MONITORAMENTO PROPOSTO', W * .28, style.headerHeight * .49, W * .64, 21, '#fff');
+  text(meta.operation || config.defaults.operation, W * .28, style.headerHeight * .65, W * .68, 19, '#fff');
   let y = style.headerHeight + 31 * unit;
   y = heading(`SISMOGRAFIA - ${reportDate(meta.date)}`, m, y);
   y += 25 * unit;
@@ -182,10 +178,10 @@ export async function renderReport(data) {
   ry = text(directions.join('\n') || 'Não informado',right,ry,col,16)+16*unit;
   const footerTop=H-style.footerHeight;
   if (Math.max(y,ry)>footerTop-36*unit) throw new Error('O conteúdo excede a página. Reduza as observações ou os nomes das áreas para exportar sem cortes.');
-  ctx.fillStyle=style.ink;ctx.fillRect(m,footerTop,W-2*m,2*unit);
-  font(14); ctx.fillStyle=style.muted; ctx.textAlign='right';
-  ctx.fillText(`RESPONSÁVEL: ${String(meta.responsible || config.defaults.responsible || '').toUpperCase()}`, W-m, footerTop+24*unit);
-  ctx.textAlign='left';
+  ctx.fillStyle=style.ink;ctx.fillRect(0,footerTop,W,style.footerHeight);
+  const logoBox = style.footerLogoBox;
+  fitImage(ctx,footerLogo,logoBox.x*unit,footerTop+logoBox.y*unit,logoBox.width*unit,logoBox.height*unit);
+  text(meta.responsible || config.defaults.responsible,W*.23,footerTop+27*unit,W*.71,16,'#fff');
   return canvas;
 }
 export function downloadBlob(blob, filename) {
