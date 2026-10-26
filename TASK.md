@@ -15,3 +15,7 @@ Logo da aplicação atualizado com VISUAL/logo.png fornecido pelo usuário, copi
 ## Ajuste do bloco de situação — relatório PDF
 
 Esquema de distâncias e mapa de satélite da seção "SITUAÇÃO ESPACIAL DO DESMONTE" ocupam o mesmo retângulo: largura da coluna e altura `report.situationBlock.heightRatio` vezes a largura. O esquema é gerado com `report.situationBlock.diagramWidth` e a proporção do bloco; o mapa é recortado para preencher o bloco, sem moldura cinza. Ambos os valores ficam em config.json.
+
+## PDF com texto vetorial — 2026-10-26
+
+Refatoração do relatório: layout único em src/reportLayout.js, prévia/PNG/DOCX em canvas (src/reports.js) e PDF vetorial em src/reportPdf.js. Adicionada a chave report.pdfFontFamily em config.json ("helvetica"). Coordenadas UTM sem agrupamento de milhar na prévia, mensagem, relatório e PDF. Testes em tests/reports.test.js cobrem formatação, layout e geração do PDF com jsPDF. Versão de cache dos módulos atualizada para 1.2.0.

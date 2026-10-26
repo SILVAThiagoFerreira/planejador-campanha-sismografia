@@ -13,3 +13,7 @@ PDF e PNG reproduzem o relatório de referência: cabeçalho/faixa Enaex grafite
 ## Ajustes do relatório — 06/09/2026
 
 Horário inicial: 12:00. Responsável inicial: Setor Técnico de Operações - Enaex Brasil. Os presets ficam em config.json; campanhas restauradas/importadas com horário vazio ou responsável padrão antigo recebem os novos valores, preservando valores personalizados. O relatório remove o subtítulo de cenário e o parágrafo sobre previsão de vibração; o rodapé mostra somente o responsável e logo proporcional. Avanço planejado apresenta horário e quantidade em uma frase e desmonte em linha separada. A seleção e os nomes dos arquivos continuam identificando o cenário.
+
+## PDF com texto vetorial — 2026-10-26
+
+O PDF é montado com jsPDF a partir do mesmo layout usado na prévia (src/reportLayout.js). Títulos, parágrafos, tabelas, fios e o esquema de distâncias são texto e desenho vetoriais, portanto selecionáveis e pesquisáveis. Apenas a faixa de identidade, o logotipo do rodapé e o mapa de satélite são imagens. Coordenadas UTM (Norte/Leste) são exibidas sem separador de milhar (ex.: 8930441,2703 m); distâncias e demais quantidades mantêm o separador de milhar. Caracteres fora de WinAnsi são substituídos por "?" somente no PDF. A fonte padrão do PDF é definida em config.json (report.pdfFontFamily).

@@ -126,6 +126,7 @@
     "height": 1754,
     "scale": 2,
     "fontFamily": "Arial",
+    "pdfFontFamily": "helvetica",
     "accent": "#ff1734",
     "ink": "#253442",
     "muted": "#637180",

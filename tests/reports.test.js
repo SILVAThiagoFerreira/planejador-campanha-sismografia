@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {buildWhatsAppMessage, coordinateDMM, reportNotes, situationBlock} from '../src/reports.js';
+import {buildWhatsAppMessage, coordinateDMM, coordinateNumber, reportNotes, situationBlock} from '../src/reports.js';
+import {number} from '../src/reportFormat.js';
+import {layoutReport} from '../src/reportLayout.js';
+import {pdfSafeText} from '../src/reportPdf.js';
 import {buildDocxParts} from '../src/docx.js';
 import {validateProject} from '../src/project.js';
 import fs from 'node:fs';
@@ -74,4 +77,61 @@ test('project validation keeps schema, all communities and exact instrument coun
   assert.throws(()=>validateProject({...project,communities:project.communities.map((c,i)=>({...c,fixed:i===0,enabled:i!==0}))},config),/também deve estar habilitado/);
   assert.throws(()=>validateProject({...project,instrumentCount:8},config),/Informe de 1 a 7/);
   assert.throws(()=>validateProject({...project,communities:project.communities.map(c=>({...c,enabled:false}))},config),/Nenhum ponto/);
+});
+
+const coordinateOrigin={...origin,x:748777.2549,y:8930441.2703};
+const coordinateData={...data,plan:{...data.plan,origin:coordinateOrigin},mapCanvas:{},mapCaption:'Mapa de teste.'};
+const fakeMeasure=(str,size,bold)=>String(str).length*size*(bold?0.56:0.5);
+const pngSize=buffer=>({width:buffer.readUInt32BE(16),height:buffer.readUInt32BE(20)});
+const footerBytes=fs.readFileSync(new URL('../assets/enaex-white.png',import.meta.url));
+const brandBytes=fs.readFileSync(new URL('../assets/report-brand.jpg',import.meta.url));
+const testImages={
+  brand:{src:`data:image/jpeg;base64,${brandBytes.toString('base64')}`,width:1277,height:208,format:'JPEG'},
+  footerLogo:{src:`data:image/png;base64,${footerBytes.toString('base64')}`,...pngSize(footerBytes),format:'PNG'},
+  map:{src:`data:image/png;base64,${footerBytes.toString('base64')}`,...pngSize(footerBytes),format:'PNG'},
+};
+
+test('coordinates in the report are shown without thousands separator, quantities keep it',()=>{
+  assert.equal(coordinateNumber(8930441.2703,4),'8930441,2703');
+  assert.equal(coordinateNumber(748777.2549,4),'748777,2549');
+  assert.equal(number(1200,0),'1.200');
+  assert.equal(number(8930441.2703,4),'8.930.441,2703');
+});
+
+test('report layout writes coordinates as text and only brand, logo and map are images',()=>{
+  const layout=layoutReport(coordinateData,{measure:fakeMeasure,imageSize:key=>({width:testImages[key].width,height:testImages[key].height})});
+  const texts=layout.ops.filter(op=>op.t==='text').map(op=>op.str);
+  assert.ok(texts.includes('8930441,2703 m'));
+  assert.ok(texts.includes('748777,2549 m'));
+  assert.ok(texts.includes('Norte (Y)'));
+  assert.ok(texts.includes('SISMOGRAFIA - 04/09/2026'));
+  const images=layout.ops.filter(op=>op.t==='image').map(op=>op.key);
+  assert.deepEqual([...new Set(images)].sort(),['brand','footerLogo','map']);
+  assert.ok(!layout.ops.some(op=>op.t==='image'&&op.w>=layout.width&&op.h>=layout.height&&op.key!=='brand'));
+});
+
+test('PDF is built with real vector text, tables and images only for the identity and map',async()=>{
+  const {jsPDF}=await import('jspdf');
+  const {buildReportPdf}=await import('../src/reportPdf.js');
+  const doc=buildReportPdf(coordinateData,jsPDF,testImages,{compress:false});
+  const raw=Buffer.from(doc.output('arraybuffer')).toString('latin1');
+  assert.match(raw,/\(8930441,2703 m\)/);
+  assert.match(raw,/\(748777,2549 m\)/);
+  assert.match(raw,/\(Norte \\\(Y\\\)\)/);
+  assert.match(raw,/\(MONITORAMENTO PROPOSTO\)/);
+  assert.ok((raw.match(/ Tj/g)||[]).length>40,'texto deve ser escrito com operadores Tj');
+  assert.ok((raw.match(/\/Subtype\s*\/Image/g)||[]).length>=3);
+});
+
+test('PDF text is limited to WinAnsi characters and keeps Portuguese accents',()=>{
+  assert.equal(pdfSafeText('Relação ↑ · 10–20 m…'),'Relação ? · 10–20 m…');
+  assert.equal(pdfSafeText('AVANÇO PLANEJADO ã é'),'AVANÇO PLANEJADO ã é');
+});
+
+test('PDF requires the configured font and layout rejects a missing scenario',async()=>{
+  const {jsPDF}=await import('jspdf');
+  const {buildReportPdf}=await import('../src/reportPdf.js');
+  const noFont={...coordinateData,config:{...config,report:{...config.report,pdfFontFamily:undefined}}};
+  assert.throws(()=>buildReportPdf(noFont,jsPDF,testImages),/report\.pdfFontFamily/);
+  assert.throws(()=>layoutReport({...coordinateData,scenario:{...coordinateData.scenario,points:[]}},{measure:fakeMeasure,imageSize:()=>({width:1,height:1})}),/cenário/);
 });
