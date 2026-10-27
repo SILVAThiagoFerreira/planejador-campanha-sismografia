@@ -7,7 +7,7 @@ import {
   buildAuthPayload, buildSavePayload, daysInMonth, monthSummary, monthView, toggleBlast, toggleMonitored, validateMonitoringData,
 } from './monitoringData.js';
 import {readRemoteData, saveRemoteMonth, checkRemoteAccess} from './monitoringApi.js';
-import {renderMonthGrid, renderLegend, renderCounts, renderCommunityTable, renderYearBody, monthTitle} from './monitoringView.js';
+import {renderMonthGrid, renderLegend, renderCounts, renderCommunityTable, renderYearBody, monthTitle} from './monitoringView.js?v=1.3.3';
 import {buildMonitoringPdf, monitoringFileName} from './monitoringPdf.js';
 
 const $ = id => document.getElementById(id);
@@ -39,7 +39,7 @@ export async function initMonitoring(config) {
   if (!monitoring || !section) return;
   const ui = monitoring.ui;
   const colors = monitoring.colors;
-  for (const [key, value] of Object.entries({header: colors.header, monitored: colors.monitored, notInMonth: colors.notInMonth, blast: colors.blastMark, grid: colors.grid})) {
+  for (const [key, value] of Object.entries({header: colors.header, monitored: colors.monitored, notInMonth: colors.notInMonth, blast: colors.blastMark, grid: colors.grid, muted: colors.mutedPoint})) {
     section.style.setProperty(`--mon-${key}`, value);
   }
   const now = new Date();
@@ -55,7 +55,6 @@ export async function initMonitoring(config) {
     busy: false,
     authPending: false,
     credentials: null,   // {user, password}: somente em memória, durante a sessão da página
-    loginUser: '',       // último usuário informado (apenas o nome, para preencher o campo)
     assets: null,
     lastOpener: null,
   };
@@ -170,9 +169,10 @@ export async function initMonitoring(config) {
     else if (!view.desmontes.size && !summary.monitoramentos && !state.editing) notices.push({tone: 'info', text: `Nenhum desmonte ou monitoramento registrado em ${label}.`});
     setNotices(notices);
     els.grid.setAttribute('aria-label', `Tabela de avanço do monitoramento, ${label}`);
-    els.editToggle.hidden = state.editing;
-    els.save.hidden = !state.editing;
-    els.cancel.hidden = !state.editing;
+    // Os botões de edição mantêm posição fixa: só mudam a visibilidade (classe is-off), nunca o layout.
+    els.editToggle.classList.toggle('is-off', state.editing);
+    els.save.classList.toggle('is-off', !state.editing);
+    els.cancel.classList.toggle('is-off', !state.editing);
     els.save.disabled = state.busy;
     if (restoreFocus) {
       const target = [...els.grid.querySelectorAll('button')].find(b => focusKeyOf(b) === restoreFocus);
@@ -239,10 +239,10 @@ export async function initMonitoring(config) {
     els.loginSubmit.textContent = busy ? ui.verifying : ui.loginButton;
   }
 
-  /** Abre o diálogo de login. Sem apiUrl configurada, mostra que a edição está indisponível. */
+  /** Abre o diálogo de login com formulário zerado (usuário e senha vazios). Sem apiUrl, mostra que a edição está indisponível. */
   function openLogin() {
     const unavailable = !monitoring.apiUrl;
-    els.loginUser.value = state.loginUser;
+    els.loginUser.value = '';
     els.loginPassword.value = '';
     setLoginError(unavailable ? ui.editUnavailable : '');
     els.loginUser.disabled = unavailable;
@@ -272,7 +272,6 @@ export async function initMonitoring(config) {
       setLoginError(error.message);
       return;
     }
-    state.loginUser = user;
     setLoginBusy(true);
     let result = null;
     try {
@@ -317,6 +316,7 @@ export async function initMonitoring(config) {
     }
     state.busy = true;
     els.save.disabled = true;
+    els.save.setAttribute('aria-busy', 'true');
     els.save.textContent = ui.saving;
     let result = null;
     try {
@@ -326,6 +326,7 @@ export async function initMonitoring(config) {
     } finally {
       state.busy = false;
       els.save.disabled = false;
+      els.save.removeAttribute('aria-busy');
       els.save.textContent = ui.saveButton;
     }
     if (!result) {

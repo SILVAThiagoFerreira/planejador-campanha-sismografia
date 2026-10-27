@@ -27,6 +27,7 @@ Refatoração do relatório: layout único em src/reportLayout.js, prévia/PNG/D
 - [x] Seção de monitoramento: grade, legenda, contagens, tabela por comunidade, visão anual, PDF mês/ano.
 - [x] Edição com login e gravação via API (cliente em src/monitoringApi.js).
 - [x] Backend Google Apps Script em apps-script/ (Code.gs, appsscript.json, README.md).
+- [x] Ajustes de UX do monitoramento (2026-10-27): sem deslocamento de layout ao exibir avisos (status abaixo da barra, altura reservada), botões de edição com posição fixa, login sempre com campos vazios e foco em Usuário, rótulo cinza para pontos sem monitoramento (monitoring.colors.mutedPoint), autocomplete username/current-password.
 - [x] Edição simplificada (2026-10-27): diálogo pequeno com fundo desfocado, ação `auth` no backend, sessão em memória, "Salvar" direto, toast de sucesso, limite de 5 tentativas por 10 min e textos técnicos removidos da tela (config.json, monitoring.ui).
 - [x] Backend sem setup manual: padrões de ADMIN_USER, ADMIN_PASSWORD_SHA256, XLSX_FILE_ID e SPREADSHEET_ID quando as propriedades não existem; setup() grava as ausentes sem sobrescrever (teste em tests/appsScript.test.js).
 - [ ] Preencher monitoring.apiUrl em config.json com a URL do Apps Script implantado (até lá a edição mostra "Edição indisponível no momento.").

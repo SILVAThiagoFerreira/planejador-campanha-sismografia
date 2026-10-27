@@ -10,7 +10,7 @@ import {checkRemoteAccess, MonitoringApiError, readRemoteData, saveRemoteMonth} 
 import {parseGanttSheet} from '../tools/lib/ganttParser.mjs';
 import {columnLetters, columnNumber, readXlsxSheets} from '../tools/lib/xlsxReader.mjs';
 import {monitoringFileName} from '../src/monitoringPdf.js';
-import {renderMonthGrid, renderYearBody} from '../src/monitoringView.js';
+import {renderCommunityTable, renderMonthGrid, renderYearBody} from '../src/monitoringView.js';
 
 const config = JSON.parse(fs.readFileSync(new URL('../config.json', import.meta.url), 'utf8'));
 const monitoring = config.monitoring;
@@ -297,4 +297,41 @@ test('leitor de xlsx lê abas, textos compartilhados e valores em cache', async 
   assert.equal(sheet.rows[1][36], 3);
   assert.equal(columnNumber('AG'), 33);
   assert.equal(columnLetters(33), 'AG');
+});
+
+test('ponto sem monitoramento no mês recebe classe is-zero (rótulo cinza); demais não', () => {
+  const view = monthView(snapshot, 2026, 10, monitoring);
+  const summary = monthSummary(view, monitoring);
+  const zeros = monitoring.points.filter(name => summary.perPoint[name] === 0);
+  const busy = monitoring.points.filter(name => summary.perPoint[name] > 0);
+  assert.ok(zeros.length > 0 && busy.length > 0, 'fixture precisa de pontos com e sem monitoramento');
+  const grid = renderMonthGrid(view, monitoring, {editable: false});
+  for (const name of zeros) assert.ok(grid.includes(`<th scope="row" class="mon-point is-zero">${name}</th>`), name);
+  for (const name of busy) assert.ok(grid.includes(`<th scope="row" class="mon-point">${name}</th>`), name);
+  const community = renderCommunityTable(summary, monitoring);
+  for (const name of zeros) assert.ok(community.includes(`<th scope="row" class="is-zero">${name}</th>`), name);
+  assert.match(monitoring.colors.mutedPoint, /^#[0-9a-f]{6}$/i);
+});
+
+test('layout: barra de controles vem antes da área de status, que tem altura reservada', () => {
+  const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const toolbar = html.indexOf('class="mon-toolbar"');
+  const status = html.indexOf('class="mon-status"');
+  const notice = html.indexOf('id="monitoring-notice"');
+  const message = html.indexOf('id="mon-message"');
+  const grid = html.indexOf('id="mon-grid-wrap"');
+  assert.ok(toolbar > 0 && status > toolbar, 'status fica abaixo da barra de controles');
+  assert.ok(notice > status && message > status && grid > message, 'avisos e mensagens ficam dentro de .mon-status, acima da grade');
+  const css = fs.readFileSync(new URL('../styles.css', import.meta.url), 'utf8');
+  assert.match(css, /\.mon-status\{[^}]*min-height:\d+px/);
+  assert.match(css, /\.mon-actions \.is-off\{visibility:hidden\}/);
+  // Botões de edição continuam sempre presentes no DOM (mesma posição em qualquer estado).
+  for (const id of ['mon-edit-toggle', 'mon-save', 'mon-cancel']) assert.ok(html.includes(`id="${id}"`), id);
+  assert.ok(!/id="mon-save"[^>]*\bhidden\b/.test(html), 'Salvar não usa o atributo hidden');
+});
+
+test('login: campos com autocomplete username/current-password', () => {
+  const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  assert.match(html, /id="mon-login-user"[^>]*autocomplete="username"/);
+  assert.match(html, /id="mon-login-password"[^>]*autocomplete="current-password"/);
 });

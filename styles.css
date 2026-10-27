@@ -60,14 +60,20 @@ label{margin:9px 0 5px}
 
 /* Monitoramento sismográfico: grade do mês, legenda, contagens, visão anual e edição. */
 .monitoring-section{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
-.mon-notices{display:grid;gap:8px;margin:0 0 12px}
+/* Área de status fica abaixo da barra e tem altura reservada: avisos e mensagens não empurram os controles. */
+.mon-status{display:grid;gap:8px;align-content:start;min-height:46px;margin:0 0 12px}
+.mon-notices{display:grid;gap:8px;margin:0}
 .mon-notice{margin:0;padding:9px 12px;border-left:3px solid #d6a86a;background:#fff8ef;color:#7a4b12;font-size:12px;line-height:1.5;border-radius:4px}
 .mon-notice.is-info{border-left-color:var(--green);background:#f2faf7;color:#1f5b47}
 .mon-notice.is-error{border-left-color:var(--red);background:#fff0f1;color:#8c2635}
-.mon-message{margin:0 0 12px;padding:9px 12px;border-left:3px solid var(--green);background:#f2faf7;color:#1f5b47;font-size:12px;border-radius:4px}
+.mon-message{margin:0;padding:9px 12px;border-left:3px solid var(--green);background:#f2faf7;color:#1f5b47;font-size:12px;border-radius:4px}
 .mon-message.is-error{border-left-color:var(--red);background:#fff0f1;color:#8c2635}
 .mon-toolbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin:0 0 14px}
 .mon-period,.mon-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+/* Botões de edição ocupam sempre o mesmo espaço; "is-off" só os esconde, sem mudar o layout nem o foco. */
+.mon-actions .is-off{visibility:hidden}
+.mon-actions #mon-save{min-width:112px}
+.mon-grid .mon-point.is-zero,.mon-mini-table th.is-zero{color:var(--mon-muted,#9aa6ae);font-weight:400}
 .mon-period label{margin:0 2px 0 6px;font-size:11px}
 .mon-period select{width:auto;min-width:110px;min-height:35px;padding:7px 9px;background:#fff}
 .mon-period .button{min-width:36px;font-size:16px}

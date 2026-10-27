@@ -228,7 +228,8 @@
       "monitoredText": "#ffffff",
       "notInMonth": "#d0d4d8",
       "blastMark": "#fa1232",
-      "grid": "#d6dbdf"
+      "grid": "#d6dbdf",
+      "mutedPoint": "#9aa6ae"
     },
     "pdf": {
       "fontFamily": "helvetica",

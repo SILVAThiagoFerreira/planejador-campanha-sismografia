@@ -2,6 +2,9 @@
 // tabela por comunidade e visão anual. Textos e cores vêm de config.json (bloco monitoring).
 import {cellState, monthSummary, monthView, yearSummary} from './monitoringData.js';
 
+/** Classe para rótulo de ponto sem nenhum monitoramento no mês (aparece em cinza). */
+const zeroClass = (summary, name) => (summary.perPoint[name] === 0 ? ' is-zero' : '');
+
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 
 /** Nome do mês para títulos, a partir de config.monitoring.monthNames (ex.: "OUTUBRO"). */
@@ -22,6 +25,7 @@ export function renderMonthGrid(view, monitoring, {editable = false, compact = f
     }
     return `<td class="mon-blast-cell${out ? ' is-out' : ''}" aria-label="${isBlast ? `Dia ${d} com desmonte` : ''}">${out ? '' : mark}</td>`;
   }).join('');
+  const summary = monthSummary(view, monitoring);
   const bodyRows = monitoring.points.map(name => {
     const cells = days.map(d => {
       const state = cellState(view, name, d);
@@ -33,7 +37,7 @@ export function renderMonthGrid(view, monitoring, {editable = false, compact = f
       }
       return `<td class="mon-cell ${cls}">${label}</td>`;
     }).join('');
-    return `<tr><th scope="row" class="mon-point">${esc(name)}</th>${cells}</tr>`;
+    return `<tr><th scope="row" class="mon-point${zeroClass(summary, name)}">${esc(name)}</th>${cells}</tr>`;
   }).join('');
   const headerLabel = esc(monitoring.labels.pointHeader);
   return `<table class="mon-grid${compact ? ' is-compact' : ''}" id="${idPrefix}-grid" data-year="${view.year}" data-month="${view.month}">
@@ -68,7 +72,7 @@ export function renderCounts(summary, monitoring) {
 
 /** Tabela "Qtd. Monitoramentos/Comunidade". */
 export function renderCommunityTable(summary, monitoring) {
-  const rows = monitoring.points.map(name => `<tr><th scope="row">${esc(name)}</th><td>${summary.perPoint[name]}</td></tr>`).join('');
+  const rows = monitoring.points.map(name => `<tr><th scope="row" class="${zeroClass(summary, name).trim()}">${esc(name)}</th><td>${summary.perPoint[name]}</td></tr>`).join('');
   return `<div class="mon-community"><p class="mon-block-title">${esc(monitoring.labels.communityTable)}</p>
     <table class="mon-mini-table"><tbody>${rows}</tbody><tfoot><tr><th scope="row">Total</th><td>${summary.monitoramentos}</td></tr></tfoot></table></div>`;
 }

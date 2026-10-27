@@ -6,7 +6,7 @@ import {renderReport,exportReport,buildWhatsAppMessage,downloadText,downloadBlob
 import {exportDocx} from './src/docx.js?v=1.2.0';
 import {validateProject} from './src/project.js';
 import {logEvent,exportLogs} from './src/logger.js';
-import {initMonitoring} from './src/monitoringController.js?v=1.3.1';
+import {initMonitoring} from './src/monitoringController.js?v=1.3.3';
 
 const $=id=>document.getElementById(id);
 const escapeHtml=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
