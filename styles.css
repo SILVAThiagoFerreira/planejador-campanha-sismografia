@@ -133,6 +133,13 @@ label{margin:9px 0 5px}
 .mon-inline-counts{margin:8px 0 0;font-size:11px;color:var(--muted)}
 .mon-notice-inline{margin:0 0 8px;font-size:11px;color:#7a4b12}
 .mon-notice-inline{background:#fff8ef;padding:6px 8px;border-radius:4px}
+.mon-dialog--small{width:min(360px,calc(100% - 32px));max-width:360px;margin:auto}
+.mon-dialog--small::backdrop{background:rgba(38,52,65,.35);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.mon-dialog--small .mon-login-form{padding:20px 22px 18px}
+.mon-login-form label{margin-top:10px}
+.mon-login-form input:disabled{opacity:.6;cursor:not-allowed}
+.mon-login-hint{margin:0 0 4px;font-size:12px;color:var(--muted);line-height:1.5}
+.toast.is-success{background:var(--green);border-left-color:#0f5c46}
 @media(max-width:1100px){.mon-layout{grid-template-columns:1fr}.mon-side{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}}
 @media(max-width:760px){.monitoring-section .section-heading{flex-direction:column;align-items:stretch}.monitoring-section .export-actions{justify-content:flex-start}.mon-toolbar{flex-direction:column;align-items:stretch}.mon-period select{min-width:0;flex:1}.mon-actions{width:100%}.mon-actions .button{flex:1}.mon-year-body{grid-template-columns:1fr;padding:14px}.mon-grid{font-size:10px}.mon-grid .mon-point{min-width:132px;max-width:132px;font-size:10px}.mon-login-form input{font-size:16px}}
 @media print{.monitoring-section{display:none!important}}

@@ -27,7 +27,9 @@ Refatoração do relatório: layout único em src/reportLayout.js, prévia/PNG/D
 - [x] Seção de monitoramento: grade, legenda, contagens, tabela por comunidade, visão anual, PDF mês/ano.
 - [x] Edição com login e gravação via API (cliente em src/monitoringApi.js).
 - [x] Backend Google Apps Script em apps-script/ (Code.gs, appsscript.json, README.md).
-- [ ] Preencher monitoring.apiUrl em config.json após implantar o Apps Script e executar setup().
-- [ ] Trocar a senha inicial (admin) antes de uso real: gerarHashSenha() e ADMIN_PASSWORD_SHA256.
+- [x] Edição simplificada (2026-10-27): diálogo pequeno com fundo desfocado, ação `auth` no backend, sessão em memória, "Salvar" direto, toast de sucesso, limite de 5 tentativas por 10 min e textos técnicos removidos da tela (config.json, monitoring.ui).
+- [x] Backend sem setup manual: padrões de ADMIN_USER, ADMIN_PASSWORD_SHA256, XLSX_FILE_ID e SPREADSHEET_ID quando as propriedades não existem; setup() grava as ausentes sem sobrescrever (teste em tests/appsScript.test.js).
+- [ ] Preencher monitoring.apiUrl em config.json com a URL do Apps Script implantado (até lá a edição mostra "Edição indisponível no momento.").
+- [ ] Trocar a senha inicial (admin) antes de uso real: gerarHashSenha() e ADMIN_PASSWORD_SHA256. O padrão "admin" está no código; sem a troca, qualquer pessoa que leia o repositório entra como administrador.
 - [ ] Decidir se os nomes dos pontos do config.json devem seguir a planilha ("Comunidade Pau Ferro", "Comunidade Pichilinga"), já adotados aqui.
 - [ ] Corrigir na planilha original as anomalias listadas (março e agosto de 2025; N ausente em 29/02/2025).

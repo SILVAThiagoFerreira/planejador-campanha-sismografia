@@ -4,8 +4,10 @@
  *
  * Contrato (ver apps-script/README.md):
  *   GET  ?action=read              -> {ok, data:{schemaVersion, source, generatedAt, years}}
- *   POST corpo JSON (text/plain)   -> {action:"save", user, password, year, month, desmontes, points}
- *                                     -> {ok, message, data?}
+ *   POST corpo JSON (text/plain)   -> {action:"auth", user, password}  -> {ok, message, code?}
+ *                                     -> {action:"save", user, password, year, month, desmontes, points}
+ *                                     -> {ok, message, code?, data?}
+ *   code: "auth" (usuário ou senha incorretos), "locked" (muitas tentativas) ou ausente.
  *
  * IMPORTANTE: as constantes abaixo espelham config.json (bloco "monitoring") do projeto.
  * Ao alterar pontos, nomes de meses ou rótulos no config.json, altere também aqui.
@@ -36,6 +38,19 @@ var DESMONTES_QUESTION = 'Quantos desmontes houveram no mês?';
 var MONITORING_QUESTION = 'Quantos monitoramentos foram realizados no mês?';
 var COMMUNITY_TABLE_TITLE = 'Qtd. Monitoramentos/Comunidade';
 
+// ---- Padrões de configuração (usados quando a propriedade do script não existe) ----
+// Os mesmos valores são gravados por setup(). Os padrões são configuração, não dados:
+// a validação dos dados continua sem fallback silencioso.
+var DEFAULT_ADMIN_USER = 'admin';
+var DEFAULT_ADMIN_PASSWORD = 'admin';             // apenas o SHA-256 é usado; trocar em produção (ADMIN_PASSWORD_SHA256)
+var DEFAULT_XLSX_FILE_ID = '1Jz49X3on8uu2ia6PC3sH4S_QGAnsnKiK';
+
+// ---- Limite de tentativas de login (por usuário, CacheService) ----
+var AUTH_MAX_FAILURES = 5;
+var AUTH_WINDOW_SECONDS = 600;                    // 10 minutos; cada falha renova a janela
+var INVALID_CREDENTIALS_MESSAGE = 'Usuário ou senha incorretos.';
+var LOCKED_MESSAGE = 'Muitas tentativas. Aguarde alguns minutos.';
+
 // ---- Entrada HTTP ----
 
 function doGet(e) {
@@ -56,6 +71,7 @@ function doPost(e) {
   } catch (error) {
     return jsonOut_({ok: false, message: 'Corpo da requisição não é JSON válido.'});
   }
+  if (body && body.action === 'auth') return jsonOut_(handleAuth_(body));
   if (!body || body.action !== 'save') return jsonOut_({ok: false, message: 'Ação inválida.'});
   var lock = LockService.getScriptLock();
   try {
@@ -64,9 +80,10 @@ function doPost(e) {
       logLine_('WARN', 'save', 'Payload recusado: ' + check.message);
       return jsonOut_(check);
     }
-    if (!credentialsOk_(body.user, body.password)) {
-      logLine_('WARN', 'save', 'Credenciais recusadas para o usuário informado.');
-      return jsonOut_({ok: false, message: 'Usuário ou senha inválidos.'});
+    var access = checkCredentials_(body.user, body.password);
+    if (!access.ok) {
+      logLine_('WARN', 'save', 'Acesso recusado (' + access.code + ').');
+      return jsonOut_(access);
     }
     lock.waitLock(30000);
     var ss = getSpreadsheet_();
@@ -92,13 +109,40 @@ function doPost(e) {
 
 // ---- Autenticação ----
 
-/** Compara usuário e o hash SHA-256 (hex minúsculo) da senha com as propriedades do script. */
-function credentialsOk_(user, password) {
-  var props = PropertiesService.getScriptProperties();
-  var adminUser = props.getProperty('ADMIN_USER');
-  var adminHash = (props.getProperty('ADMIN_PASSWORD_SHA256') || '').toLowerCase();
-  if (!adminUser || !adminHash) throw new Error('Propriedades ADMIN_USER / ADMIN_PASSWORD_SHA256 não configuradas (execute setup()).');
-  return String(user) === adminUser && sha256Hex_(String(password)) === adminHash;
+/** Ação "auth": valida somente as credenciais (não grava nada). */
+function handleAuth_(body) {
+  if (typeof body.user !== 'string' || !body.user.trim() || body.user.length > 100 ||
+      typeof body.password !== 'string' || !body.password || body.password.length > 200) {
+    return {ok: false, code: 'auth', message: INVALID_CREDENTIALS_MESSAGE};
+  }
+  var access = checkCredentials_(body.user, body.password);
+  logLine_(access.ok ? 'INFO' : 'WARN', 'auth', access.ok ? 'Acesso liberado.' : 'Acesso recusado (' + access.code + ').');
+  return access.ok ? {ok: true, message: 'Acesso liberado.'} : access;
+}
+
+/**
+ * Confere usuário e senha com limite de tentativas por usuário: após AUTH_MAX_FAILURES falhas
+ * em AUTH_WINDOW_SECONDS, recusa sem verificar a senha. Sucesso zera o contador.
+ * Retorna {ok, code?, message}. Usado por "auth" e por "save".
+ */
+function checkCredentials_(user, password) {
+  var cache = CacheService.getScriptCache();
+  var key = 'auth-fail:' + String(user).trim().toLowerCase();
+  var failures = Number(cache.get(key) || 0);
+  if (failures >= AUTH_MAX_FAILURES) return {ok: false, code: 'locked', message: LOCKED_MESSAGE};
+  if (credentialsMatch_(user, password)) {
+    cache.remove(key);
+    return {ok: true, message: 'Acesso liberado.'};
+  }
+  cache.put(key, String(failures + 1), AUTH_WINDOW_SECONDS);
+  return {ok: false, code: 'auth', message: INVALID_CREDENTIALS_MESSAGE};
+}
+
+/** Compara usuário e o hash SHA-256 (hex minúsculo) da senha com as propriedades (ou os padrões). */
+function credentialsMatch_(user, password) {
+  var adminUser = getConfig_('ADMIN_USER');
+  var adminHash = getConfig_('ADMIN_PASSWORD_SHA256').toLowerCase();
+  return String(user).trim() === adminUser && sha256Hex_(String(password)) === adminHash;
 }
 
 function sha256Hex_(text) {
@@ -317,7 +361,7 @@ function ensureYearSheet_(ss, year) {
  * original no Drive (Drive API v3, serviço avançado). Retorna aviso textual em caso de falha.
  */
 function exportXlsxIfConfigured_(ss) {
-  var fileId = PropertiesService.getScriptProperties().getProperty('XLSX_FILE_ID');
+  var fileId = getConfig_('XLSX_FILE_ID');
   if (!fileId) return '';
   try {
     var response = UrlFetchApp.fetch('https://docs.google.com/spreadsheets/d/' + ss.getId() + '/export?format=xlsx', {
@@ -337,9 +381,28 @@ function exportXlsxIfConfigured_(ss) {
 
 // ---- Utilidades ----
 
+/**
+ * Lê uma propriedade do script. Se ausente, usa o padrão (configuração, não dado):
+ * ADMIN_USER, ADMIN_PASSWORD_SHA256 e XLSX_FILE_ID têm padrões fixos; SPREADSHEET_ID vazio
+ * significa a planilha vinculada ao script.
+ */
+function getConfig_(key) {
+  var value = PropertiesService.getScriptProperties().getProperty(key);
+  if (value) return value;
+  var defaults = {
+    ADMIN_USER: DEFAULT_ADMIN_USER,
+    ADMIN_PASSWORD_SHA256: sha256Hex_(DEFAULT_ADMIN_PASSWORD),
+    XLSX_FILE_ID: DEFAULT_XLSX_FILE_ID,
+    SPREADSHEET_ID: ''
+  };
+  return defaults[key] || '';
+}
+
 function getSpreadsheet_() {
-  var id = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
-  return id ? SpreadsheetApp.openById(id) : SpreadsheetApp.getActiveSpreadsheet();
+  var id = getConfig_('SPREADSHEET_ID');
+  var ss = id ? SpreadsheetApp.openById(id) : SpreadsheetApp.getActive();
+  if (!ss) throw new Error('Planilha não encontrada: defina SPREADSHEET_ID em Propriedades do script.');
+  return ss;
 }
 
 function jsonOut_(object) {
@@ -353,14 +416,22 @@ function logLine_(level, scope, message) {
 // ---- Configuração inicial (executar manualmente no editor) ----
 
 /**
- * Define as propriedades padrão: ADMIN_USER = "admin" e a senha "admin" (apenas o hash SHA-256 é guardado).
- * Troque a senha em produção: execute gerarHashSenha() após editar NOVA_SENHA, ou altere
- * ADMIN_PASSWORD_SHA256 em Projeto > Propriedades do script.
- * Não sobrescreve valores já existentes.
+ * Grava as propriedades do script que estiverem ausentes:
+ * ADMIN_USER = "admin", ADMIN_PASSWORD_SHA256 = SHA-256 de "admin", XLSX_FILE_ID (arquivo .xlsx no Drive)
+ * e SPREADSHEET_ID = planilha vinculada. Não sobrescreve valores já existentes.
+ * Opcional: o script funciona mesmo sem executar setup(), pelos mesmos padrões (getConfig_).
+ * Troque a senha em produção: execute gerarHashSenha() após editar NOVA_SENHA e grave o hash
+ * em ADMIN_PASSWORD_SHA256 (Projeto > Propriedades do script).
  */
 function setup() {
   var props = PropertiesService.getScriptProperties();
-  var defaults = {ADMIN_USER: 'admin', ADMIN_PASSWORD_SHA256: sha256Hex_('admin')};
+  var defaults = {
+    ADMIN_USER: DEFAULT_ADMIN_USER,
+    ADMIN_PASSWORD_SHA256: sha256Hex_(DEFAULT_ADMIN_PASSWORD),
+    XLSX_FILE_ID: DEFAULT_XLSX_FILE_ID
+  };
+  var active = SpreadsheetApp.getActive();
+  if (active) defaults.SPREADSHEET_ID = active.getId();
   var created = [];
   for (var key in defaults) {
     if (!props.getProperty(key)) {

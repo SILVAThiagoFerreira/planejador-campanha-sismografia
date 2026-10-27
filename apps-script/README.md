@@ -15,16 +15,14 @@ Web app que lê e grava a planilha Gantt de monitoramento e, opcionalmente, mant
 2. Substitua o conteúdo de `Code.gs` pelo arquivo deste diretório e crie `appsscript.json` com o mesmo conteúdo (em **Configurações do projeto > Mostrar o arquivo de manifesto**).
 3. Em **Serviços**, confirme que o **Drive API** está ativo como `Drive` (v3). O manifesto já declara isso.
 
-## 3. Configurar propriedades do script
-Execute a função `setup` no editor (botão Executar; autorize as permissões). Ela cria:
-- `ADMIN_USER` = `admin`
-- `ADMIN_PASSWORD_SHA256` = SHA-256 (hex) da senha inicial `admin`
+## 3. Configurar propriedades do script (opcional)
+O script já funciona sem nenhuma propriedade: quando uma propriedade não existe, usa o padrão abaixo (configuração, não dado). A função `setup` grava as propriedades que faltarem, sem sobrescrever as existentes. Execute-a no editor (botão Executar; autorize as permissões):
+- `ADMIN_USER` = `admin` (padrão igual)
+- `ADMIN_PASSWORD_SHA256` = SHA-256 (hex) da senha inicial `admin` (padrão igual)
+- `XLSX_FILE_ID` = `1Jz49X3on8uu2ia6PC3sH4S_QGAnsnKiK` (se vazio, o `.xlsx` no Drive não é atualizado)
+- `SPREADSHEET_ID` = ID da planilha vinculada ao script (padrão: a própria planilha vinculada)
 
-Depois, em **Configurações do projeto > Propriedades do script**, adicione:
-- `XLSX_FILE_ID` = `1Jz49X3on8uu2ia6PC3sH4S_QGAnsnKiK` (opcional: se ausente, o `.xlsx` no Drive não é atualizado, apenas a planilha nativa)
-- `SPREADSHEET_ID` = ID da planilha nativa (opcional; sem ele a função usa a planilha vinculada ao script)
-
-**Trocar a senha antes do uso em produção:** edite `NOVA_SENHA` na função `gerarHashSenha()`, execute-a e copie o hash registrado no log para `ADMIN_PASSWORD_SHA256`. Nunca grave a senha em texto no código nem no front-end.
+**Trocar a senha antes do uso em produção (obrigatório):** o padrão `admin` está no código do repositório, então qualquer pessoa que o leia conhece a senha inicial. Edite `NOVA_SENHA` na função `gerarHashSenha()`, execute-a e copie o hash registrado no log para `ADMIN_PASSWORD_SHA256`. Nunca grave a senha em texto no código nem no front-end.
 
 ## 4. Implantar a web app
 1. **Implantar > Nova implantação > Tipo: App da Web**.
@@ -41,22 +39,33 @@ Resposta JSON:
 ```
 Os dados têm o mesmo schema de `data/monitoramento.json` (ver `DATA_SCHEMA.md`).
 
+### Verificação de acesso: `POST {apiUrl}` com `action: "auth"`
+- Corpo (text/plain): `{"action": "auth", "user": "admin", "password": "..."}`.
+- Só confere as credenciais; não grava nada.
+- Sucesso: `{"ok": true, "message": "Acesso liberado."}`.
+- Recusa: `{"ok": false, "code": "auth", "message": "Usuário ou senha incorretos."}`.
+- Limite de tentativas: após 5 falhas em 10 minutos para o mesmo usuário (nome sem diferença de maiúsculas e espaços), a resposta é `{"ok": false, "code": "locked", "message": "Muitas tentativas. Aguarde alguns minutos."}`, mesmo com a senha correta. O contador fica no CacheService; cada falha renova a janela e um acerto zera o contador.
+
 ### Gravação: `POST {apiUrl}`
 - Corpo: string JSON enviada com `Content-Type: text/plain` (evita preflight CORS):
 ```json
 {"action": "save", "user": "admin", "password": "...", "year": 2026, "month": 10, "desmontes": [3, 10], "points": {"Barragem de Rejeitos": [3, 10], "Comunidade Lagoa do Mel": [], "...": []}}
 ```
 - Validações: usuário (até 100 caracteres), senha (até 200), ano com aba `AAAA`, mês 1 a 12, dias inteiros, únicos, em ordem e dentro do mês, e exatamente os 7 nomes de ponto.
-- Credenciais: `user` igual a `ADMIN_USER` e SHA-256 da senha igual a `ADMIN_PASSWORD_SHA256`.
+- Credenciais: mesma verificação da ação `auth` (inclui o limite de tentativas).
 - Gravação: escreve `D` na linha acima dos dias e `M` nas linhas dos pontos, somente para dias do mês. Células `N`, rótulos e fórmulas de contagem não são alterados. Usa `LockService` (espera até 30 s).
 - Aba do ano inexistente: copia a aba-modelo mais recente, limpa as marcações e recalcula as células `N`.
 - Se `XLSX_FILE_ID` estiver definido, exporta a planilha como `.xlsx` e atualiza o arquivo original via Drive API v3 (`Drive.Files.update`).
-- Resposta: `{"ok": true, "message": "...", "data": {...}}` ou `{"ok": false, "message": "..."}`. Falhas de validação e de credenciais retornam HTTP 200 com `ok: false`, para que a aplicação exiba a mensagem.
+- Resposta: `{"ok": true, "message": "...", "data": {...}}` ou `{"ok": false, "code": "auth" | "locked", "message": "..."}` (sem `code` nas demais falhas). Falhas de validação e de credenciais retornam HTTP 200 com `ok: false`, para que a aplicação exiba a mensagem.
 
 ### Erros
-- `Usuário ou senha inválidos.`: credenciais recusadas.
+- `Usuário ou senha incorretos.` (`code: "auth"`): credenciais recusadas. A aplicação volta ao diálogo de login.
+- `Muitas tentativas. Aguarde alguns minutos.` (`code: "locked"`): limite atingido.
 - Mensagens de validação começam com o campo afetado (ex.: `Ponto desconhecido: ...`).
 - Falhas na exportação do `.xlsx` não desfazem a gravação; a resposta informa a falha.
+
+### Testes automáticos
+`npm test` carrega `Code.gs` num sandbox com stubs dos serviços do Google (tests/appsScript.test.js) e cobre setup(), padrões, `auth` e o limite de tentativas. Não substitui o teste manual na implantação.
 
 ## Sincronização com config.json
 As constantes no topo de `Code.gs` (nomes de pontos, meses, rótulos e marcadores) espelham `config.json`, bloco `monitoring`. Se mudar nomes de pontos ou rótulos, altere os dois.
@@ -66,5 +75,5 @@ Os eventos são registrados com `console.log` em JSON (Apps Script > Execuções
 
 ## Teste manual rápido
 1. Abra a URL `/exec?action=read` no navegador: deve aparecer um JSON com `"ok": true`.
-2. No planejador, abra a seção de monitoramento, clique em "Editar dados", marque um dia e clique em "Salvar no Google Drive" com credenciais inválidas: deve aparecer "Usuário ou senha inválidos.".
+2. No planejador, abra a seção de monitoramento, clique em "Editar dados", informe credenciais inválidas e clique em "Entrar": deve aparecer "Usuário ou senha incorretos." no diálogo. Com as credenciais corretas, marque um dia e clique em "Salvar": deve aparecer o toast "Salvo no Google Drive.".
 3. Com credenciais válidas, grave e confira a célula na planilha nativa e o `.xlsx` no Drive.

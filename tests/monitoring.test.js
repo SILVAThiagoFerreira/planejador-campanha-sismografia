@@ -3,9 +3,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import JSZip from 'jszip';
 import {
-  buildSavePayload, cellState, daysInMonth, monthSummary, monthView, parseApiResponse, toggleBlast, toggleMonitored,
+  buildAuthPayload, buildSavePayload, cellState, daysInMonth, monthSummary, monthView, parseApiResponse, toggleBlast, toggleMonitored,
   validateMonitoringData, yearSummary,
 } from '../src/monitoringData.js';
+import {checkRemoteAccess, MonitoringApiError, readRemoteData, saveRemoteMonth} from '../src/monitoringApi.js';
 import {parseGanttSheet} from '../tools/lib/ganttParser.mjs';
 import {columnLetters, columnNumber, readXlsxSheets} from '../tools/lib/xlsxReader.mjs';
 import {monitoringFileName} from '../src/monitoringPdf.js';
@@ -55,6 +56,17 @@ test('configuração de monitoramento tem 7 pontos, 12 meses e cores', () => {
   assert.equal(monitoring.monthNames.length, 12);
   assert.match(monitoring.colors.monitored, /^#[0-9a-f]{6}$/i);
   assert.equal(monitoring.api.saveAction, 'save');
+  assert.equal(monitoring.api.authAction, 'auth');
+  for (const key of ['sourceText', 'offlineNotice', 'editUnavailable', 'saveButton', 'savedToast']) {
+    assert.equal(typeof monitoring.ui[key], 'string', `texto monitoring.ui.${key}`);
+    assert.ok(monitoring.ui[key].trim(), `texto monitoring.ui.${key} não vazio`);
+  }
+  // Nenhum texto exibido ao usuário pode citar API, configuração ou arquivo local.
+  const visible = [monitoring.ui.offlineNotice, monitoring.ui.loadFailedNotice, monitoring.ui.sourceText, monitoring.ui.editUnavailable];
+  for (const text of visible) assert.doesNotMatch(text, /API|config|json|snapshot|monitoring\.apiUrl/i);
+  assert.equal(monitoring.ui.sourceText, 'planilha de acompanhamento no Google Drive.');
+  assert.equal(monitoring.ui.offlineNotice, 'Sem conexão com o Google Drive no momento — exibindo a última cópia publicada.');
+  assert.equal(monitoring.ui.editUnavailable, 'Edição indisponível no momento.');
 });
 
 test('parser lê dias com desmonte, dias monitorados e contagens em cache', () => {
@@ -179,11 +191,79 @@ test('payload de gravação exige usuário e senha e envia dias ordenados', () =
   assert.equal(payload.points[LAGOA][0], 2);
 });
 
-test('resposta da API: JSON válido com campo ok', () => {
+test('resposta da API: JSON válido com campo ok e código de erro opcional', () => {
   assert.deepEqual(parseApiResponse('{"ok":true,"message":"Gravado"}').ok, true);
   assert.equal(parseApiResponse('{"ok":false,"message":"Senha incorreta"}').message, 'Senha incorreta');
+  assert.equal(parseApiResponse('{"ok":false,"code":"auth","message":"x"}').code, 'auth');
+  assert.equal(parseApiResponse('{"ok":true,"message":"x"}').code, '');
   assert.throws(() => parseApiResponse('<html>erro</html>'), /não é JSON/);
   assert.throws(() => parseApiResponse('{"message":"sem ok"}'), /campo "ok"/);
+});
+
+test('payload de acesso (auth) leva só ação, usuário e senha, sem dados da grade', () => {
+  const payload = buildAuthPayload(monitoring, {user: ' admin ', password: 'segredo'});
+  assert.deepEqual(payload, {action: 'auth', user: 'admin', password: 'segredo'});
+  assert.throws(() => buildAuthPayload(monitoring, {user: '  ', password: 'x'}), /usuário/);
+  assert.throws(() => buildAuthPayload(monitoring, {user: 'admin', password: ''}), /senha/);
+  assert.throws(() => buildAuthPayload(monitoring, {user: 'u'.repeat(101), password: 'x'}), /100 caracteres/);
+  assert.throws(() => buildAuthPayload(monitoring, {user: 'admin', password: 'p'.repeat(201)}), /200 caracteres/);
+});
+
+/** fetch simulado: registra a chamada e devolve a resposta indicada. */
+function fakeFetch(bodyText, {status = 200} = {}) {
+  const calls = [];
+  const impl = async (url, options) => {
+    calls.push({url, options});
+    return {ok: status >= 200 && status < 300, status, text: async () => bodyText};
+  };
+  return {impl, calls};
+}
+
+test('acesso: envia POST text/plain com action auth e devolve ok ou código de erro', async () => {
+  const api = {...monitoring, apiUrl: 'https://script.example/exec'};
+  const ok = fakeFetch('{"ok":true,"message":"Acesso liberado."}');
+  const granted = await checkRemoteAccess(api, {user: 'admin', password: 'admin'}, ok.impl);
+  assert.equal(granted.ok, true);
+  assert.equal(ok.calls[0].url, 'https://script.example/exec');
+  assert.equal(ok.calls[0].options.method, 'POST');
+  assert.equal(ok.calls[0].options.headers['Content-Type'], 'text/plain;charset=utf-8');
+  assert.deepEqual(JSON.parse(ok.calls[0].options.body), {action: 'auth', user: 'admin', password: 'admin'});
+
+  const denied = fakeFetch('{"ok":false,"code":"locked","message":"Muitas tentativas. Aguarde alguns minutos."}');
+  const refused = await checkRemoteAccess(api, {user: 'admin', password: 'x'}, denied.impl);
+  assert.equal(refused.ok, false);
+  assert.equal(refused.code, 'locked');
+});
+
+test('acesso sem apiUrl falha como indisponível, sem chamar a rede', async () => {
+  const offline = fakeFetch('{}');
+  await assert.rejects(
+    () => checkRemoteAccess({...monitoring, apiUrl: ''}, {user: 'admin', password: 'admin'}, offline.impl),
+    (error) => error instanceof MonitoringApiError && error.kind === 'not-configured',
+  );
+  assert.equal(offline.calls.length, 0);
+});
+
+test('acesso com falha de rede ou HTTP lança MonitoringApiError com tipo', async () => {
+  const api = {...monitoring, apiUrl: 'https://script.example/exec'};
+  const failing = async () => { throw new TypeError('Failed to fetch'); };
+  await assert.rejects(() => checkRemoteAccess(api, {user: 'admin', password: 'admin'}, failing), (e) => e.kind === 'network');
+  const http500 = fakeFetch('erro', {status: 500});
+  await assert.rejects(() => checkRemoteAccess(api, {user: 'admin', password: 'admin'}, http500.impl), (e) => e.kind === 'http');
+});
+
+test('gravação e leitura usam o mesmo cliente; leitura valida o JSON recebido', async () => {
+  const api = {...monitoring, apiUrl: 'https://script.example/exec'};
+  const view = monthView(snapshot, 2026, 10, monitoring);
+  const payload = buildSavePayload(view, monitoring, {user: 'admin', password: 'admin'});
+  const saved = fakeFetch('{"ok":false,"code":"auth","message":"Usuário ou senha incorretos."}');
+  const result = await saveRemoteMonth(api, payload, saved.impl);
+  assert.equal(result.code, 'auth');
+  assert.equal(JSON.parse(saved.calls[0].options.body).action, 'save');
+  const read = fakeFetch(JSON.stringify({ok: true, data: snapshot}));
+  const data = await readRemoteData(api, read.impl);
+  assert.equal(data.schemaVersion, 1);
+  assert.match(read.calls[0].url, /\?action=read$/);
 });
 
 test('nome do arquivo PDF segue o modelo do config', () => {

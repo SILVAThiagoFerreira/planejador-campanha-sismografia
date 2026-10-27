@@ -47,6 +47,10 @@ Gerado por `npm run import:gantt`; mesmo schema retornado pela API (`GET ?action
 
 Anomalias conhecidas da planilha de origem (2026-10-27): março e agosto de 2025 têm a linha dos dias sobre o rótulo "Barragem de Rejeitos" e os demais rótulos deslocados uma linha (dados lidos pela posição); a linha 34 de março não tem rótulo; fevereiro de 2025 não tem a marcação "N" no dia 29.
 
-Configuração: bloco `monitoring` de config.json (points, monthNames, layout, labels, colors, api, pdf, source, snapshotPath, apiUrl).
+Configuração: bloco `monitoring` de config.json (points, monthNames, layout, labels, colors, api (readAction, saveAction, authAction, timeoutMs), ui (textos exibidos), pdf, source, snapshotPath, apiUrl).
 
-Payload de gravação (`POST apiUrl`, text/plain): `{action: "save", user, password, year, month, desmontes: [dias], points: {nome: [dias]}}`. Resposta: `{ok, message, data?}`.
+Payload de verificação de acesso (`POST apiUrl`, text/plain): `{action: "auth", user, password}`. Resposta: `{ok: true, message: "Acesso liberado."}` ou `{ok: false, code, message}`.
+
+Payload de gravação (`POST apiUrl`, text/plain): `{action: "save", user, password, year, month, desmontes: [dias], points: {nome: [dias]}}`. Resposta: `{ok, message, code?, data?}`.
+
+Campo `code` (ausente em sucesso): `"auth"` = usuário ou senha incorretos; `"locked"` = muitas tentativas (5 falhas em 10 min por usuário). A aplicação usa o code para decidir se volta ao diálogo de login. Credenciais nunca são persistidas pela aplicação.

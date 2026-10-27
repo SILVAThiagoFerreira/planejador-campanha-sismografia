@@ -162,11 +162,28 @@
     "title": "Avanço do Monitoramento Sismográfico",
     "subtitle": "US Mineração Vale-Verde | Mina Serrote",
     "snapshotPath": "data/monitoramento.json",
-    "apiUrl": "",
+    "apiUrl": "https://script.google.com/macros/s/AKfycbxxkQ7cJDde5tn3PWW2G8lVGMdTdZfr4zi8GL8ggjv8OrtlEE_zo3tSzILSH_jczXBx/exec",
     "api": {
       "readAction": "read",
       "saveAction": "save",
+      "authAction": "auth",
       "timeoutMs": 20000
+    },
+    "ui": {
+      "sourceText": "planilha de acompanhamento no Google Drive.",
+      "offlineNotice": "Sem conexão com o Google Drive no momento — exibindo a última cópia publicada.",
+      "loadFailedNotice": "Não foi possível carregar o monitoramento agora. Tente novamente mais tarde.",
+      "editHint": "Edição ativa: clique nos dias (D) e nas células (M). Células N não são editáveis. Clique em \"Salvar\" para gravar no Google Drive.",
+      "loginTitle": "Editar dados",
+      "loginHint": "Entre com o usuário e a senha de administrador.",
+      "loginButton": "Entrar",
+      "editUnavailable": "Edição indisponível no momento.",
+      "verifying": "Verificando…",
+      "saveButton": "Salvar",
+      "saving": "Salvando…",
+      "savedToast": "Salvo no Google Drive.",
+      "saveFailed": "Não foi possível salvar agora. Verifique a conexão e tente novamente.",
+      "cancelled": "Edição cancelada; nenhuma alteração foi gravada."
     },
     "source": {
       "fileName": "Tabela 1 - Gantt Chart - Monitoramentos Sismograficos - US MVV.xlsx",

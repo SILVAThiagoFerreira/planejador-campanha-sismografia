@@ -1,11 +1,12 @@
-// Controlador da seção "Avanço do monitoramento": carregamento de dados (API ou snapshot),
-// navegação por ano/mês, edição, gravação com login, visão anual e exportação PDF.
-// Nenhuma senha é armazenada; falhas da API aparecem na tela com a causa.
+// Controlador da seção "Avanço do monitoramento": carregamento de dados (Google Drive ou última cópia),
+// navegação por ano/mês, edição com login em diálogo pequeno, gravação, visão anual e exportação PDF.
+// As credenciais ficam apenas em memória (state.credentials) durante a página; nunca são persistidas.
+// A tela mostra só mensagens em linguagem simples; detalhes técnicos vão para o log.
 import {logEvent} from './logger.js';
 import {
-  buildSavePayload, daysInMonth, monthSummary, monthView, toggleBlast, toggleMonitored, validateMonitoringData,
+  buildAuthPayload, buildSavePayload, daysInMonth, monthSummary, monthView, toggleBlast, toggleMonitored, validateMonitoringData,
 } from './monitoringData.js';
-import {readRemoteData, saveRemoteMonth, MonitoringApiError} from './monitoringApi.js';
+import {readRemoteData, saveRemoteMonth, checkRemoteAccess} from './monitoringApi.js';
 import {renderMonthGrid, renderLegend, renderCounts, renderCommunityTable, renderYearBody, monthTitle} from './monitoringView.js';
 import {buildMonitoringPdf, monitoringFileName} from './monitoringPdf.js';
 
@@ -36,6 +37,7 @@ export async function initMonitoring(config) {
   const monitoring = config?.monitoring;
   const section = $('monitoring-section');
   if (!monitoring || !section) return;
+  const ui = monitoring.ui;
   const colors = monitoring.colors;
   for (const [key, value] of Object.entries({header: colors.header, monitored: colors.monitored, notInMonth: colors.notInMonth, blast: colors.blastMark, grid: colors.grid})) {
     section.style.setProperty(`--mon-${key}`, value);
@@ -43,13 +45,17 @@ export async function initMonitoring(config) {
   const now = new Date();
   const state = {
     data: {schemaVersion: 1, years: {}},
-    source: {kind: 'none', label: '', reason: ''},
+    // kind: 'api' (Google Drive), 'snapshot' (última cópia publicada, sem conexão) ou 'error' (nada disponível).
+    source: {kind: 'none', generatedAt: ''},
     year: now.getFullYear(),
     month: now.getMonth() + 1,
     editing: false,
     draft: null,
     dirty: false,
     busy: false,
+    authPending: false,
+    credentials: null,   // {user, password}: somente em memória, durante a sessão da página
+    loginUser: '',       // último usuário informado (apenas o nome, para preencher o campo)
     assets: null,
     lastOpener: null,
   };
@@ -59,12 +65,12 @@ export async function initMonitoring(config) {
     notice: $('monitoring-notice'), message: $('mon-message'), sourceLabel: $('monitoring-source-label'),
     editToggle: $('mon-edit-toggle'), save: $('mon-save'), cancel: $('mon-cancel'),
     openYear: $('mon-open-year'), exportMonth: $('mon-export-month'), exportYear: $('mon-export-year'),
-    loginDialog: $('mon-login-dialog'), loginForm: $('mon-login-form'), loginUser: $('mon-login-user'),
-    loginPassword: $('mon-login-password'), loginError: $('mon-login-error'), loginSubmit: $('mon-login-submit'),
-    loginCancel: $('mon-login-cancel'), yearDialog: $('mon-year-dialog'), yearTitle: $('mon-year-title'),
-    yearBody: $('mon-year-body'), yearClose: $('mon-year-close'),
+    loginDialog: $('mon-login-dialog'), loginForm: $('mon-login-form'), loginTitle: $('mon-login-title'),
+    loginHint: $('mon-login-hint'), loginUser: $('mon-login-user'), loginPassword: $('mon-login-password'),
+    loginError: $('mon-login-error'), loginSubmit: $('mon-login-submit'), loginCancel: $('mon-login-cancel'),
+    yearDialog: $('mon-year-dialog'), yearTitle: $('mon-year-title'), yearBody: $('mon-year-body'), yearClose: $('mon-year-close'),
+    toast: $('toast'),
   };
-  const monthName = (m) => `${monitoring.monthNames[m - 1]}`;
 
   function say(text, error = false) {
     els.message.hidden = false;
@@ -73,7 +79,17 @@ export async function initMonitoring(config) {
     els.message.setAttribute('role', error ? 'alert' : 'status');
     logEvent(error ? 'error' : 'info', text);
   }
-  /** Avisos persistentes (fonte dos dados e situação do mês), um parágrafo por aviso. */
+
+  let toastTimer = 0;
+  function showToast(text) {
+    els.toast.textContent = text;
+    els.toast.className = 'toast is-success';
+    els.toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { els.toast.hidden = true; }, 4000);
+  }
+
+  /** Avisos persistentes (conexão e situação do mês), um parágrafo por aviso. */
   function setNotices(notices) {
     if (!notices.length) { els.notice.hidden = true; els.notice.replaceChildren(); return; }
     els.notice.hidden = false;
@@ -85,49 +101,39 @@ export async function initMonitoring(config) {
     }));
   }
 
+  /** Sem conexão, mostra um aviso neutro; com dados ao vivo não mostra nada. */
   function sourceNotice() {
-    if (state.source.kind === 'snapshot') {
-      const when = state.source.generatedAt ? ` Gerado em ${new Date(state.source.generatedAt).toLocaleString('pt-BR')}.` : '';
-      return {tone: 'warning', text: `Dados do arquivo local, não da API: ${state.source.reason}${when} Os valores exibidos podem não refletir a planilha atual.`};
-    }
-    if (state.source.kind === 'error') return {tone: 'error', text: `Dados de monitoramento indisponíveis. ${state.source.reason}`};
+    if (state.source.kind === 'snapshot') return {tone: 'info', text: ui.offlineNotice};
+    if (state.source.kind === 'error') return {tone: 'warning', text: ui.loadFailedNotice};
     return null;
   }
 
-  /** Lê a API; se não houver API ou a leitura falhar, usa o snapshot local com aviso visível. */
+  /** Lê o Google Drive; se não for possível, usa a última cópia publicada e registra o motivo no log. */
   async function loadData() {
-    let reason = '';
-    if (monitoring.apiUrl) {
+    if (!monitoring.apiUrl) {
+      logEvent('info', 'monitoring.apiUrl vazio em config.json; exibindo a última cópia publicada.');
+    } else {
       try {
         const data = validateMonitoringData(await readRemoteData(monitoring), monitoring);
         state.data = data;
-        state.source = {kind: 'api', label: 'Google Drive (API)', reason: '', generatedAt: data.generatedAt || ''};
-        logEvent('info', 'Monitoramento lido pela API', {years: Object.keys(data.years)});
+        state.source = {kind: 'api', generatedAt: data.generatedAt || ''};
+        logEvent('info', 'Monitoramento lido do Google Drive', {years: Object.keys(data.years)});
         return;
       } catch (error) {
-        reason = `Falha ao ler a API: ${error.message}`;
-        logEvent('error', 'Leitura da API do monitoramento falhou; usando snapshot local', {reason});
+        logEvent('error', 'Leitura do Google Drive falhou; exibindo a última cópia publicada', {kind: error.kind, message: error.message});
       }
-    } else {
-      reason = 'API não configurada (monitoring.apiUrl em config.json está vazio).';
     }
     try {
       const response = await fetch(monitoring.snapshotPath, {cache: 'no-cache'});
       if (!response.ok) throw new Error(`HTTP ${response.status} ao obter ${monitoring.snapshotPath}.`);
       const data = validateMonitoringData(await response.json(), monitoring);
       state.data = data;
-      state.source = {kind: 'snapshot', label: monitoring.snapshotPath, reason, generatedAt: data.generatedAt || ''};
+      state.source = {kind: 'snapshot', generatedAt: data.generatedAt || ''};
     } catch (error) {
       state.data = {schemaVersion: 1, years: {}};
-      state.source = {kind: 'error', label: monitoring.snapshotPath, reason: `${reason} Snapshot local indisponível: ${error.message}`};
-      logEvent('error', 'Snapshot do monitoramento indisponível', {message: error.message});
+      state.source = {kind: 'error', generatedAt: ''};
+      logEvent('error', 'Última cópia do monitoramento indisponível', {message: error.message});
     }
-  }
-
-  function sourceText() {
-    if (state.source.kind === 'api') return 'API do Google Drive.';
-    if (state.source.kind === 'snapshot') return `snapshot local (${state.source.label}).`;
-    return 'indisponível.';
   }
 
   function refreshYearOptions() {
@@ -163,10 +169,8 @@ export async function initMonitoring(config) {
     if (!view.hasRecord) notices.push({tone: 'warning', text: `Sem dados de monitoramento para ${label} na planilha. A grade mostra apenas o calendário.`});
     else if (!view.desmontes.size && !summary.monitoramentos && !state.editing) notices.push({tone: 'info', text: `Nenhum desmonte ou monitoramento registrado em ${label}.`});
     setNotices(notices);
-    els.sourceLabel.textContent = sourceText();
     els.grid.setAttribute('aria-label', `Tabela de avanço do monitoramento, ${label}`);
-    els.editToggle.setAttribute('aria-pressed', String(state.editing));
-    els.editToggle.textContent = state.editing ? 'Editando' : 'Editar dados';
+    els.editToggle.hidden = state.editing;
     els.save.hidden = !state.editing;
     els.cancel.hidden = !state.editing;
     els.save.disabled = state.busy;
@@ -196,17 +200,11 @@ export async function initMonitoring(config) {
     setPeriod(year, month);
   }
 
-  function setEditing(on) {
-    if (on) {
-      state.editing = true;
-      state.draft = monthView(state.data, state.year, state.month, monitoring);
-      state.dirty = false;
-      say('Edição ativa: clique nos dias (D) e nas células (M). Células N não são editáveis. Clique em "Salvar no Google Drive" para gravar.');
-    } else {
-      state.editing = false;
-      state.draft = null;
-      state.dirty = false;
-    }
+  function startEditing() {
+    state.editing = true;
+    state.draft = monthView(state.data, state.year, state.month, monitoring);
+    state.dirty = false;
+    say(ui.editHint);
     render();
   }
 
@@ -226,16 +224,34 @@ export async function initMonitoring(config) {
     render(key);
   }
 
+  // ---- Diálogo de login (pequeno, com fundo desfocado) ----
+
+  function setLoginError(text) {
+    els.loginError.textContent = text;
+    els.loginError.hidden = !text;
+  }
+
+  function setLoginBusy(busy) {
+    state.authPending = busy;
+    els.loginUser.disabled = busy;
+    els.loginPassword.disabled = busy;
+    els.loginSubmit.disabled = busy;
+    els.loginSubmit.textContent = busy ? ui.verifying : ui.loginButton;
+  }
+
+  /** Abre o diálogo de login. Sem apiUrl configurada, mostra que a edição está indisponível. */
   function openLogin() {
-    if (!monitoring.apiUrl) {
-      say('Gravação indisponível: API não configurada. Preencha monitoring.apiUrl em config.json com a URL do Apps Script implantado.', true);
-      return;
-    }
-    els.loginError.hidden = true;
-    els.loginError.textContent = '';
+    const unavailable = !monitoring.apiUrl;
+    els.loginUser.value = state.loginUser;
+    els.loginPassword.value = '';
+    setLoginError(unavailable ? ui.editUnavailable : '');
+    els.loginUser.disabled = unavailable;
+    els.loginPassword.disabled = unavailable;
+    els.loginSubmit.disabled = unavailable;
+    if (unavailable) logEvent('info', 'Edição indisponível: monitoring.apiUrl vazio em config.json.');
     state.lastOpener = document.activeElement;
-    els.loginDialog.showModal();
-    els.loginUser.focus();
+    if (!els.loginDialog.open) els.loginDialog.showModal();
+    (unavailable ? els.loginCancel : els.loginUser).focus();
   }
 
   function closeLogin() {
@@ -243,62 +259,114 @@ export async function initMonitoring(config) {
     els.loginDialog.close();
   }
 
+  /** Verifica usuário e senha no servidor. Só entra em modo de edição após o acesso ser confirmado. */
   async function onLoginSubmit(event) {
     event.preventDefault();
-    const user = els.loginUser.value;
+    if (state.authPending) return;
+    const user = els.loginUser.value.trim();
     const password = els.loginPassword.value;
+    setLoginError('');
+    try {
+      buildAuthPayload(monitoring, {user, password});
+    } catch (error) {
+      setLoginError(error.message);
+      return;
+    }
+    state.loginUser = user;
+    setLoginBusy(true);
+    let result = null;
+    try {
+      result = await checkRemoteAccess(monitoring, {user, password});
+    } catch (error) {
+      logEvent('error', 'Verificação de acesso falhou', {kind: error.kind, message: error.message});
+    } finally {
+      setLoginBusy(false);
+    }
+    if (!result) {
+      els.loginPassword.value = '';
+      setLoginError(ui.editUnavailable);
+      return;
+    }
+    if (!result.ok) {
+      logEvent('info', 'Acesso recusado pelo servidor', {code: result.code});
+      els.loginPassword.value = '';
+      setLoginError(result.message || ui.editUnavailable);
+      els.loginPassword.focus();
+      return;
+    }
+    state.credentials = {user, password};
     els.loginPassword.value = '';
-    els.loginError.hidden = true;
+    els.loginDialog.close();
+    if (state.editing) render();
+    else startEditing();
+    els.save.focus();
+  }
+
+  // ---- Gravação ----
+
+  /** Grava com as credenciais da sessão, sem novo pedido de senha. */
+  async function onSave() {
+    if (state.busy) return;
+    if (!state.credentials) { openLogin(); return; }
     let payload;
     try {
-      payload = buildSavePayload(state.draft, monitoring, {user, password});
+      payload = buildSavePayload(state.draft, monitoring, state.credentials);
     } catch (error) {
-      els.loginError.textContent = error.message;
-      els.loginError.hidden = false;
+      say(error.message, true);
       return;
     }
     state.busy = true;
-    els.loginSubmit.disabled = true;
-    els.loginSubmit.textContent = 'Gravando…';
+    els.save.disabled = true;
+    els.save.textContent = ui.saving;
+    let result = null;
     try {
-      const result = await saveRemoteMonth(monitoring, payload);
-      if (!result.ok) {
-        els.loginError.textContent = result.message || 'O servidor recusou a gravação.';
-        els.loginError.hidden = false;
-        logEvent('error', 'Gravação recusada pela API', {year: payload.year, month: payload.month, message: result.message});
-        return;
-      }
-      logEvent('export', 'Mês gravado pela API', {year: payload.year, month: payload.month});
-      const previous = state.data.years[String(payload.year)]?.months?.[String(payload.month)];
-      const years = {...state.data.years};
-      years[String(payload.year)] = {months: {...(years[String(payload.year)]?.months ?? {}), [String(payload.month)]: {
-        desmontes: payload.desmontes, points: payload.points, anomalies: previous?.anomalies ?? [],
-      }}};
-      state.data = {...state.data, years};
-      state.editing = false;
-      state.draft = null;
-      state.dirty = false;
-      closeLogin();
-      try {
-        state.data = validateMonitoringData(await readRemoteData(monitoring), monitoring);
-        state.source = {kind: 'api', label: 'Google Drive (API)', reason: '', generatedAt: state.data.generatedAt || ''};
-        say(`${result.message || 'Gravado no Google Drive.'} Dados atualizados pela API.`);
-      } catch (error) {
-        state.source = {kind: 'api', label: 'Google Drive (API)', reason: '', generatedAt: ''};
-        say(`${result.message || 'Gravado no Google Drive.'} Não foi possível reler a API (${error.message}); a grade mostra o valor gravado.`, true);
-      }
-      refreshYearOptions();
-      render();
+      result = await saveRemoteMonth(monitoring, payload);
     } catch (error) {
-      const message = error instanceof MonitoringApiError ? error.message : `Erro inesperado: ${error.message}`;
-      els.loginError.textContent = message;
-      els.loginError.hidden = false;
-      logEvent('error', 'Falha ao gravar o monitoramento', {message});
+      logEvent('error', 'Falha de comunicação ao gravar o monitoramento', {kind: error.kind, message: error.message});
     } finally {
       state.busy = false;
-      els.loginSubmit.disabled = false;
-      els.loginSubmit.textContent = 'Entrar e salvar';
+      els.save.disabled = false;
+      els.save.textContent = ui.saveButton;
     }
+    if (!result) {
+      say(ui.saveFailed, true);
+      return;
+    }
+    if (!result.ok && (result.code === 'auth' || result.code === 'locked')) {
+      // Credenciais recusadas (ex.: senha alterada): pede o acesso de novo; o rascunho continua na grade.
+      logEvent('error', 'Credenciais recusadas ao gravar', {code: result.code});
+      state.credentials = null;
+      openLogin();
+      setLoginError(result.message || ui.editUnavailable);
+      return;
+    }
+    if (!result.ok) {
+      logEvent('error', 'Gravação recusada pelo servidor', {code: result.code, message: result.message});
+      say(ui.saveFailed, true);
+      return;
+    }
+    logEvent('export', 'Mês gravado no Google Drive', {year: payload.year, month: payload.month});
+    const previous = state.data.years[String(payload.year)]?.months?.[String(payload.month)];
+    const years = {...state.data.years};
+    years[String(payload.year)] = {months: {...(years[String(payload.year)]?.months ?? {}), [String(payload.month)]: {
+      desmontes: payload.desmontes, points: payload.points, anomalies: previous?.anomalies ?? [],
+    }}};
+    state.data = {...state.data, years};
+    state.editing = false;
+    state.draft = null;
+    state.dirty = false;
+    try {
+      state.data = validateMonitoringData(await readRemoteData(monitoring), monitoring);
+      state.source = {kind: 'api', generatedAt: state.data.generatedAt || ''};
+    } catch (error) {
+      // A grade mantém o valor gravado; o aviso neutro indica que a releitura não ocorreu.
+      state.source = {kind: 'snapshot', generatedAt: ''};
+      logEvent('error', 'Releitura do Google Drive falhou após gravar', {kind: error.kind, message: error.message});
+    }
+    els.message.hidden = true;
+    refreshYearOptions();
+    render();
+    showToast(ui.savedToast);
   }
 
   function openYear() {
@@ -329,17 +397,27 @@ export async function initMonitoring(config) {
     }
   }
 
+  // Textos fixos vindos de config.json
+  els.sourceLabel.textContent = ui.sourceText;
+  els.loginTitle.textContent = ui.loginTitle;
+  els.loginHint.textContent = ui.loginHint;
+  els.loginSubmit.textContent = ui.loginButton;
+  els.save.textContent = ui.saveButton;
+
   // Eventos
   els.year.addEventListener('change', () => setPeriod(Number(els.year.value), state.month));
   els.month.addEventListener('change', () => setPeriod(state.year, Number(els.month.value)));
   els.prev.addEventListener('click', () => stepMonth(-1));
   els.next.addEventListener('click', () => stepMonth(1));
-  els.editToggle.addEventListener('click', () => setEditing(!state.editing));
-  els.cancel.addEventListener('click', () => { state.editing = false; state.draft = null; state.dirty = false; say('Edição cancelada; nenhuma alteração foi gravada.'); render(); });
-  els.save.addEventListener('click', openLogin);
+  els.editToggle.addEventListener('click', openLogin);
+  els.cancel.addEventListener('click', () => { state.editing = false; state.draft = null; state.dirty = false; say(ui.cancelled); render(); });
+  els.save.addEventListener('click', onSave);
   els.loginCancel.addEventListener('click', closeLogin);
   els.loginForm.addEventListener('submit', onLoginSubmit);
-  els.loginDialog.addEventListener('close', () => { els.loginPassword.value = ''; state.lastOpener?.focus?.(); });
+  els.loginDialog.addEventListener('close', () => {
+    els.loginPassword.value = '';
+    if (!state.editing) state.lastOpener?.focus?.();
+  });
   els.grid.addEventListener('click', onGridClick);
   els.openYear.addEventListener('click', openYear);
   els.yearClose.addEventListener('click', () => els.yearDialog.close());

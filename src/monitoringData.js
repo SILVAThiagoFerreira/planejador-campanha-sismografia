@@ -158,7 +158,21 @@ export function buildSavePayload(view, monitoring, credentials) {
   return {action: monitoring.api.saveAction, user, password, year: view.year, month: view.month, desmontes, points};
 }
 
-/** Interpreta a resposta JSON da API: {ok, message, data?}. */
+/**
+ * Monta o corpo do POST de verificação de acesso ({action:"auth", user, password}).
+ * Não grava nada no servidor; serve apenas para confirmar as credenciais.
+ */
+export function buildAuthPayload(monitoring, credentials) {
+  const user = String(credentials?.user ?? '').trim();
+  const password = String(credentials?.password ?? '');
+  if (!user) throw new Error('Informe o usuário.');
+  if (user.length > 100) throw new Error('Usuário com mais de 100 caracteres.');
+  if (!password) throw new Error('Informe a senha.');
+  if (password.length > 200) throw new Error('Senha com mais de 200 caracteres.');
+  return {action: monitoring.api.authAction, user, password};
+}
+
+/** Interpreta a resposta JSON da API: {ok, message, code?, data?}. `code` é "auth", "locked" ou vazio. */
 export function parseApiResponse(text) {
   let body;
   try {
@@ -167,5 +181,5 @@ export function parseApiResponse(text) {
     throw new Error('A resposta do servidor não é JSON válido. Verifique a implantação do Apps Script.');
   }
   if (!body || typeof body !== 'object' || typeof body.ok !== 'boolean') throw new Error('Resposta do servidor sem campo "ok".');
-  return {ok: body.ok, message: String(body.message ?? ''), data: body.data};
+  return {ok: body.ok, message: String(body.message ?? ''), code: String(body.code ?? ''), data: body.data};
 }

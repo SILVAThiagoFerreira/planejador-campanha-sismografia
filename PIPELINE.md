@@ -20,8 +20,9 @@ Horário inicial: 12:00. Responsável inicial: Setor Técnico de Operações - E
 
 1. Importação (offline): planilha .xlsx exportada do Drive -> `npm run import:gantt -- arquivo.xlsx` -> valida o contrato e grava data/monitoramento.json. Anomalias do layout são impressas e gravadas no snapshot; a execução falha se faltar a linha de dias ou o cabeçalho de mês.
 2. Build: `npm run build` valida o bloco monitoring de config.json e, se existir, o snapshot.
-3. Navegador: lê a API (GET ?action=read) ou o snapshot local com aviso; valida o schema; calcula contagens e N pelo calendário real.
-4. Edição: alterna D e M no rascunho; o login envia POST com o payload validado (senha só no corpo da requisição).
-5. Backend (Apps Script): valida o payload, confere credenciais por hash, grava com LockService, cria aba de ano pelo modelo se necessário e, se XLSX_FILE_ID estiver definido, atualiza o .xlsx no Drive.
-6. Após gravar, a aplicação relê a API; falha de leitura é exibida sem esconder o valor gravado.
-7. Testes: npm test (tests/monitoring.test.js cobre parser, contagens, calendário, payload e leitor xlsx).
+3. Navegador: lê a API (GET ?action=read); sem conexão ou sem apiUrl, usa a última cópia publicada com aviso neutro (motivo só no log); valida o schema; calcula contagens e N pelo calendário real.
+4. Edição: "Editar dados" abre o diálogo de login; POST {action:"auth"} confirma o acesso. Só então alterna D e M no rascunho. Credenciais ficam em memória (variável), nunca em armazenamento do navegador.
+5. Salvar: POST {action:"save"} com as credenciais da sessão (sem novo pedido de senha). Se o servidor recusar (code "auth" ou "locked"), o diálogo volta a abrir e o rascunho é mantido.
+6. Backend (Apps Script): limite de 5 falhas por usuário em 10 min (CacheService); valida o payload, confere credenciais por hash (padrões quando as propriedades faltam), grava com LockService, cria aba de ano pelo modelo se necessário e, se XLSX_FILE_ID estiver definido, atualiza o .xlsx no Drive.
+7. Após gravar, a aplicação mostra o toast "Salvo no Google Drive." e relê a API; falha de leitura mostra o aviso neutro sem esconder o valor gravado.
+8. Testes: npm test (tests/monitoring.test.js cobre parser, contagens, calendário, payload de auth e gravação, respostas e fetch simulado; tests/appsScript.test.js carrega Code.gs com stubs e cobre setup, padrões, auth e limite de tentativas).
