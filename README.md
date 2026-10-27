@@ -3,7 +3,7 @@
 Aplicação estática para importar áreas DXF, comparar três estratégias de posicionamento de sismógrafos e exportar PDF, PNG e mensagem TXT. Executa integralmente no navegador e no GitHub Pages. Os arquivos importados permanecem no dispositivo.
 
 ## Executar
-`npm ci`, `npm run build`, `npm test` e `npm start`. Abrir http://localhost:8765. O build copia dependências versionadas para vendor e gera data/manifest.json a partir de config.json; nunca editar o manifesto manualmente.
+`npm ci`, `npm run build`, `npm test` e `npm start`. Para regenerar o snapshot do monitoramento a partir da planilha: `npm run import:gantt -- "caminho/planilha.xlsx"` (gera `data/monitoramento.json` e lista as anomalias). Abrir http://localhost:8765. O build copia dependências versionadas para vendor e gera data/manifest.json a partir de config.json; nunca editar o manifesto manualmente.
 
 ## Configuração
 config.json contém projeções, comunidades, limites, critérios, textos, identidade visual e caminhos. Em `report.situationBlock` ficam a proporção (`heightRatio`) e a largura de geração (`diagramWidth`) do bloco comum entre esquema de distâncias e mapa do relatório. EPSG:31984 é SIRGAS 2000 / UTM 24S; EPSG:32724 é WGS84 / UTM 24S. DXF usa X=Este e Y=Norte em metros; selecione o SRC correto antes de importar. Coordenadas das comunidades vieram do usuário em graus e minutos decimais.
@@ -14,7 +14,9 @@ No cadastro de pontos, **Ponto fixo** inclui obrigatoriamente a comunidade nos t
 
 Na validação do projeto foram importadas duas amostras fornecidas pela operação: `holes-string-PP490826.dxf` e `r280826.dxf`, da pasta de versões 20260828. O primeiro gerou uma poligonal com 184 vértices e o segundo uma poligonal com 25 vértices; a entidade auxiliar `VIEWPORT` do segundo arquivo foi reportada e ignorada. Os arquivos continuam no computador do usuário e não são copiados para o Pages.
 
-Dependências: Leaflet para mapa navegável; proj4 para transformação de coordenadas; jsPDF para PDF; JSZip para o pacote DOCX local. Versões fixadas e cópias locais mantêm cálculo e exportação independentes de CDNs. Imagens de satélite exigem conexão; falhas são indicadas e o mapa vetorial continua disponível. Não há autenticação fictícia ou backend de publicação de dados operacionais.
+Monitoramento: bloco `monitoring` em config.json (pontos, meses, rótulos, cores, `apiUrl` vazia até a implantação do Apps Script). O importador usa apenas o leitor de xlsx com JSZip já existente; nenhuma dependência nova.
+
+Dependências: Leaflet para mapa navegável; proj4 para transformação de coordenadas; jsPDF para PDF; JSZip para o pacote DOCX local. Versões fixadas e cópias locais mantêm cálculo e exportação independentes de CDNs. Imagens de satélite exigem conexão; falhas são indicadas e o mapa vetorial continua disponível. O monitoramento sismográfico (seção final do planejador) lê e grava a planilha Gantt por meio de um backend Google Apps Script (`apps-script/`, ver `apps-script/README.md`), com login de administrador validado no servidor por hash SHA-256; a senha não é armazenada no navegador. Sem `monitoring.apiUrl` configurada, a seção exibe o snapshot local `data/monitoramento.json` com aviso visível. Nenhum dado de campanha é gravado no Pages.
 
 ## Referências técnicas
 - https://proj.org/en/stable/operations/projections/utm.html

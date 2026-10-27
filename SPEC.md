@@ -17,3 +17,16 @@ Horário inicial: 12:00. Responsável inicial: Setor Técnico de Operações - E
 ## PDF com texto vetorial — 2026-10-26
 
 O PDF é montado com jsPDF a partir do mesmo layout usado na prévia (src/reportLayout.js). Títulos, parágrafos, tabelas, fios e o esquema de distâncias são texto e desenho vetoriais, portanto selecionáveis e pesquisáveis. Apenas a faixa de identidade, o logotipo do rodapé e o mapa de satélite são imagens. Coordenadas UTM (Norte/Leste) são exibidas sem separador de milhar (ex.: 8930441,2703 m); distâncias e demais quantidades mantêm o separador de milhar. Caracteres fora de WinAnsi são substituídos por "?" somente no PDF. A fonte padrão do PDF é definida em config.json (report.pdfFontFamily).
+
+
+## Monitoramento sismográfico — 2026-10-27
+
+Nova seção abaixo do relatório: avanço do monitoramento (grade de dias por ponto), legenda, contagens do mês, tabela por comunidade e visão anual em diálogo. O mês atual e o ano atual são exibidos por padrão, com seletores de ano e mês e botões anterior/próximo.
+
+Regras: célula "M" = ponto monitorado no dia; "D" sobre a coluna = dia com desmonte; "N" = dia fora do calendário do mês (não editável, cinza). Células em branco = não monitorado. Fins de semana não recebem destaque.
+
+Fonte dos dados: API (apps-script/) quando `monitoring.apiUrl` está preenchida; caso contrário ou em falha de leitura, `data/monitoramento.json` com aviso visível (motivo informado). Não há fallback silencioso.
+
+Edição: "Editar dados" alterna D e M; "Salvar no Google Drive" pede usuário e senha, envia o payload à API e atualiza a grade após a gravação. Exportação: PDF do mês e PDF anual (uma página por mês e resumo), vetorial, A4 paisagem.
+
+Importação: `npm run import:gantt -- "planilha.xlsx"` converte as abas de ano (AAAA) da planilha. Divergências de layout (março e agosto de 2025, rótulos deslocados e a linha sem rótulo; célula N ausente em fevereiro de 2025) são lidas pela posição e listadas em `anomalies` por mês; nada é corrigido em silêncio.

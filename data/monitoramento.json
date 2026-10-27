@@ -1,0 +1,1203 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "fileName": "Tabela 1 - Gantt Chart - Monitoramentos Sismograficos - US MVV.xlsx",
+    "driveFileId": "1Jz49X3on8uu2ia6PC3sH4S_QGAnsnKiK",
+    "importedFile": "gantt.xlsx",
+    "sheets": [
+      "2025",
+      "2026"
+    ]
+  },
+  "generatedAt": "2026-10-27T13:21:59.238Z",
+  "years": {
+    "2025": {
+      "months": {
+        "1": {
+          "desmontes": [
+            7,
+            10,
+            14,
+            17,
+            21,
+            24,
+            28,
+            31
+          ],
+          "points": {
+            "Barragem de Rejeitos": [
+              7,
+              10,
+              14,
+              17,
+              21,
+              24,
+              28,
+              31
+            ],
+            "Comunidade Lagoa do Mel": [
+              7,
+              14,
+              21
+            ],
+            "Comunidade Pau Ferro": [
+              7,
+              14,
+              21
+            ],
+            "Comunidade Torrões": [
+              17,
+              28
+            ],
+            "Comunidade Corredor": [
+              17,
+              28
+            ],
+            "Comunidade Itapicuru": [
+              10,
+              24,
+              31
+            ],
+            "Comunidade Pichilinga": [
+              10,
+              24,
+              31
+            ]
+          },
+          "anomalies": []
+        },
+        "2": {
+          "desmontes": [
+            4,
+            7,
+            11,
+            12,
+            14,
+            18,
+            21,
+            25,
+            28
+          ],
+          "points": {
+            "Barragem de Rejeitos": [
+              4,
+              7,
+              11,
+              12,
+              14,
+              18,
+              21,
+              25,
+              28
+            ],
+            "Comunidade Lagoa do Mel": [
+              4,
+              11,
+              21
+            ],
+            "Comunidade Pau Ferro": [
+              4,
+              11,
+              21
+            ],
+            "Comunidade Torrões": [
+              7,
+              14,
+              25,
+              28
+            ],
+            "Comunidade Corredor": [
+              7,
+              14,
+              25,
+              28
+            ],
+            "Comunidade Itapicuru": [
+              12,
+              18
+            ],
+            "Comunidade Pichilinga": [
+              12,
+              18
+            ]
+          },
+          "anomalies": [
+            "Dia 29 de Barragem de Rejeitos fora do calendário sem marcação \"N\".",
+            "Dia 29 de Comunidade Lagoa do Mel fora do calendário sem marcação \"N\".",
+            "Dia 29 de Comunidade Pau Ferro fora do calendário sem marcação \"N\".",
+            "Dia 29 de Comunidade Torrões fora do calendário sem marcação \"N\".",
+            "Dia 29 de Comunidade Corredor fora do calendário sem marcação \"N\".",
+            "Dia 29 de Comunidade Itapicuru fora do calendário sem marcação \"N\".",
+            "Dia 29 de Comunidade Pichilinga fora do calendário sem marcação \"N\"."
+          ]
+        },
+        "3": {
+          "desmontes": [
+            3,
+            5,
+            7,
+            11,
+            14,
+            17,
+            19,
+            21,
+            24,
+            28
+          ],
+          "points": {
+            "Barragem de Rejeitos": [
+              3,
+              5,
+              7,
+              11,
+              14,
+              17,
+              19,
+              21,
+              24,
+              28
+            ],
+            "Comunidade Lagoa do Mel": [
+              3,
+              14,
+              19,
+              24
+            ],
+            "Comunidade Pau Ferro": [
+              3,
+              14,
+              19,
+              24
+            ],
+            "Comunidade Torrões": [
+              7,
+              17
+            ],
+            "Comunidade Corredor": [
+              7,
+              17
+            ],
+            "Comunidade Itapicuru": [
+              5,
+              11,
+              21,
+              28
+            ],
+            "Comunidade Pichilinga": [
+              5,
+              11,
+              21,
+              28
+            ]
+          },
+          "anomalies": [
+            "A linha dos dias (27) traz o rótulo \"Barragem de Rejeitos\" na coluna B; as linhas de pontos foram lidas pela posição.",
+            "Linha 28: rótulo \"Comunidade Lagoa do Mel\" difere de \"Barragem de Rejeitos\"; dados lidos pela posição (Barragem de Rejeitos).",
+            "Linha 29: rótulo \"Comunidade Pau Ferro\" difere de \"Comunidade Lagoa do Mel\"; dados lidos pela posição (Comunidade Lagoa do Mel).",
+            "Linha 30: rótulo \"Comunidade Torrões\" difere de \"Comunidade Pau Ferro\"; dados lidos pela posição (Comunidade Pau Ferro).",
+            "Linha 31: rótulo \"Comunidade Corredor\" difere de \"Comunidade Torrões\"; dados lidos pela posição (Comunidade Torrões).",
+            "Linha 32: rótulo \"Comunidade Itapicuru\" difere de \"Comunidade Corredor\"; dados lidos pela posição (Comunidade Corredor).",
+            "Linha 33: rótulo \"Comunidade Pichilinga\" difere de \"Comunidade Itapicuru\"; dados lidos pela posição (Comunidade Itapicuru).",
+            "Linha 34 sem rótulo; dados lidos pela posição (Comunidade Pichilinga)."
+          ]
+        },
+        "4": {
+          "desmontes": [
+            2,
+            4,
+            9,
+            11,
+            17,
+            22,
+            25,
+            30
+          ],
+          "points": {
+            "Barragem de Rejeitos": [
+              2,
+              4,
+              9,
+              11,
+              17,
+              22,
+              25,
+              30
+            ],
+            "Comunidade Lagoa do Mel": [
+              9,
+              30
+            ],
+            "Comunidade Pau Ferro": [
+              9,
+              30
+            ],
+            "Comunidade Torrões": [
+              2,
+              11,
+              22
+            ],
+            "Comunidade Corredor": [
+              2,
+              11,
+              22
+            ],
+            "Comunidade Itapicuru": [
+              4,
+              17,
+              25
+            ],
+            "Comunidade Pichilinga": [
+              4,
+              17,
+              25
+            ]
+          },
+          "anomalies": []
+        },
+        "5": {
+          "desmontes": [
+            2,
+            7,
+            8,
+            13,
+            16,
+            21,
+            23,
+            30
+          ],
+          "points": {
+            "Barragem de Rejeitos": [
+              2,
+              7,
+              8,
+              13,
+              16,
+              21,
+              23,
+              30
+            ],
+            "Comunidade Lagoa do Mel": [
+              8,
+              21
+            ],
+            "Comunidade Pau Ferro": [
+              8,
+              21
+            ],
+            "Comunidade Torrões": [
+              2,
+              13,
+              23
+            ],
+            "Comunidade Corredor": [
+              2,
+              13,
+              23
+            ],
+            "Comunidade Itapicuru": [
+              7,
+              16,
+              30
+            ],
+            "Comunidade Pichilinga": [
+              7,
+              16,
+              30
+            ]
+          },
+          "anomalies": []
+        },
+        "6": {
+          "desmontes": [
+            6,
+            9,
+            12,
+            17,
+            20,
+            27
+          ],
+          "points": {
+            "Barragem de Rejeitos": [
+              6,
+              9,
+              12,
+              17,
+              20,
+              27
+            ],
+            "Comunidade Lagoa do Mel": [
+              9,
+              17
+            ],
+            "Comunidade Pau Ferro": [
+              9,
+              17
+            ],
+            "Comunidade Torrões": [
+              6,
+              12,
+              27
+            ],
+            "Comunidade Corredor": [
+              6,
+              12,
+              27
+            ],
+            "Comunidade Itapicuru": [
+              20
+            ],
+            "Comunidade Pichilinga": [
+              20
+            ]
+          },
+          "anomalies": []
+        },
+        "7": {
+          "desmontes": [
+            4,
+            8,
+            11,
+            18,
+            23,
+            25,
+            30
+          ],
+          "points": {
+            "Barragem de Rejeitos": [
+              4,
+              8,
+              11,
+              18,
+              23,
+              25,
+              30
+            ],
+            "Comunidade Lagoa do Mel": [
+              4,
+              8,
+              23
+            ],
+            "Comunidade Pau Ferro": [
+              4,
+              8,
+              23
+            ],
+            "Comunidade Torrões": [
+              18,
+              25
+            ],
+            "Comunidade Corredor": [
+              18,
+              25
+            ],
+            "Comunidade Itapicuru": [
+              11,
+              30
+            ],
+            "Comunidade Pichilinga": [
+              11,
+              30
+            ]
+          },
+          "anomalies": []
+        },
+        "8": {
+          "desmontes": [
+            1,
+            5,
+            8,
+            14,
+            15,
+            19,
+            21,
+            25
+          ],
+          "points": {
+            "Barragem de Rejeitos": [
+              1,
+              5,
+              8,
+              14,
+              15,
+              19,
+              21,
+              25
+            ],
+            "Comunidade Lagoa do Mel": [
+              8,
+              15
+            ],
+            "Comunidade Pau Ferro": [
+              8,
+              15
+            ],
+            "Comunidade Torrões": [
+              1,
+              14,
+              21
+            ],
+            "Comunidade Corredor": [
+              1,
+              14,
+              21
+            ],
+            "Comunidade Itapicuru": [
+              5,
+              19,
+              25
+            ],
+            "Comunidade Pichilinga": [
+              5,
+              19,
+              25
+            ]
+          },
+          "anomalies": [
+            "A linha dos dias (82) traz o rótulo \"Barragem de Rejeitos\" na coluna B; as linhas de pontos foram lidas pela posição.",
+            "Linha 83: rótulo \"Comunidade Lagoa do Mel\" difere de \"Barragem de Rejeitos\"; dados lidos pela posição (Barragem de Rejeitos).",
+            "Linha 84: rótulo \"Comunidade Pau Ferro\" difere de \"Comunidade Lagoa do Mel\"; dados lidos pela posição (Comunidade Lagoa do Mel).",
+            "Linha 85: rótulo \"Comunidade Torrões\" difere de \"Comunidade Pau Ferro\"; dados lidos pela posição (Comunidade Pau Ferro).",
+            "Linha 86: rótulo \"Comunidade Corredor\" difere de \"Comunidade Torrões\"; dados lidos pela posição (Comunidade Torrões).",
+            "Linha 87: rótulo \"Comunidade Itapicuru\" difere de \"Comunidade Corredor\"; dados lidos pela posição (Comunidade Corredor).",
+            "Linha 88: rótulo \"Comunidade Pichilinga\" difere de \"Comunidade Itapicuru\"; dados lidos pela posição (Comunidade Itapicuru).",
+            "Linha 89 sem rótulo; dados lidos pela posição (Comunidade Pichilinga)."
+          ]
+        },
+        "9": {
+          "desmontes": [
+            1,
+            5,
+            10,
+            12,
+            17,
+            19,
+            23,
+            26,
+            30
+          ],
+          "points": {
+            "Barragem de Rejeitos": [
+              1,
+              5,
+              10,
+              12,
+              17,
+              19,
+              23,
+              26,
+              30
+            ],
+            "Comunidade Lagoa do Mel": [
+              1,
+              10,
+              23,
+              30
+            ],
+            "Comunidade Pau Ferro": [
+              1,
+              10,
+              17,
+              23,
+              30
+            ],
+            "Comunidade Torrões": [
+              5,
+              17,
+              26
+            ],
+            "Comunidade Corredor": [
+              5,
+              26
+            ],
+            "Comunidade Itapicuru": [
+              12,
+              19
+            ],
+            "Comunidade Pichilinga": [
+              12,
+              19
+            ]
+          },
+          "anomalies": []
+        },
+        "10": {
+          "desmontes": [
+            3,
+            7,
+            10,
+            14,
+            17,
+            21,
+            24,
+            28,
+            31
+          ],
+          "points": {
+            "Barragem de Rejeitos": [
+              3,
+              7,
+              10,
+              14,
+              17,
+              21,
+              24,
+              28,
+              31
+            ],
+            "Comunidade Lagoa do Mel": [
+              14,
+              21,
+              24,
+              28,
+              31
+            ],
+            "Comunidade Pau Ferro": [
+              14,
+              21,
+              24
+            ],
+            "Comunidade Torrões": [
+              7,
+              17,
+              31
+            ],
+            "Comunidade Corredor": [
+              7,
+              17
+            ],
+            "Comunidade Itapicuru": [
+              3,
+              10,
+              28
+            ],
+            "Comunidade Pichilinga": [
+              3,
+              10
+            ]
+          },
+          "anomalies": []
+        },
+        "11": {
+          "desmontes": [
+            4,
+            7,
+            11,
+            14,
+            18,
+            21,
+            26,
+            28
+          ],
+          "points": {
+            "Barragem de Rejeitos": [
+              4,
+              7,
+              11,
+              14,
+              18,
+              21,
+              26,
+              28
+            ],
+            "Comunidade Lagoa do Mel": [
+              7,
+              11,
+              18,
+              21,
+              26
+            ],
+            "Comunidade Pau Ferro": [
+              11,
+              14,
+              21,
+              28
+            ],
+            "Comunidade Torrões": [
+              4,
+              18,
+              26
+            ],
+            "Comunidade Corredor": [
+              14
+            ],
+            "Comunidade Itapicuru": [
+              7,
+              28
+            ],
+            "Comunidade Pichilinga": [
+              4
+            ]
+          },
+          "anomalies": []
+        },
+        "12": {
+          "desmontes": [
+            3,
+            5,
+            9,
+            12,
+            17,
+            19,
+            24,
+            29
+          ],
+          "points": {
+            "Barragem de Rejeitos": [
+              3,
+              5,
+              9,
+              12,
+              17,
+              19,
+              24,
+              29,
+              31
+            ],
+            "Comunidade Lagoa do Mel": [
+              3,
+              5,
+              9,
+              17,
+              19,
+              24,
+              31
+            ],
+            "Comunidade Pau Ferro": [
+              9
+            ],
+            "Comunidade Torrões": [
+              5,
+              12,
+              24,
+              29
+            ],
+            "Comunidade Corredor": [
+              19
+            ],
+            "Comunidade Itapicuru": [
+              12,
+              17,
+              29
+            ],
+            "Comunidade Pichilinga": [
+              3,
+              31
+            ]
+          },
+          "anomalies": []
+        }
+      }
+    },
+    "2026": {
+      "months": {
+        "1": {
+          "desmontes": [
+            6,
+            9,
+            14,
+            16,
+            20,
+            23,
+            27,
+            30
+          ],
+          "points": {
+            "Barragem de Rejeitos": [
+              6,
+              9,
+              14,
+              16,
+              20,
+              23,
+              27,
+              30
+            ],
+            "Comunidade Lagoa do Mel": [
+              6,
+              14,
+              16,
+              23,
+              27,
+              30
+            ],
+            "Comunidade Pau Ferro": [
+              6,
+              23
+            ],
+            "Comunidade Torrões": [
+              9,
+              14,
+              20,
+              27
+            ],
+            "Comunidade Corredor": [
+              16
+            ],
+            "Comunidade Itapicuru": [
+              9,
+              20
+            ],
+            "Comunidade Pichilinga": [
+              30
+            ]
+          },
+          "anomalies": []
+        },
+        "2": {
+          "desmontes": [
+            3,
+            6,
+            10,
+            13,
+            18,
+            20,
+            24,
+            27
+          ],
+          "points": {
+            "Barragem de Rejeitos": [
+              3,
+              6,
+              10,
+              13,
+              18,
+              20,
+              24,
+              27
+            ],
+            "Comunidade Lagoa do Mel": [
+              3,
+              6,
+              10,
+              18,
+              20,
+              24
+            ],
+            "Comunidade Pau Ferro": [
+              13,
+              27
+            ],
+            "Comunidade Torrões": [
+              3,
+              10,
+              18
+            ],
+            "Comunidade Corredor": [
+              20
+            ],
+            "Comunidade Itapicuru": [
+              6,
+              13,
+              27
+            ],
+            "Comunidade Pichilinga": [
+              24
+            ]
+          },
+          "anomalies": []
+        },
+        "3": {
+          "desmontes": [
+            3,
+            6,
+            11,
+            13,
+            18,
+            20,
+            25,
+            30
+          ],
+          "points": {
+            "Barragem de Rejeitos": [
+              3,
+              6,
+              11,
+              13,
+              18,
+              20,
+              25,
+              30
+            ],
+            "Comunidade Lagoa do Mel": [
+              6,
+              11,
+              13,
+              20,
+              25,
+              30
+            ],
+            "Comunidade Pau Ferro": [
+              11
+            ],
+            "Comunidade Torrões": [
+              6,
+              18,
+              25
+            ],
+            "Comunidade Corredor": [
+              3,
+              18
+            ],
+            "Comunidade Itapicuru": [
+              3,
+              13
+            ],
+            "Comunidade Pichilinga": [
+              20,
+              30
+            ]
+          },
+          "anomalies": []
+        },
+        "4": {
+          "desmontes": [
+            2,
+            8,
+            15,
+            20,
+            24,
+            30
+          ],
+          "points": {
+            "Barragem de Rejeitos": [
+              2,
+              8,
+              15,
+              20,
+              24,
+              30
+            ],
+            "Comunidade Lagoa do Mel": [
+              8,
+              24,
+              30
+            ],
+            "Comunidade Pau Ferro": [
+              20,
+              24
+            ],
+            "Comunidade Torrões": [
+              2,
+              15
+            ],
+            "Comunidade Corredor": [
+              15
+            ],
+            "Comunidade Itapicuru": [
+              2,
+              8,
+              20
+            ],
+            "Comunidade Pichilinga": [
+              30
+            ]
+          },
+          "anomalies": []
+        },
+        "5": {
+          "desmontes": [
+            5,
+            8,
+            13,
+            15,
+            19,
+            22,
+            27
+          ],
+          "points": {
+            "Barragem de Rejeitos": [
+              5,
+              8,
+              13,
+              15,
+              19,
+              22,
+              27
+            ],
+            "Comunidade Lagoa do Mel": [
+              5,
+              13,
+              15,
+              22,
+              27
+            ],
+            "Comunidade Pau Ferro": [
+              13,
+              19,
+              22
+            ],
+            "Comunidade Torrões": [
+              8
+            ],
+            "Comunidade Corredor": [
+              19
+            ],
+            "Comunidade Itapicuru": [
+              5,
+              8,
+              27
+            ],
+            "Comunidade Pichilinga": [
+              15
+            ]
+          },
+          "anomalies": []
+        },
+        "6": {
+          "desmontes": [
+            2,
+            10,
+            17,
+            19,
+            22,
+            26,
+            30
+          ],
+          "points": {
+            "Barragem de Rejeitos": [
+              2,
+              10,
+              17,
+              19,
+              22,
+              26,
+              30
+            ],
+            "Comunidade Lagoa do Mel": [
+              10,
+              19,
+              26,
+              30
+            ],
+            "Comunidade Pau Ferro": [
+              17,
+              26,
+              30
+            ],
+            "Comunidade Torrões": [
+              10,
+              19
+            ],
+            "Comunidade Corredor": [
+              2,
+              22
+            ],
+            "Comunidade Itapicuru": [
+              2,
+              22
+            ],
+            "Comunidade Pichilinga": [
+              17
+            ]
+          },
+          "anomalies": []
+        },
+        "7": {
+          "desmontes": [
+            3,
+            7,
+            10,
+            16,
+            22,
+            24,
+            31
+          ],
+          "points": {
+            "Barragem de Rejeitos": [
+              3,
+              7,
+              10,
+              16,
+              22,
+              24,
+              31
+            ],
+            "Comunidade Lagoa do Mel": [
+              3,
+              24,
+              31
+            ],
+            "Comunidade Pau Ferro": [
+              7,
+              10
+            ],
+            "Comunidade Torrões": [
+              3,
+              16,
+              24
+            ],
+            "Comunidade Corredor": [
+              22
+            ],
+            "Comunidade Itapicuru": [
+              7,
+              16,
+              22,
+              31
+            ],
+            "Comunidade Pichilinga": [
+              10
+            ]
+          },
+          "anomalies": []
+        },
+        "8": {
+          "desmontes": [
+            4,
+            11,
+            14,
+            18,
+            20,
+            25,
+            28
+          ],
+          "points": {
+            "Barragem de Rejeitos": [
+              4,
+              11,
+              14,
+              18,
+              20,
+              25,
+              28
+            ],
+            "Comunidade Lagoa do Mel": [
+              4,
+              14,
+              18
+            ],
+            "Comunidade Pau Ferro": [
+              11,
+              20
+            ],
+            "Comunidade Torrões": [
+              4,
+              14,
+              18
+            ],
+            "Comunidade Corredor": [
+              11,
+              28
+            ],
+            "Comunidade Itapicuru": [
+              20,
+              25,
+              28
+            ],
+            "Comunidade Pichilinga": [
+              25
+            ]
+          },
+          "anomalies": []
+        },
+        "9": {
+          "desmontes": [
+            1,
+            4,
+            9,
+            15,
+            17,
+            25
+          ],
+          "points": {
+            "Barragem de Rejeitos": [
+              1,
+              4,
+              9,
+              15,
+              17,
+              25
+            ],
+            "Comunidade Lagoa do Mel": [
+              9,
+              17
+            ],
+            "Comunidade Pau Ferro": [
+              15
+            ],
+            "Comunidade Torrões": [
+              1,
+              4,
+              9,
+              17,
+              25
+            ],
+            "Comunidade Corredor": [
+              15
+            ],
+            "Comunidade Itapicuru": [
+              4,
+              25
+            ],
+            "Comunidade Pichilinga": [
+              1
+            ]
+          },
+          "anomalies": []
+        },
+        "10": {
+          "desmontes": [
+            2,
+            6,
+            21,
+            27
+          ],
+          "points": {
+            "Barragem de Rejeitos": [
+              2,
+              6,
+              21,
+              27
+            ],
+            "Comunidade Lagoa do Mel": [
+              6,
+              21
+            ],
+            "Comunidade Pau Ferro": [
+              27
+            ],
+            "Comunidade Torrões": [
+              21
+            ],
+            "Comunidade Corredor": [
+              2,
+              27
+            ],
+            "Comunidade Itapicuru": [
+              2,
+              6
+            ],
+            "Comunidade Pichilinga": []
+          },
+          "anomalies": []
+        },
+        "11": {
+          "desmontes": [],
+          "points": {
+            "Barragem de Rejeitos": [],
+            "Comunidade Lagoa do Mel": [],
+            "Comunidade Pau Ferro": [],
+            "Comunidade Torrões": [],
+            "Comunidade Corredor": [],
+            "Comunidade Itapicuru": [],
+            "Comunidade Pichilinga": []
+          },
+          "anomalies": []
+        },
+        "12": {
+          "desmontes": [],
+          "points": {
+            "Barragem de Rejeitos": [],
+            "Comunidade Lagoa do Mel": [],
+            "Comunidade Pau Ferro": [],
+            "Comunidade Torrões": [],
+            "Comunidade Corredor": [],
+            "Comunidade Itapicuru": [],
+            "Comunidade Pichilinga": []
+          },
+          "anomalies": []
+        }
+      }
+    }
+  }
+}

@@ -19,3 +19,15 @@ Esquema de distâncias e mapa de satélite da seção "SITUAÇÃO ESPACIAL DO DE
 ## PDF com texto vetorial — 2026-10-26
 
 Refatoração do relatório: layout único em src/reportLayout.js, prévia/PNG/DOCX em canvas (src/reports.js) e PDF vetorial em src/reportPdf.js. Adicionada a chave report.pdfFontFamily em config.json ("helvetica"). Coordenadas UTM sem agrupamento de milhar na prévia, mensagem, relatório e PDF. Testes em tests/reports.test.js cobrem formatação, layout e geração do PDF com jsPDF. Versão de cache dos módulos atualizada para 1.2.0.
+
+
+## Monitoramento sismográfico — 2026-10-27
+
+- [x] Importador da planilha Gantt (tools/import-gantt.mjs, npm run import:gantt) e snapshot data/monitoramento.json.
+- [x] Seção de monitoramento: grade, legenda, contagens, tabela por comunidade, visão anual, PDF mês/ano.
+- [x] Edição com login e gravação via API (cliente em src/monitoringApi.js).
+- [x] Backend Google Apps Script em apps-script/ (Code.gs, appsscript.json, README.md).
+- [ ] Preencher monitoring.apiUrl em config.json após implantar o Apps Script e executar setup().
+- [ ] Trocar a senha inicial (admin) antes de uso real: gerarHashSenha() e ADMIN_PASSWORD_SHA256.
+- [ ] Decidir se os nomes dos pontos do config.json devem seguir a planilha ("Comunidade Pau Ferro", "Comunidade Pichilinga"), já adotados aqui.
+- [ ] Corrigir na planilha original as anomalias listadas (março e agosto de 2025; N ausente em 29/02/2025).

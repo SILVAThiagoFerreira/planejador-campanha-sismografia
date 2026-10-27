@@ -158,6 +158,68 @@
       "fixed": "#ffbf2f"
     }
   },
+  "monitoring": {
+    "title": "Avanço do Monitoramento Sismográfico",
+    "subtitle": "US Mineração Vale-Verde | Mina Serrote",
+    "snapshotPath": "data/monitoramento.json",
+    "apiUrl": "",
+    "api": {
+      "readAction": "read",
+      "saveAction": "save",
+      "timeoutMs": 20000
+    },
+    "source": {
+      "fileName": "Tabela 1 - Gantt Chart - Monitoramentos Sismograficos - US MVV.xlsx",
+      "driveFileId": "1Jz49X3on8uu2ia6PC3sH4S_QGAnsnKiK",
+      "sheetNamePattern": "^\\d{4}$"
+    },
+    "monthNames": ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"],
+    "points": [
+      "Barragem de Rejeitos",
+      "Comunidade Lagoa do Mel",
+      "Comunidade Pau Ferro",
+      "Comunidade Torrões",
+      "Comunidade Corredor",
+      "Comunidade Itapicuru",
+      "Comunidade Pichilinga"
+    ],
+    "layout": {
+      "monthHeaderPattern": "^(\\d{2})\\.\\s*(.+)$",
+      "labelColumn": "B",
+      "firstDayColumn": "C",
+      "dayCount": 31,
+      "dayMarker": "D",
+      "monitoredMarker": "M",
+      "notInMonthMarker": "N"
+    },
+    "labels": {
+      "tableTitle": "Tabela 1 - Avanço do Monitoramento Sismográfico - Gantt Chart",
+      "pointHeader": "Ponto de Monitoramento",
+      "desmontesCount": "Quantos desmontes houveram no mês?",
+      "monitoringCount": "Quantos monitoramentos foram realizados no mês?",
+      "communityTable": "Qtd. Monitoramentos/Comunidade",
+      "legendTitle": "Legenda",
+      "blankLegend": "Não houveram desmontes nesta data / Este ponto não foi monitorado",
+      "monitoredLegend": "Este ponto foi monitorado",
+      "notInMonthLegend": "Data não pertencente ao calendário do mês",
+      "blastLegend": "Dia com desmonte (D)"
+    },
+    "colors": {
+      "header": "#3b3b3b",
+      "headerText": "#ffffff",
+      "monitored": "#3d6b4f",
+      "monitoredText": "#ffffff",
+      "notInMonth": "#d0d4d8",
+      "blastMark": "#fa1232",
+      "grid": "#d6dbdf"
+    },
+    "pdf": {
+      "fontFamily": "helvetica",
+      "margin": 28,
+      "fileName": "monitoramento-{year}-{month}.pdf",
+      "yearFileName": "monitoramento-{year}-anual.pdf"
+    }
+  },
   "paths": {
     "manifest": "data/manifest.json",
     "config": "config.json"
