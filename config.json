@@ -95,6 +95,7 @@
     "maxPolygons": 100,
     "maxRadiusMeters": 50000,
     "maxFileBytes": 20000000,
+    "closureToleranceMeters": 0.001,
     "regionBounds": [
       -37.2,
       -10.2,

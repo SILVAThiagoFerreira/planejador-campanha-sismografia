@@ -19,6 +19,12 @@ Horário inicial: 12:00. Responsável inicial: Setor Técnico de Operações - E
 O PDF é montado com jsPDF a partir do mesmo layout usado na prévia (src/reportLayout.js). Títulos, parágrafos, tabelas, fios e o esquema de distâncias são texto e desenho vetoriais, portanto selecionáveis e pesquisáveis. Apenas a faixa de identidade, o logotipo do rodapé e o mapa de satélite são imagens. Coordenadas UTM (Norte/Leste) são exibidas sem separador de milhar (ex.: 8930441,2703 m); distâncias e demais quantidades mantêm o separador de milhar. Caracteres fora de WinAnsi são substituídos por "?" somente no PDF. A fonte padrão do PDF é definida em config.json (report.pdfFontFamily).
 
 
+## Importação DXF por arquivo — 2026-10-30
+
+Área fechada é a polilinha marcada como fechada no DXF ou cujo último vértice coincide com o primeiro, dentro de `validation.closureToleranceMeters` (config.json, 0,001 m). Neste segundo caso o sistema registra aviso com a camada e usa a área sem o vértice repetido. Polilinha aberta (extremos afastados) é recusada com a camada e a distância entre os extremos. Linhas abertas, como pré-corte, não são áreas e não entram no cálculo.
+
+Lote: cada arquivo é validado separadamente. Os arquivos válidos são importados; os recusados aparecem no aviso com nome e causa e não alteram o projeto. Se nenhum arquivo for aceito, a importação é recusada. Avisos e recusas ficam no log (evento "import").
+
 ## Monitoramento sismográfico — 2026-10-27
 
 Nova seção abaixo do relatório: avanço do monitoramento (grade de dias por ponto), legenda, contagens do mês, tabela por comunidade e visão anual em diálogo. O mês atual e o ano atual são exibidos por padrão, com seletores de ano e mês e botões anterior/próximo.
