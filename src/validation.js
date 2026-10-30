@@ -1,4 +1,4 @@
-import { polygonCentroid,isSimplePolygon } from './geometry.js';
+import { polygonCentroid,isSimplePolygon } from './geometry.js?v=1.3.6';
 export function validatePolygons(polygons,limits={}){
   if(!Array.isArray(polygons)||!polygons.length)throw new Error('Importe ao menos uma poligonal fechada de desmonte.');
   if(limits.maxPolygons&&polygons.length>limits.maxPolygons)throw new Error(`Limite de ${limits.maxPolygons} poligonais excedido.`);
@@ -15,6 +15,24 @@ export function validatePolygons(polygons,limits={}){
     if(p.direction!==null&&p.direction!==undefined&&(!Number.isFinite(p.direction)||p.direction<0||p.direction>=360))throw new Error(`${p.name||p.id}: direção deve estar entre 0° e menos de 360°.`);
   }
   return polygons;
+}
+// Linhas de pré-corte: polilinhas abertas. Não têm área; validam vértices, coordenadas e comprimento mínimo.
+export function validateLines(lines,limits={}){
+  if(!Array.isArray(lines))throw new Error('Linhas de pré-corte inválidas.');
+  if(!lines.length)return lines;
+  const minLength=limits.minLineLengthMeters;
+  if(!Number.isFinite(minLength)||minLength<0)throw new Error('Comprimento mínimo de linha ausente ou inválido na configuração.');
+  const ids=new Set();
+  for(const l of lines){
+    if(!l.id||ids.has(l.id))throw new Error('Identificador de linha ausente ou duplicado.');ids.add(l.id);
+    const label=l.name||l.id;
+    if(!Array.isArray(l.vertices)||l.vertices.length<2)throw new Error(`${label}: mínimo de dois vértices.`);
+    // O limite total de vértices (áreas + linhas) é conferido em checkGeometry.
+    if(l.vertices.some(v=>!Number.isFinite(v.x)||!Number.isFinite(v.y)))throw new Error(`${label}: coordenadas inválidas.`);
+    const length=l.vertices.slice(1).reduce((sum,v,i)=>sum+Math.hypot(v.x-l.vertices[i].x,v.y-l.vertices[i].y),0);
+    if(!(length>0)||length<minLength)throw new Error(`${label}: comprimento de ${length.toFixed(3).replace('.',',')} m abaixo do mínimo de ${minLength} m.`);
+  }
+  return lines;
 }
 export function validateCommunities(communities,instrumentCount){
   if(!Array.isArray(communities)||!communities.length)throw new Error('Nenhum ponto de monitoramento configurado.');

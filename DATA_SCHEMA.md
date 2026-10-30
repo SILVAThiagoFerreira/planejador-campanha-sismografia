@@ -6,11 +6,13 @@ data/manifest.json (gerado): schemaVersion, version, configPath, configSha256. N
 
 Área: id, name, layer, vertices[{x,y}], direction (azimute graus ou null), source (nome DXF). Coordenadas UTM em metros.
 
+Linha de pré-corte: id, name, layer, vertices[{x,y}] (no mínimo dois; comprimento ≥ validation.minLineLengthMeters), source (nome DXF). Não tem área, direção nem centróide.
+
 Comunidade: id, name, lat, lon (graus decimais), enabled (boolean), fixed (boolean) e priority (número positivo). `fixed=true` obriga o ponto a integrar todos os cenários e o ponto continua contando na quantidade total de instrumentos. Projetos antigos sem `fixed` são migrados para `false`. Coordenadas fornecidas em graus e minutos decimais são convertidas sem reinterpretar minutos como segundos.
 
-Plano calculado: origin{x,y,lat,lon,radius}, polygons, communities (métricas, incluindo fixed), scenarios[{id,title,description,points,score,coincidentWith}], instrumentCount, fixedPointCount, warnings.
+Plano calculado: origin{x,y,lat,lon,radius}, polygons, lines, communities (métricas, incluindo fixed), scenarios[{id,title,description,points,score,coincidentWith}], instrumentCount, fixedPointCount, warnings.
 
-Projeto exportado: schemaVersion, savedAt, crs, meta, polygons, communities, instrumentCount, selectedScenario, messageTemplate. Importação deve validar versão e todos os campos antes de processar.
+Projeto exportado: schemaVersion, savedAt, crs, meta, polygons, lines, communities, instrumentCount, selectedScenario, messageTemplate. Projetos anteriores sem `lines` carregam com lista vazia. Importação deve validar versão e todos os campos antes de processar.
 
 DOCX/PDF/PNG: relatório do cenário selecionado, nome ENAEX-SMP-AAAAMMDD-cenario-N. O DOCX é OOXML válido com a página A4 renderizada preservando a aparência do relatório. TXT: mensagem UTF-8 customizada para o cenário atual, sem envio automático. Logs JSON: eventos com timestamp, tipo e descrição.
 

@@ -26,7 +26,8 @@ Refatoração do relatório: layout único em src/reportLayout.js, prévia/PNG/D
 - [x] Polilinha com último vértice coincidente com o primeiro aceita como área fechada, com aviso (CAD que não grava a flag de fechamento). Tolerância em config.json (`validation.closureToleranceMeters`).
 - [x] Lote importado por arquivo (src/dxfBatch.js): válidos entram, recusados listados com nome e causa.
 - [x] Testes em tests/dxfImport.test.js com dados sintéticos; DXF reais de campanha não entram no repositório público.
-- [ ] Decisão do usuário: linhas abertas de pré-corte (ex.: `PC561026.dxf`, extremos a 147 m) continuam recusadas. Usá-las no cálculo exige definir o papel da linha: origem, distância à borda ou apenas exibição.
+- [x] Decisão do usuário (2026-10-30): linhas abertas de pré-corte entram no cálculo (origem e distância à borda), sem área. `PC561026.dxf` está sobre a borda da área `PP561026.dxf`, então os resultados desta campanha não mudam.
+- [x] Linhas de pré-corte: validateLines, planner, mapa (cor em config.json), lista com remoção, campo `lines` no projeto e testes em tests/preCutLines.test.js.
 
 ## Monitoramento sismográfico — 2026-10-27
 

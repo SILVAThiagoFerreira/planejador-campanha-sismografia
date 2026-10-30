@@ -1,4 +1,4 @@
-import { validatePolygons } from './validation.js';
+import { validatePolygons,validateLines } from './validation.js?v=1.3.6';
 export function parseDXF(text,limits={}){
   if(typeof text!=='string'||text.includes('AutoCAD Binary DXF'))throw new Error('Utilize DXF ASCII. DXF binário não é suportado.');
   if(limits.maxFileBytes&&new TextEncoder().encode(text).byteLength>limits.maxFileBytes)throw new Error(`Arquivo DXF excede ${limits.maxFileBytes} bytes.`);
@@ -13,7 +13,7 @@ export function parseDXF(text,limits={}){
   const entities=[];let section='',record=null;
   for(let i=0;i<pairs.length;i++){const [code,value]=pairs[i];if(code===0&&value==='SECTION'){section=pairs[i+1]?.[1];record=null;continue;}if(code===0&&value==='ENDSEC'){section='';record=null;continue;}if(section!=='ENTITIES')continue;if(code===0){record={type:value,pairs:[]};entities.push(record);}else if(record)record.pairs.push([code,value]);}
   if(!pairs.some(([c,v])=>c===0&&v==='EOF'))throw new Error('DXF sem marcador EOF; arquivo incompleto.');
-  const polygons=[],ignored=new Set(),closureWarnings=[];
+  const polygons=[],openLines=[],ignored=new Set(),notes=[];
   const get=(e,c,fallback)=>e.pairs.find(p=>p[0]===c)?.[1]??fallback;
   const number=(e,c,fallback)=>{const raw=get(e,c,fallback);const n=Number(raw);if(raw===undefined||raw===''||!Number.isFinite(n))throw new Error(`Coordenada/código ${c} inválido em ${e.type}.`);return n;};
   for(let i=0;i<entities.length;i++){
@@ -36,11 +36,18 @@ export function parseDXF(text,limits={}){
     const gap=Math.hypot(vertices[0].x-vertices.at(-1).x,vertices[0].y-vertices.at(-1).y);
     const closedByFlag=(flags&1)===1;
     const closedByCoincidence=vertices.length>2&&gap<=tolerance;
-    if(!closedByFlag&&!closedByCoincidence)throw new Error(`Polilinha aberta na camada ${layer} (inicial e final distam ${gap.toFixed(3).replace('.',',')} m). Feche a área no CAD. Linhas abertas, como pré-corte, não são áreas e não são importadas.`);
-    if(!closedByFlag)closureWarnings.push(`Camada ${layer}: polilinha sem marcação de fechamento, mas com último vértice igual ao primeiro; tratada como fechada.`);
+    if(!closedByFlag&&!closedByCoincidence){
+      // Polilinha aberta: linha de pré-corte. Não é área; entra na origem e na distância à borda.
+      openLines.push({id:`linha-${openLines.length+1}`,name:`${layer==='0'?'Linha':layer} ${openLines.length+1}`,layer,vertices});
+      notes.push(`Camada ${layer}: polilinha aberta (extremos a ${gap.toFixed(3).replace('.',',')} m) importada como linha de pré-corte; entra na origem e na distância à borda, sem área.`);
+      continue;
+    }
+    if(!closedByFlag)notes.push(`Camada ${layer}: polilinha sem marcação de fechamento, mas com último vértice igual ao primeiro; tratada como fechada.`);
     if(gap<=tolerance)vertices.pop();
     polygons.push({id:`area-${polygons.length+1}`,name:`${layer==='0'?'Área':layer} ${polygons.length+1}`,layer,vertices,direction:null});
   }
-  validatePolygons(polygons,limits);
-  return {polygons,warnings:[...(ignored.size?[`Entidades auxiliares ignoradas: ${[...ignored].join(', ')}. Somente polilinhas fechadas compõem as áreas.`]:[]),...closureWarnings]};
+  // Arquivo só com linhas é aceito (as linhas precisam de área para o cálculo, conferido no projeto).
+  if(polygons.length||!openLines.length)validatePolygons(polygons,limits);
+  const preCutLines=validateLines(openLines,limits);
+  return {polygons,lines:preCutLines,warnings:[...(ignored.size?[`Entidades auxiliares ignoradas: ${[...ignored].join(', ')}. Somente polilinhas fechadas compõem as áreas.`]:[]),...notes]};
 }

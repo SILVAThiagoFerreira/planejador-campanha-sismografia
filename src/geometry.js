@@ -51,6 +51,12 @@ export function distanceToPolygon(point,vertices){
   }
   return inside?0:min;
 }
+// Distância de um ponto à poligonal aberta (sem fechamento e sem teste de interior).
+export function distanceToPolyline(point,vertices){
+  let min=Infinity;
+  for(let i=0;i<vertices.length-1;i++){const a=vertices[i],b=vertices[i+1],dx=b.x-a.x,dy=b.y-a.y;const t=Math.max(0,Math.min(1,((point.x-a.x)*dx+(point.y-a.y)*dy)/(dx*dx+dy*dy||1)));min=Math.min(min,distance(point,{x:a.x+t*dx,y:a.y+t*dy}));}
+  return min;
+}
 export function isSimplePolygon(v){
   const on=(a,b,p)=>Math.abs(cross(a,b,p))<1e-8&&p.x>=Math.min(a.x,b.x)&&p.x<=Math.max(a.x,b.x)&&p.y>=Math.min(a.y,b.y)&&p.y<=Math.max(a.y,b.y);
   for(let i=0;i<v.length;i++){

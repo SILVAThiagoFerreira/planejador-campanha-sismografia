@@ -4,13 +4,13 @@ import {parseDXF} from '../src/dxf.js';
 import {parseDXFBatch,acceptIntoProject} from '../src/dxfBatch.js';
 
 // Dados sintéticos: nenhum DXF real de campanha entra no repositório público.
-const limits={closureToleranceMeters:0.001,maxVertices:20000,maxPolygons:100,maxFileBytes:20000000};
+const limits={closureToleranceMeters:0.001,minLineLengthMeters:1,maxVertices:20000,maxPolygons:100,maxFileBytes:20000000};
 const wrap=body=>`0\nSECTION\n2\nENTITIES\n${body}0\nENDSEC\n0\nEOF\n`;
 // LWPOLYLINE como no CAD: código 90 = número de vértices gravados; código 70 = flags.
 const lwpolyline=(points,{layer='0',flag=0}={})=>`0\nLWPOLYLINE\n8\n${layer}\n90\n${points.length}\n70\n${flag}\n${points.map(([x,y])=>`10\n${x}\n20\n${y}\n`).join('')}`;
 const square=[[0,0],[100,0],[100,100],[0,100]];
 const squareClosedByRepeat=[...square,[0,0]];
-// Linha aberta: mesmos vértices do quadrado, sem repetir o primeiro (extremos a 100 m).
+// Polilinha aberta: mesmos vértices do quadrado, sem repetir o primeiro (extremos a 100 m).
 const openLine=square;
 const file=(name,text,size=text.length)=>({name,size,text:async()=>text});
 
@@ -28,18 +28,22 @@ test('polilinha marcada como fechada continua aceita sem aviso de fechamento', (
   assert.deepEqual(result.warnings,[]);
 });
 
-test('polilinha realmente aberta é recusada com camada e distância entre os extremos', ()=>{
-  assert.throws(
-    ()=>parseDXF(wrap(lwpolyline(openLine,{flag:128,layer:'PC'})),limits),
-    /Polilinha aberta na camada PC \(inicial e final distam 100,000 m\)/
-  );
+test('polilinha realmente aberta vira linha de pré-corte, com aviso e extremos informados', ()=>{
+  const result=parseDXF(wrap(lwpolyline(openLine,{flag:128,layer:'PC'})),limits);
+  assert.equal(result.polygons.length,0);
+  assert.equal(result.lines.length,1);
+  assert.equal(result.lines[0].vertices.length,4);
+  assert.match(result.warnings.join(' '),/Camada PC: polilinha aberta \(extremos a 100,000 m\) importada como linha de pré-corte/);
 });
 
-test('tolerância de fechamento vem da configuração: dentro é aceita, fora é recusada', ()=>{
+test('tolerância de fechamento vem da configuração: dentro fecha a área, fora vira linha de pré-corte', ()=>{
   const nearby=[...square,[0.0005,0]];
   const far=[...square,[0.01,0]];
   assert.equal(parseDXF(wrap(lwpolyline(nearby,{flag:128})),limits).polygons[0].vertices.length,4);
-  assert.throws(()=>parseDXF(wrap(lwpolyline(far,{flag:128})),limits),/aberta/);
+  const open=parseDXF(wrap(lwpolyline(far,{flag:128})),limits);
+  assert.equal(open.polygons.length,0);
+  assert.equal(open.lines.length,1);
+  assert.match(open.warnings.join(' '),/extremos a 0,010 m/);
 });
 
 test('tolerância inválida na configuração é recusada explicitamente', ()=>{
@@ -52,23 +56,24 @@ test('sem tolerância configurada o parser recusa, em vez de assumir um valor', 
   assert.throws(()=>parseDXF(wrap(lwpolyline(squareClosedByRepeat,{flag:128})),{closureToleranceMeters:null}),/ausente ou inválida/);
 });
 
-test('lote: aceita os arquivos válidos e recusa, com causa, os demais', async()=>{
+test('lote: áreas e linhas de pré-corte são aceitas; o arquivo que não é DXF é recusado com causa', async()=>{
   const batch=await parseDXFBatch([
     file('PP561026.dxf',wrap(lwpolyline(squareClosedByRepeat,{flag:128,layer:'PP'}))),
     file('PC561026.dxf',wrap(lwpolyline(openLine,{flag:128,layer:'PC'}))),
     file('notas.txt','qualquer coisa'),
   ],limits);
-  assert.deepEqual(batch.accepted.map(a=>a.name),['PP561026.dxf']);
+  assert.deepEqual(batch.accepted.map(a=>a.name),['PP561026.dxf','PC561026.dxf']);
   assert.equal(batch.accepted[0].polygons[0].vertices.length,4);
-  assert.deepEqual(batch.refused.map(r=>r.name),['PC561026.dxf','notas.txt']);
-  assert.match(batch.refused[0].reason,/Polilinha aberta na camada PC/);
-  assert.equal(batch.refused[1].reason,'não é um arquivo DXF.');
+  assert.equal(batch.accepted[1].lines.length,1);
+  assert.deepEqual(batch.refused.map(r=>r.name),['notas.txt']);
+  assert.equal(batch.refused[0].reason,'não é um arquivo DXF.');
 });
 
 test('lote sem nenhum arquivo válido não aceita nada', async()=>{
-  const batch=await parseDXFBatch([file('PC561026.dxf',wrap(lwpolyline(openLine,{flag:128})))],limits);
+  const batch=await parseDXFBatch([file('PC561026.dxf',wrap(lwpolyline([[5,5]],{flag:128})))],limits);
   assert.deepEqual(batch.accepted,[]);
   assert.equal(batch.refused.length,1);
+  assert.match(batch.refused[0].reason,/vértices insuficientes/);
 });
 
 test('lote recusa arquivo acima do limite de tamanho sem ler o conteúdo', async()=>{
@@ -88,7 +93,8 @@ test('polilinha POLYLINE fechada só pelo último vértice é aceita, com aviso'
 
 test('distância entre extremos aparece com três casas (4 mm, não 0,00 m)', ()=>{
   const pts=[[0,0],[100,0],[100,100],[0.004,0]];
-  assert.throws(()=>parseDXF(wrap(lwpolyline(pts,{flag:128})),limits),/distam 0,004 m/);
+  const result=parseDXF(wrap(lwpolyline(pts,{flag:128})),limits);
+  assert.match(result.warnings.join(' '),/extremos a 0,004 m/);
 });
 
 test('polilinha com um único vértice é recusada explicitamente', ()=>{
@@ -100,18 +106,25 @@ test('coordenada não numérica é recusada e identificada pela camada', ()=>{
 });
 
 test('arquivo que quebra o plano é recusado pelo nome e os demais entram', ()=>{
-  const toPolygons=f=>[{name:f.name}];
-  const check=polygons=>{if(polygons.some(p=>p.name==='fora.dxf'))throw new Error('Áreas fora da região configurada.');};
-  const result=acceptIntoProject([{name:'ok.dxf'},{name:'fora.dxf'},{name:'ok2.dxf'}],[],toPolygons,check);
+  const toAdditions=f=>({polygons:[{name:f.name}],lines:[]});
+  const check=candidate=>{if(candidate.polygons.some(p=>p.name==='fora.dxf'))throw new Error('Áreas fora da região configurada.');};
+  const result=acceptIntoProject([{name:'ok.dxf'},{name:'fora.dxf'},{name:'ok2.dxf'}],{polygons:[],lines:[]},toAdditions,check);
   assert.deepEqual(result.imported.map(f=>f.name),['ok.dxf','ok2.dxf']);
   assert.deepEqual(result.refused,[{name:'fora.dxf',reason:'Áreas fora da região configurada.'}]);
-  assert.deepEqual(result.polygons.map(p=>p.name),['ok.dxf','ok2.dxf']);
+  assert.deepEqual(result.project.polygons.map(p=>p.name),['ok.dxf','ok2.dxf']);
 });
 
 test('a conferência usa o projeto acumulado: o que passa sozinho pode falhar depois de outro arquivo', ()=>{
-  const toPolygons=f=>[{name:f.name}];
-  const check=polygons=>{if(polygons.length>2)throw new Error('Limite de poligonais excedido.');};
-  const result=acceptIntoProject([{name:'a'},{name:'b'},{name:'c'}],[],toPolygons,check);
+  const toAdditions=f=>({polygons:[{name:f.name}],lines:[]});
+  const check=candidate=>{if(candidate.polygons.length>2)throw new Error('Limite de poligonais excedido.');};
+  const result=acceptIntoProject([{name:'a'},{name:'b'},{name:'c'}],{polygons:[],lines:[]},toAdditions,check);
   assert.deepEqual(result.imported.map(f=>f.name),['a','b']);
   assert.equal(result.refused[0].name,'c');
+});
+
+test('linhas são acumuladas separadamente das áreas', ()=>{
+  const toAdditions=f=>({polygons:[],lines:[{name:f.name}]});
+  const result=acceptIntoProject([{name:'pc.dxf'}],{polygons:[{name:'a'}],lines:[]},toAdditions,()=>{});
+  assert.deepEqual(result.project.lines.map(l=>l.name),['pc.dxf']);
+  assert.equal(result.project.polygons.length,1);
 });

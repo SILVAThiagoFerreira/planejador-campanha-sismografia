@@ -21,9 +21,13 @@ O PDF é montado com jsPDF a partir do mesmo layout usado na prévia (src/report
 
 ## Importação DXF por arquivo — 2026-10-30
 
-Área fechada é a polilinha marcada como fechada no DXF ou cujo último vértice coincide com o primeiro, dentro de `validation.closureToleranceMeters` (config.json, 0,001 m). Neste segundo caso o sistema registra aviso com a camada e usa a área sem o vértice repetido. Polilinha aberta (extremos afastados) é recusada com a camada e a distância entre os extremos. Linhas abertas, como pré-corte, não são áreas e não entram no cálculo.
+Área fechada é a polilinha marcada como fechada no DXF ou cujo último vértice coincide com o primeiro, dentro de `validation.closureToleranceMeters` (config.json, 0,001 m). Neste segundo caso o sistema registra aviso com a camada e usa a área sem o vértice repetido. Polilinha aberta (extremos afastados) vira linha de pré-corte, descrita na seção seguinte.
 
 Lote: cada arquivo é validado separadamente. Os arquivos válidos são importados; os recusados aparecem no aviso com nome e causa e não alteram o projeto. Cada arquivo aceito é conferido contra o projeto já acumulado (região, raio e regras do cálculo): um arquivo que quebra o cálculo é recusado pelo nome e os demais seguem. Se nenhum arquivo for aceito, a importação é recusada. Avisos e recusas ficam no log (evento "import").
+
+## Linhas de pré-corte — 2026-10-30
+
+Polilinha aberta importada vira linha de pré-corte: vértices e comprimento, sem área, direção ou centróide. A linha entra no cálculo: os vértices das linhas compõem o menor círculo da origem, e a distância à borda de cada comunidade é a menor entre as áreas e as linhas. O comprimento mínimo vem de `validation.minLineLengthMeters` (config.json, 1 m). Linha abaixo do mínimo, com coordenadas inválidas ou com menos de dois vértices é recusada com a causa. Os vértices das linhas são conferidos contra a região configurada, como os das áreas. Um lote só com linhas é aceito sem cálculo, e o aviso pede ao menos uma área fechada. Lote ou projeto só com linhas é conferido do mesmo jeito contra a região, o comprimento mínimo e o limite total de vértices; a mensagem diz se a causa é uma área ou uma linha. O projeto JSON tem o campo `lines`; projetos anteriores sem o campo carregam com lista vazia. No mapa e no PNG, as linhas são tracejadas na cor `visual.mapColors.line`, com item na legenda. Quando a linha fica dentro da área ou sobre a borda, o efeito no cálculo é nulo, porque a menor distância já é a da borda da área.
 
 ## Monitoramento sismográfico — 2026-10-27
 

@@ -4,7 +4,7 @@
 2. Navegador carrega manifesto e configuração, registra início e apresenta comunidades.
 3. Importação lê o lote arquivo a arquivo (src/dxfBatch.js): cada DXF valida tamanho, tipo, geometria e fechamento antes de alterar o estado; cada arquivo aceito é conferido contra o projeto acumulado (região e cálculo); os que entram seguem e os recusados são listados com nome e causa.
 4. Transforma coordenadas para SRC escolhido e verifica região, direções e quantidade.
-5. Calcula círculo envolvente, centro e distâncias; inclui os pontos fixos em todos os cenários e seleciona as vagas restantes por estratégia.
+5. Calcula círculo envolvente (áreas e linhas de pré-corte), centro e distâncias à borda (a menor entre áreas e linhas); inclui os pontos fixos em todos os cenários e seleciona as vagas restantes por estratégia.
 6. Renderiza mapa, critérios e relatório do cenário selecionado.
 7. Exporta PDF, PNG, TXT ou projeto JSON com identificação; registra evento no log.
 8. Testes e build precedem publicação Pages; publicação é conferida no endereço servido.

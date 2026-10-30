@@ -96,6 +96,7 @@
     "maxRadiusMeters": 50000,
     "maxFileBytes": 20000000,
     "closureToleranceMeters": 0.001,
+    "minLineLengthMeters": 1,
     "regionBounds": [
       -37.2,
       -10.2,
@@ -140,7 +141,7 @@
       "heightRatio": 0.72,
       "diagramWidth": 1100
     },
-    "whatsappTemplate": "*SISMOGRAFIA | DESMONTE {data}*\n\n*{operacao}*\nRegião: {regiao}\nHorário: {horario}\nCampanha com {quantidade} sismógrafo(s) — cenário {cenario}.\n\n*ORIGEM DO DESMONTE*\nCentro do círculo envolvente das poligonais importadas.\nLatitude: {latitude}\nLongitude: {longitude}\nUTM — Zona {zona} Sul\nNorte (Y): {norte} m\nLeste (X): {leste} m\n\n*MONITORAMENTO PROPOSTO*\n{pontos}\n\n*OBSERVAÇÕES*\n{observacoes}\n\nResponsável: {responsavel}",
+    "whatsappTemplate": "*SISMOGRAFIA | DESMONTE {data}*\n\n*{operacao}*\nRegião: {regiao}\nHorário: {horario}\nCampanha com {quantidade} sismógrafo(s) — cenário {cenario}.\n\n*ORIGEM DO DESMONTE*\nCentro do círculo envolvente das áreas e linhas de pré-corte importadas.\nLatitude: {latitude}\nLongitude: {longitude}\nUTM — Zona {zona} Sul\nNorte (Y): {norte} m\nLeste (X): {leste} m\n\n*MONITORAMENTO PROPOSTO*\n{pontos}\n\n*OBSERVAÇÕES*\n{observacoes}\n\nResponsável: {responsavel}",
     "footerLogoAsset": "assets/enaex-white.png",
     "footerLogoBox": {
       "x": 24,
@@ -156,7 +157,8 @@
     "background": "#f3f5f6",
     "logo": "assets/planejador-logo.png",
     "mapColors": {
-      "fixed": "#ffbf2f"
+      "fixed": "#ffbf2f",
+      "line": "#ff7f0e"
     }
   },
   "monitoring": {

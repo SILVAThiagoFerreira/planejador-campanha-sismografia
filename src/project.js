@@ -1,4 +1,4 @@
-import {validatePolygons,validateCommunities} from './validation.js';
+import {validatePolygons,validateLines,validateCommunities} from './validation.js?v=1.3.6';
 export function validateProject(value,config){
   if(!value||value.schemaVersion!==1) throw Error('Versão do arquivo de projeto não suportada.');
   if(!config.crs.some(c=>c.id===value.crs)) throw Error('Sistema de coordenadas desconhecido.');
@@ -10,7 +10,10 @@ export function validateProject(value,config){
   validateCommunities(enabled,value.instrumentCount);
   if(!Array.isArray(value.polygons))throw Error('Geometrias do projeto inválidas.');
   if(value.polygons.length)validatePolygons(value.polygons,config.validation);
-  for(const p of value.polygons)if(typeof p.name!=='string'||p.name.length>config.validation.maxLabelLength)throw Error('Nome da área inválido.');
+  // Projetos salvos antes das linhas de pré-corte não têm o campo "lines": nesse caso não há linhas.
+  const lines=value.lines===undefined?[]:value.lines;
+  validateLines(lines,config.validation);
+  for(const p of [...value.polygons,...lines])if(typeof p.name!=='string'||p.name.length>config.validation.maxLabelLength)throw Error('Nome de área ou linha inválido.');
   if(!value.meta||!/^\d{4}-\d{2}-\d{2}$/.test(value.meta.date))throw Error('Data do projeto inválida.');
   const date=new Date(`${value.meta.date}T12:00:00Z`);if(!Number.isFinite(date.valueOf())||date.toISOString().slice(0,10)!==value.meta.date)throw Error('Data do projeto inválida.');
   for(const key of ['blastName','operation','responsible','time','notes'])if(typeof value.meta[key]!=='string')throw Error(`Campo ${key} inválido.`);
@@ -18,6 +21,7 @@ export function validateProject(value,config){
   if(typeof value.messageTemplate!=='string'||value.messageTemplate.length>10000)throw Error('Modelo de mensagem inválido.');
   if(![1,2,3].includes(value.selectedScenario))throw Error('Cenário do projeto inválido.');
   const validated=structuredClone(value);
+  validated.lines=structuredClone(lines);
   for(const community of validated.communities)community.fixed=community.fixed===true;
   return validated;
 }

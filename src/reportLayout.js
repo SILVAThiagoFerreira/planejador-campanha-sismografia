@@ -147,7 +147,7 @@ export function layoutReport(data, {measure, imageSize}) {
   y = text(`Monitoramento sismográfico programado ${schedule}, com ${instruments}.`, m, y, col, 18) + 9 * unit;
   y = text(`Desmonte: ${meta.blastName || `${plan.polygons?.length || 0} áreas importadas`}.`, m, y, col, 18) + 23 * unit;
   y = heading('LOCALIZAÇÃO DO PONTO', m, y);
-  y = text('Origem no centro do menor círculo que contém todas as poligonais importadas.', m, y, col, 18) + 23 * unit;
+  y = text('Origem no centro do menor círculo que contém todas as áreas e linhas de pré-corte importadas.', m, y, col, 18) + 23 * unit;
   y = heading('COORDENADAS - ORIGEM DO DESMONTE', m, y);
   y = table(['Eixo', 'Coordenada'], [
     ['Latitude', coordinateDMM(plan.origin.lat, 'lat')], ['Longitude', coordinateDMM(plan.origin.lon, 'lon')],

@@ -2,7 +2,7 @@
  * Gerador de PDF vetorial do relatório: textos, tabelas e fios são escritos com jsPDF
  * (texto selecionável e pesquisável); apenas mapa e logotipos são imagens.
  */
-import {layoutReport} from './reportLayout.js';
+import {layoutReport} from './reportLayout.js?v=1.3.6';
 
 /** Distância do topo do corpo da fonte até a linha de base (métrica Helvetica/Arial), em múltiplos do tamanho. */
 const ASCENT = 0.905;
