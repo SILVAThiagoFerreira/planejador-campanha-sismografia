@@ -23,7 +23,7 @@ O PDF é montado com jsPDF a partir do mesmo layout usado na prévia (src/report
 
 Área fechada é a polilinha marcada como fechada no DXF ou cujo último vértice coincide com o primeiro, dentro de `validation.closureToleranceMeters` (config.json, 0,001 m). Neste segundo caso o sistema registra aviso com a camada e usa a área sem o vértice repetido. Polilinha aberta (extremos afastados) é recusada com a camada e a distância entre os extremos. Linhas abertas, como pré-corte, não são áreas e não entram no cálculo.
 
-Lote: cada arquivo é validado separadamente. Os arquivos válidos são importados; os recusados aparecem no aviso com nome e causa e não alteram o projeto. Se nenhum arquivo for aceito, a importação é recusada. Avisos e recusas ficam no log (evento "import").
+Lote: cada arquivo é validado separadamente. Os arquivos válidos são importados; os recusados aparecem no aviso com nome e causa e não alteram o projeto. Cada arquivo aceito é conferido contra o projeto já acumulado (região, raio e regras do cálculo): um arquivo que quebra o cálculo é recusado pelo nome e os demais seguem. Se nenhum arquivo for aceito, a importação é recusada. Avisos e recusas ficam no log (evento "import").
 
 ## Monitoramento sismográfico — 2026-10-27
 

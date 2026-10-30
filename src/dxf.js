@@ -2,10 +2,12 @@ import { validatePolygons } from './validation.js';
 export function parseDXF(text,limits={}){
   if(typeof text!=='string'||text.includes('AutoCAD Binary DXF'))throw new Error('Utilize DXF ASCII. DXF binário não é suportado.');
   if(limits.maxFileBytes&&new TextEncoder().encode(text).byteLength>limits.maxFileBytes)throw new Error(`Arquivo DXF excede ${limits.maxFileBytes} bytes.`);
-  // Tolerância (config.json) para considerar que o último vértice coincide com o primeiro; sem valor, coincidência exata.
-  const tolerance=limits.closureToleranceMeters??0;
-  if(!Number.isFinite(tolerance)||tolerance<0)throw new Error('Tolerância de fechamento DXF inválida na configuração.');
-  const lines=text.replace(/^﻿/,'').replace(/\r/g,'').split('\n');while(lines.length&&lines.at(-1).trim()==='')lines.pop();
+  // Tolerância em metros (config.json, validation.closureToleranceMeters) para o último vértice coincidir com o primeiro. Obrigatória: sem ela o parser recusa.
+  const tolerance=limits.closureToleranceMeters;
+  if(!Number.isFinite(tolerance)||tolerance<0)throw new Error('Tolerância de fechamento DXF ausente ou inválida na configuração.');
+  // Remove o BOM (U+FEFF) por código, sem caractere literal no fonte.
+  const body=text.charCodeAt(0)===0xFEFF?text.slice(1):text;
+  const lines=body.replace(/\r/g,'').split('\n');while(lines.length&&lines.at(-1).trim()==='')lines.pop();
   if(lines.length%2)throw new Error('DXF truncado: pares de códigos incompletos.');
   const pairs=[];for(let i=0;i<lines.length;i+=2){if(!/^\s*\d+\s*$/.test(lines[i]))throw new Error(`Código DXF inválido na linha ${i+1}.`);pairs.push([Number(lines[i]),lines[i+1].trim()]);}
   const entities=[];let section='',record=null;
@@ -29,13 +31,14 @@ export function parseDXF(text,limits={}){
     }
     const layer=get(e,8,'0');
     if(vertices.some(v=>!Number.isFinite(v.x)||!Number.isFinite(v.y)))throw new Error(`Coordenada inválida na camada ${layer}.`);
+    if(vertices.length<2)throw new Error(`Polilinha na camada ${layer} com vértices insuficientes.`);
     // Fechada = marcada como fechada no DXF, ou com último vértice coincidente com o primeiro (CAD que não grava a flag).
-    const gap=vertices.length>1?Math.hypot(vertices[0].x-vertices.at(-1).x,vertices[0].y-vertices.at(-1).y):Infinity;
+    const gap=Math.hypot(vertices[0].x-vertices.at(-1).x,vertices[0].y-vertices.at(-1).y);
     const closedByFlag=(flags&1)===1;
     const closedByCoincidence=vertices.length>2&&gap<=tolerance;
-    if(!closedByFlag&&!closedByCoincidence)throw new Error(`Polilinha aberta na camada ${layer} (inicial e final distam ${gap.toFixed(2).replace('.',',')} m). Feche a área no CAD. Linhas abertas, como pré-corte, não são áreas e não são importadas.`);
+    if(!closedByFlag&&!closedByCoincidence)throw new Error(`Polilinha aberta na camada ${layer} (inicial e final distam ${gap.toFixed(3).replace('.',',')} m). Feche a área no CAD. Linhas abertas, como pré-corte, não são áreas e não são importadas.`);
     if(!closedByFlag)closureWarnings.push(`Camada ${layer}: polilinha sem marcação de fechamento, mas com último vértice igual ao primeiro; tratada como fechada.`);
-    if(vertices.length>1&&gap<=tolerance)vertices.pop();
+    if(gap<=tolerance)vertices.pop();
     polygons.push({id:`area-${polygons.length+1}`,name:`${layer==='0'?'Área':layer} ${polygons.length+1}`,layer,vertices,direction:null});
   }
   validatePolygons(polygons,limits);

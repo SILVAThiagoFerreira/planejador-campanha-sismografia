@@ -6,6 +6,7 @@ import {buildPlan} from '../src/planner.js';
 import {validatePolygons} from '../src/validation.js';
 import proj4 from 'proj4';
 import {readFileSync} from 'node:fs';
+const dxf={closureToleranceMeters:0};
 const square=[{x:-1,y:-1},{x:1,y:-1},{x:1,y:1},{x:-1,y:1}];
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,`${a} ≠ ${b}`);
 test('minimum circle considers extremes, unaffected by vertex density',()=>{
@@ -16,8 +17,8 @@ test('minimum circle encloses random projected UTM points',()=>{let seed=77;cons
 test('polygon distance is zero inside; centroid and north clockwise bearing',()=>{near(distanceToPolygon({x:0,y:0},square),0);near(distanceToPolygon({x:4,y:0},square),3);near(polygonCentroid(square).x,0);near(bearing({x:0,y:0},{x:1,y:0}),90);});
 const wrap=body=>`0\nSECTION\n2\nENTITIES\n${body}0\nENDSEC\n0\nEOF\n`;
 const lw=(flag=1,extra='')=>`0\nLWPOLYLINE\n8\nREG\n90\n4\n70\n${flag}\n10\n0\n20\n0\n10\n100\n20\n0\n10\n100\n20\n100\n10\n0\n20\n100\n${extra}`;
-test('ASCII DXF closed LWPOLYLINE and classic POLYLINE',()=>{assert.equal(parseDXF(wrap(lw())).polygons[0].vertices.length,4);const body='0\nPOLYLINE\n70\n1\n'+[[0,0],[10,0],[0,10]].map(([x,y])=>`0\nVERTEX\n10\n${x}\n20\n${y}\n`).join('')+'0\nSEQEND\n';assert.equal(parseDXF(wrap(body)).polygons[0].vertices.length,3);});
-test('DXF rejects open areas, bulges, blocks, truncation, OCS, invalid counts and limits',()=>{for(const input of [wrap(lw(0)),wrap(lw(1,'42\n0.2\n')),wrap('0\nINSERT\n8\n0\n'),wrap(lw()).replace('0\nEOF\n',''),wrap(lw(1,'210\n1\n')),wrap(lw().replace('90\n4','90\n7'))])assert.throws(()=>parseDXF(input));assert.throws(()=>parseDXF(wrap(lw()),{maxVertices:3}));});
+test('ASCII DXF closed LWPOLYLINE and classic POLYLINE',()=>{assert.equal(parseDXF(wrap(lw()),dxf).polygons[0].vertices.length,4);const body='0\nPOLYLINE\n70\n1\n'+[[0,0],[10,0],[0,10]].map(([x,y])=>`0\nVERTEX\n10\n${x}\n20\n${y}\n`).join('')+'0\nSEQEND\n';assert.equal(parseDXF(wrap(body),dxf).polygons[0].vertices.length,3);});
+test('DXF rejects open areas, bulges, blocks, truncation, OCS, invalid counts and limits',()=>{for(const input of [wrap(lw(0)),wrap(lw(1,'42\n0.2\n')),wrap('0\nINSERT\n8\n0\n'),wrap(lw()).replace('0\nEOF\n',''),wrap(lw(1,'210\n1\n')),wrap(lw().replace('90\n4','90\n7'))])assert.throws(()=>parseDXF(input,dxf));assert.throws(()=>parseDXF(wrap(lw()),{...dxf,maxVertices:3}));});
 test('reject crossing and zero-area polygons',()=>{assert.throws(()=>validatePolygons([{id:'x',vertices:[square[0],square[2],square[1],square[3]]}]));assert.throws(()=>validatePolygons([{id:'x',vertices:[{x:0,y:0},{x:1,y:1},{x:2,y:2}]}]));});
 const communities=[{id:'n',name:'Norte',lon:0,lat:10},{id:'e',name:'Leste',lon:10,lat:0},{id:'s',name:'Sul',lon:0,lat:-10},{id:'w',name:'Oeste',lon:-10,lat:0},{id:'ne',name:'NE',lon:10,lat:10},{id:'sw',name:'SO',lon:-10,lat:-10},{id:'se',name:'SE',lon:10,lat:-10}];
 const options={polygons:[{id:'p',name:'Área',vertices:square,direction:90}],communities,project:(lon,lat)=>({x:lon,y:lat}),unproject:(x,y)=>({lon:x,lat:y}),config:{}};
@@ -48,7 +49,7 @@ test('empty, repeated and nonfinite vertices stop processing',()=>{
  assert.throws(()=>validatePolygons([]));
  assert.throws(()=>validatePolygons([{id:'x',vertices:[...square,square[0]]}]));
  assert.throws(()=>validatePolygons([{id:'x',vertices:[...square,{x:NaN,y:1}]}]));
- assert.throws(()=>parseDXF(wrap(lw().replace('10\n100','10\n'))));
+ assert.throws(()=>parseDXF(wrap(lw().replace('10\n100','10\n')),dxf));
  assert.throws(()=>validatePolygons([{id:'spike',vertices:[{x:0,y:0},{x:3,y:0},{x:2,y:0},{x:2,y:2},{x:0,y:2}]}]),/auto-interseção/);
 });
 test('invalid projection and configured region are rejected explicitly',()=>{
@@ -64,8 +65,8 @@ test('SIRGAS 2000 UTM24S agrees with report rounded GPS and inverse coordinates'
  const [outLon,outLat]=proj4(utm,'EPSG:4326',[x,y]);near(outLon,lon);near(outLat,lat);
 });
 test('demonstration fixture supports real-region planning and invalid fixture fails',()=>{
- const parsed=parseDXF(readFileSync(new URL('./fixtures/campanha.dxf',import.meta.url),'utf8'));
+ const parsed=parseDXF(readFileSync(new URL('./fixtures/campanha.dxf',import.meta.url),'utf8'),dxf);
  const p=buildPlan({polygons:parsed.polygons,communities:[{id:'torroes',name:'Comunidade de Torrões',lat:-(9+39.898/60),lon:-(36+43.091/60)}],instrumentCount:1,project:(lon,lat)=>{const [x,y]=proj4('EPSG:4326',utm,[lon,lat]);return{x,y};},unproject:(x,y)=>{const [lon,lat]=proj4(utm,'EPSG:4326',[x,y]);return{lon,lat};},config:{validation:{regionBounds:[-37.2,-10.2,-36.2,-9.1]}}});
  assert.equal(p.polygons.length,2);assert.ok(p.communities[0].distance>1000);
- assert.throws(()=>parseDXF(readFileSync(new URL('./fixtures/invalido.dxf',import.meta.url),'utf8')),/aberta/);
+ assert.throws(()=>parseDXF(readFileSync(new URL('./fixtures/invalido.dxf',import.meta.url),'utf8'),dxf),/aberta/);
 });

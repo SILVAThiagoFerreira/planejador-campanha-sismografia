@@ -1,4 +1,4 @@
-import { parseDXF } from './dxf.js?v=1.3.4';
+import { parseDXF } from './dxf.js?v=1.3.5';
 // Importa um lote de arquivos DXF arquivo a arquivo. Cada arquivo válido vai para "accepted";
 // cada arquivo recusado vai para "refused" com a causa. Quem chama aplica apenas os aceitos,
 // assim um arquivo recusado nunca altera o projeto nem some sem explicação.
@@ -15,4 +15,21 @@ export async function parseDXFBatch(files,limits){
     }
   }
   return {accepted,refused};
+}
+// Confere cada arquivo aceito contra o projeto já acumulado. "check" lança erro quando o plano não fecha
+// (ex.: área fora da região). O arquivo que quebra o plano é recusado pelo nome; os demais seguem.
+export function acceptIntoProject(accepted,currentPolygons,toPolygons,check){
+  let polygons=currentPolygons;
+  const imported=[],refused=[];
+  for(const file of accepted){
+    const candidate=[...polygons,...toPolygons(file)];
+    try{
+      check(candidate);
+      polygons=candidate;
+      imported.push(file);
+    }catch(error){
+      refused.push({name:file.name,reason:error.message});
+    }
+  }
+  return {polygons,imported,refused};
 }
