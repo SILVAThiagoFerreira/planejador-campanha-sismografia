@@ -58,3 +58,52 @@ Renderização: vetorial em canvas. A mesma lista de operações do PDF (src/mon
 Arquivos: mês gera um PNG `monitoramento-AAAA-MM-4k.png`. Ano gera um ZIP `monitoramento-AAAA-anual-4k.zip` com os 12 PNG mensais (`monitoramento-AAAA-MM-4k.png`) e o resumo (`monitoramento-AAAA-resumo-4k.png`). O ZIP usa JSZip já vendorizado (vendor/jszip.min.js, também usado pelo DOCX): nenhuma dependência nova.
 
 Validação: o build recusa `monitoring.png` com `widthPx` menor que `minWidthPx`, e a exportação recusa o mesmo caso antes de renderizar. Logo ou fonte ausentes interrompem a exportação com o caminho da chave.
+
+## Relatório de apresentação do monitoramento — 2026-11-06
+
+Escopo: botão "Gerar relatório (PDF)" na seção de monitoramento. Gera um PDF de apresentação no modelo da referência `RT - DESVIOS DE PERFURAÇÃO - PC56B (2).pdf` (14 páginas, jsPDF 2.5.1), com as informações que o dashboard exibe para o período dos filtros ativos. O arquivo não é versionado com a referência; as medidas abaixo foram lidas do PDF vetorial e as cores amostradas do desenho.
+
+### Sistema visual da referência
+
+Medidas em pontos (pt), página paisagem.
+
+| Elemento | Especificação extraída |
+|---|---|
+| Página | 960,094 × 613,984 pt, paisagem. Não há capa separada: a página 1 traz título, identificação e indicadores. |
+| Margens | 32,6 pt à esquerda e à direita; conteúdo de 32,6 a 927,5 pt. |
+| Cabeçalho | título em caixa alta, Helvetica regular 20 pt, `#B5121B`, linha de base 56,7 pt. Subtítulo Helvetica 10 pt, `#4A4A4A`, linha de base 76,5 pt. Sem filete sob o cabeçalho. |
+| Logotipos | dois no canto superior direito, altura 34 pt, topo 25,5 pt, alinhados à margem direita e separados por 22,7 pt: cliente (Mineração Vale Verde) à esquerda e Enaex Brasil à direita. Aparecem em todas as páginas. |
+| Rodapé | filete `#3D4045` de 1 pt em y = 580 pt. Texto Helvetica 6,5 pt, `#4A4A4A`, alinhado à direita, linha de base 594,1 pt. Não há numeração de página. |
+| Grade | blocos alinhados à margem. Indicadores em 5 colunas de 181,25 pt com recuo de 11,3 pt. |
+| Título de seção | Helvetica regular 11 pt, `#3C3F44` (ex.: "Conformidade por parâmetro"). |
+| Indicador (KPI) | sem caixa e sem sombra. Rótulo Helvetica 9 pt `#4A4A4A`; valor Helvetica-Bold 22 pt, grafite, ou vermelho quando fora da meta; observação Helvetica 8 pt `#4A4A4A` abaixo do valor. |
+| Tabela | sem bordas verticais e sem zebra. Cabeçalho Helvetica-Bold 7,5 a 8 pt `#8A8F96` com filete `#E5E6E5` de 0,71 pt. Corpo 8 a 9,5 pt `#3C3F44`; números centralizados; valor fora da meta em Helvetica-Bold `#B5121B`. |
+| Gráficos | imagens em fundo branco, grade muito clara, rótulos de eixo cinza 8 a 9 pt, valores dentro das barras em branco negrito, linha de meta tracejada vermelha de 1,7 pt. |
+| Cores | `#B5121B` (título e alerta), `#E30512` (dados em vermelho), `#3C3F44` (texto e barras), `#4A4A4A` (texto secundário), `#8A8F96` (rótulos), `#E5E6E5` (filetes), `#3D4045` (filete do rodapé). |
+| Geometria | cantos retos, sem sombra, sem gradiente. |
+
+Adaptações documentadas:
+- Rodapé traduzido para o português: "ESTRITAMENTE PRIVADO E CONFIDENCIAL" (`monitoring.report.labels.footer`).
+- Dois logotipos, como na referência. Isso excede a regra do VISUAL_STANDARD ("logo uma vez por página") porque o pedido é reproduzir o modelo; a exceção fica registrada aqui.
+- O dashboard não tem gráficos além da grade do Gantt, então o relatório não cria gráficos novos. A grade segue a geometria e as cores acima.
+
+### Filtros e conteúdo
+
+Filtros: ano e mês da seção de monitoramento. O dashboard não tem filtro de pontos; o relatório usa os 7 pontos cadastrados e a capa informa "Todos os 7 pontos cadastrados". Se o filtro de pontos for criado, a capa e as tabelas devem ser alterados junto.
+
+Recusas: sem leitura de dados (fonte `error`) o relatório não é gerado; edição com alterações pendentes bloqueia a exportação, como nos PDFs existentes.
+
+Páginas (3):
+1. **Capa e resumo.** Título "MONITORAMENTO SISMOGRÁFICO - OUTUBRO 2026"; subtítulo `monitoring.subtitle`. Faixa de filtros com rótulo e valor: Período (mês e ano), Pontos, Fonte (planilha no Google Drive ou última cópia publicada) e Emitido em (data e hora da geração). Seis indicadores em duas linhas de três: no mês, desmontes, monitoramentos e pontos sem monitoramento (vermelho quando maior que zero); no ano, desmontes, monitoramentos e meses com registro (de 12). Tabela "Monitoramentos por comunidade": ponto, coluna do mês, coluna do ano e linha Total.
+2. **Grade de monitoramento.** Título "GRADE DE MONITORAMENTO - OUTUBRO 2026". Linha D (dias com desmonte) e uma linha por ponto com os dias 1 a 31: M (monitorado) e N (fora do calendário do mês); células em branco não monitoradas. Legenda em uma linha. Aviso quando o mês não tem registro na planilha.
+3. **Resumo anual.** Título "RESUMO ANUAL - 2026". Tabela com um mês por linha (desmontes, monitoramentos e cada ponto) e linha Total. O mês do relatório aparece em negrito e vermelho. Nota com os meses sem registro na planilha.
+
+Nome do arquivo: `relatorio-monitoramento-{ano}-{mês}.pdf` (`monitoring.report.fileName`).
+
+Formato: PDF vetorial. Títulos, textos, filetes e a grade são vetores e pesquisáveis; apenas os logotipos são imagens. Fonte Helvetica (`monitoring.report.fontFamily`). Caracteres fora de WinAnsi viram "?" somente no PDF.
+
+Configuração e validação: bloco `monitoring.report` em config.json (página, margens, logotipos, cores, tamanhos, medidas em pt, rótulos e nome do arquivo). A validação fica em `src/monitoringReportConfig.js` e é usada pelo build (`tools/build.mjs`) e pela exportação. Chave ausente, cor inválida ou logotipo inexistente interrompe com o caminho da chave; não há valor padrão silencioso.
+
+Módulos: `src/monitoringReportPdf.js` monta as páginas como lista de operações de desenho (mesma base do Gantt) e gera o jsPDF. Reutiliza `painter` e `measureWith` de `src/monitoringGantt.js`, `drawOpsPdf` de `src/monitoringPdf.js` e `monthView`, `monthSummary` e `cellState` de `src/monitoringData.js`. Os dados são os mesmos do dashboard; o relatório não grava nada.
+
+Testes: `tests/monitoringReport.test.js` (configuração, páginas, contagens, filtros, limites da página e nome do arquivo).

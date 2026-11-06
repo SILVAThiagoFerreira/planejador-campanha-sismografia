@@ -26,3 +26,11 @@ Horário inicial: 12:00. Responsável inicial: Setor Técnico de Operações - E
 6. Backend (Apps Script): limite de 5 falhas por usuário em 10 min (CacheService); valida o payload, confere credenciais por hash (padrões quando as propriedades faltam), grava com LockService, cria aba de ano pelo modelo se necessário e, se XLSX_FILE_ID estiver definido, atualiza o .xlsx no Drive.
 7. Após gravar, a aplicação mostra o toast "Salvo no Google Drive." e relê a API; falha de leitura mostra o aviso neutro sem esconder o valor gravado.
 8. Testes: npm test (tests/monitoring.test.js cobre parser, contagens, calendário, payload de auth e gravação, respostas e fetch simulado; tests/appsScript.test.js carrega Code.gs com stubs e cobre setup, padrões, auth e limite de tentativas).
+
+## Relatório de apresentação do monitoramento — 2026-11-06
+
+1. Botão "Gerar relatório (PDF)": usa o ano e o mês dos filtros da seção. Recusa a geração sem dados lidos (fonte `error`) e com edição pendente. Carrega os logotipos `monitoring.report.logos` sob demanda.
+2. Validação: `reportSettings` (src/monitoringReportConfig.js) confere o bloco `monitoring.report` inteiro: chaves, cores, medidas, rótulos e arquivos dos logotipos. Falha interrompe com o caminho da chave.
+3. Montagem: `layoutReport` (src/monitoringReportPdf.js) gera as operações das três páginas a partir de `monthView`, `monthSummary` e `yearSummary`, os mesmos dados do dashboard. Não grava nada.
+4. Desenho: `drawOpsPdf` escreve o PDF vetorial; `doc.save` entrega o arquivo ao navegador. Registra evento "export" no log.
+5. Build: `npm run build` valida `monitoring.report` e os logotipos antes da publicação; `npm test` cobre tests/monitoringReport.test.js.

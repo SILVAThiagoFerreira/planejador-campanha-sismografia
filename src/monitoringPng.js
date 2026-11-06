@@ -2,7 +2,7 @@
 // direto na resolução final, sem ampliar bitmaps. Largura em monitoring.png.widthPx (3840 px no mínimo),
 // altura pela proporção da página A4 paisagem. Mês: um PNG. Ano: ZIP com os 12 meses e o resumo.
 // ZIP usa o JSZip já vendorizado (vendor/jszip.min.js), sem dependência nova.
-import {ganttPages, ganttSettings, measureWith} from './monitoringGantt.js?v=1.4.0';
+import {ganttPages, ganttSettings, measureWith} from './monitoringGantt.js?v=1.5.0';
 
 /** Configuração de monitoring.png; chave ausente interrompe a exportação. */
 export function pngSettings(monitoring) {

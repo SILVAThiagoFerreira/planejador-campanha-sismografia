@@ -77,8 +77,11 @@ export function monthBlockColumns(monitoring, pageWidth) {
   };
 }
 
-/** Empilha operações de desenho. Textos passam por pdfSafeText, como no PDF. */
-function painter(measure, settings) {
+/**
+ * Empilha operações de desenho. Textos passam por pdfSafeText, como no PDF.
+ * Exportado para o relatório de apresentação (monitoringReportPdf.js), que reutiliza o mesmo desenho.
+ */
+export function painter(measure, settings) {
   const {sizes: S, layout: L, colors: C} = settings;
   const ops = [];
   const step = size => size * LINE_HEIGHT;

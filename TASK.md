@@ -51,3 +51,16 @@ Refatoração do relatório: layout único em src/reportLayout.js, prévia/PNG/D
 - [x] Testes em tests/monitoringPdf.test.js (uma página por mês, 13 no ano, colunas sem sobreposição, chave ausente recusada, textos removidos da página).
 - [x] Reprovação do visual do PDF do Gantt (2026-11-06): refeito com a paleta Enaex do VISUAL_STANDARD do hub (vermelho `#E20613`, cinzas `#38424B`, `#4A4F55`, `#8A8F96`, `#E3E3E3`), fundo branco, grade de filetes finos, marcas em pílulas, legenda em uma linha, cartões sem caixas, tabela com filetes e logotipo Enaex colorido (`assets/enaex-brasil.png`, cópia do hub). Medidas, cores e logo em `monitoring.pdf`; o controlador lê o logo de `monitoring.pdf.logoAsset`. Teste de paleta em tests/monitoringPdf.test.js. Prévias conferidas em output/gantt-preview/ (não versionadas).
 - [x] Exportação PNG 4K do Gantt (2026-11-06): botões "Exportar mês (PNG 4K)" e "Exportar ano (PNG 4K)". Mesmo layout e cores do PDF, desenhado em canvas na resolução final (3840 × 2715 px, RGB). Ano gera ZIP com 12 meses e resumo, via JSZip já vendorizado (sem dependência nova). Config em `monitoring.png` (widthPx, minWidthPx = 3840, fontStack, nomes); build recusa largura abaixo do mínimo; testes em tests/monitoringPng.test.js. Layout compartilhado em src/monitoringGantt.js. Versões de cache: app.js 1.4.0, controlador 1.4.0, monitoringPdf/monitoringPng/monitoringGantt 1.4.0. Prévias 4K em output/gantt-preview/ (não versionadas).
+
+## Relatório de apresentação do monitoramento — 2026-11-06
+
+- [x] Referência medida (RT - DESVIOS DE PERFURAÇÃO - PC56B, 14 páginas): página, margens, fontes, tamanhos, cores, logotipos, rodapé e tabelas documentados em SPEC.md.
+- [x] Bloco `monitoring.report` em config.json; validação em src/monitoringReportConfig.js, usada pela exportação e pelo build (tools/build.mjs).
+- [x] Módulo src/monitoringReportPdf.js com três páginas: capa e resumo (filtros, seis indicadores e tabela por comunidade), grade do mês e resumo anual. Reaproveita `painter` e `measureWith` de monitoringGantt.js e `drawOpsPdf` de monitoringPdf.js.
+- [x] Botão "Gerar relatório (PDF)" na seção de monitoramento; usa o ano e o mês dos filtros; "Exportar mês (PDF)" passa a ser secundário.
+- [x] Testes em tests/monitoringReport.test.js (contagens conferidas a partir do JSON, filtros, mês sem registro, margens, paleta e PDF de três páginas).
+- [x] Prévias em output/report-preview/ (não versionadas): PDF, páginas em PNG e comparações lado a lado com a referência.
+- [ ] Logotipo da Mineração Vale Verde (assets/mineracao-vale-verde.png) foi extraído do PDF de referência e é publicado no Pages. Confirmar se pode ficar público.
+- [ ] Confirmar a tradução do rodapé ("ESTRITAMENTE PRIVADO E CONFIDENCIAL") e a exceção de dois logotipos por página (VISUAL_STANDARD pede um logo por página).
+- [ ] O dashboard não tem filtro de pontos/comunidades; a capa informa os 7 pontos. Se o filtro for criado, o relatório precisa aceitar o subconjunto.
+- Versões de cache: monitoringGantt, monitoringPdf, monitoringPng, monitoringReportConfig e monitoringReportPdf em 1.5.0; controlador 1.5.0; app.js 1.5.0 (index.html).

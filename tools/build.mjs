@@ -2,6 +2,7 @@ import {readFile,writeFile,mkdir,cp} from 'node:fs/promises';
 import {existsSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {validateMonitoringData} from '../src/monitoringData.js';
+import {reportSettings} from '../src/monitoringReportConfig.js';
 // Hash the canonical LF representation so Windows checkouts and the Pages Linux
 // runner produce the same stable manifest.
 const raw=(await readFile('config.json','utf8')).replace(/\r\n/g,'\n');
@@ -13,6 +14,8 @@ if(!monitoring||monitoring.points.length!==7||new Set(monitoring.points).size!==
 // O PDF do monitoramento lê layout, tamanhos e cores de monitoring.pdf; bloco incompleto interrompe o build.
 if(!monitoring.pdf?.layout||!monitoring.pdf?.sizes||!monitoring.pdf?.colors) throw Error('Configuração de PDF do monitoramento incompleta (monitoring.pdf).');
 if(typeof monitoring.pdf.logoAsset!=='string'||!existsSync(monitoring.pdf.logoAsset)) throw Error('Logo do PDF do monitoramento ausente (monitoring.pdf.logoAsset).');
+// Relatório de apresentação (monitoring.report): bloco completo, cores válidas e logotipos existentes; qualquer falha interrompe o build.
+reportSettings(monitoring,{fileExists:path=>existsSync(path)});
 // PNG 4K do Gantt: largura em monitoring.png.widthPx nunca abaixo de minWidthPx (3840 px na especificação).
 const png=monitoring.png;
 if(!png||!Number.isInteger(png.widthPx)||!Number.isInteger(png.minWidthPx)||png.widthPx<png.minWidthPx||!png.fontStack||!png.fileName||!png.yearFileName||!png.summaryFileName) throw Error('Configuração de PNG do monitoramento inválida (monitoring.png: widthPx não pode ser menor que minWidthPx).');

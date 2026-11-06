@@ -1,10 +1,10 @@
 // Exportação PDF do monitoramento (jsPDF, A4 paisagem, vetorial e selecionável).
 // O layout vem de monitoringGantt.js (o mesmo usado pelo PNG 4K); aqui só se desenham as operações no jsPDF.
 // Mês: uma página. Ano: uma página por mês e uma de resumo anual.
-import {ganttPages, ganttSettings, measureWith} from './monitoringGantt.js?v=1.4.0';
+import {ganttPages, ganttSettings, measureWith} from './monitoringGantt.js?v=1.5.0';
 import {monthTitle} from './monitoringView.js';
 
-/** Desenha uma lista de operações numa página do jsPDF. */
+/** Desenha uma lista de operações numa página do jsPDF. Imagens são buscadas em assets[op.key] (padrão: 'brand'). */
 export function drawOpsPdf(doc, ops, {font, assets}) {
   for (const op of ops) {
     if (op.t === 'rect') {
@@ -29,8 +29,8 @@ export function drawOpsPdf(doc, ops, {font, assets}) {
       doc.setTextColor(...op.color);
       doc.text(op.s, op.x, op.y, {align: op.align});
     } else if (op.t === 'image') {
-      const brand = assets.brand;
-      doc.addImage(brand.src, brand.format, op.x, op.y, op.w, op.h, undefined, 'FAST');
+      const image = assets[op.key ?? 'brand'];
+      doc.addImage(image.src, image.format, op.x, op.y, op.w, op.h, undefined, 'FAST');
     }
   }
 }

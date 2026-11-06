@@ -8,8 +8,10 @@ import {
 } from './monitoringData.js';
 import {readRemoteData, saveRemoteMonth, checkRemoteAccess} from './monitoringApi.js';
 import {renderMonthGrid, renderLegend, renderCounts, renderCommunityTable, renderYearBody, monthTitle} from './monitoringView.js?v=1.3.3';
-import {buildMonitoringPdf, monitoringFileName} from './monitoringPdf.js?v=1.4.0';
-import {exportMonitoringPng, saveBlob} from './monitoringPng.js?v=1.4.0';
+import {buildMonitoringPdf, monitoringFileName} from './monitoringPdf.js?v=1.5.0';
+import {exportMonitoringPng, saveBlob} from './monitoringPng.js?v=1.5.0';
+import {buildMonitoringReport, reportFileName} from './monitoringReportPdf.js?v=1.5.0';
+import {reportSettings} from './monitoringReportConfig.js?v=1.5.0';
 
 const $ = id => document.getElementById(id);
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
@@ -57,6 +59,7 @@ export async function initMonitoring(config) {
     authPending: false,
     credentials: null,   // {user, password}: somente em memória, durante a sessão da página
     assets: null,
+    reportAssets: null,  // logotipos do relatório de apresentação (client e enaex), carregados sob demanda
     lastOpener: null,
   };
   const els = {
@@ -65,7 +68,7 @@ export async function initMonitoring(config) {
     notice: $('monitoring-notice'), message: $('mon-message'), sourceLabel: $('monitoring-source-label'),
     editToggle: $('mon-edit-toggle'), save: $('mon-save'), cancel: $('mon-cancel'),
     openYear: $('mon-open-year'), exportMonth: $('mon-export-month'), exportYear: $('mon-export-year'),
-    exportMonthPng: $('mon-export-month-png'), exportYearPng: $('mon-export-year-png'),
+    exportMonthPng: $('mon-export-month-png'), exportYearPng: $('mon-export-year-png'), exportReport: $('mon-export-report'),
     loginDialog: $('mon-login-dialog'), loginForm: $('mon-login-form'), loginTitle: $('mon-login-title'),
     loginUser: $('mon-login-user'), loginPassword: $('mon-login-password'),
     loginError: $('mon-login-error'), loginSubmit: $('mon-login-submit'), loginCancel: $('mon-login-cancel'),
@@ -424,6 +427,36 @@ export async function initMonitoring(config) {
     }
   }
 
+  // Relatório de apresentação (PDF): usa o ano e o mês dos filtros ativos; não grava nada.
+  async function exportReport() {
+    if (state.busy) return;
+    const JsPDF = globalThis.jspdf?.jsPDF;
+    if (!JsPDF) { say('Biblioteca jsPDF não carregada; não é possível gerar o relatório.', true); return; }
+    if (state.editing && state.dirty) { say('Grave ou cancele a edição antes de gerar o relatório.', true); return; }
+    if (state.source.kind !== 'api' && state.source.kind !== 'snapshot') {
+      say('Sem dados de monitoramento para gerar o relatório.', true);
+      return;
+    }
+    state.busy = true;
+    try {
+      const settings = reportSettings(monitoring);
+      if (!state.reportAssets) {
+        state.reportAssets = {client: await loadImageAsset(settings.logos.client), enaex: await loadImageAsset(settings.logos.enaex)};
+      }
+      const doc = buildMonitoringReport(JsPDF, {
+        data: state.data, monitoring, year: state.year, month: state.month, source: state.source.kind, issued: new Date(), assets: state.reportAssets,
+      });
+      const fileName = reportFileName(monitoring, state.year, state.month);
+      doc.save(fileName);
+      logEvent('export', 'Relatório de apresentação do monitoramento gerado', {year: state.year, month: state.month, source: state.source.kind, file: fileName});
+      say(`Relatório gerado: ${fileName}.`);
+    } catch (error) {
+      say(`Não foi possível gerar o relatório. ${error.message}`, true);
+    } finally {
+      state.busy = false;
+    }
+  }
+
   // Textos fixos vindos de config.json
   els.sourceLabel.textContent = ui.sourceText;
   els.loginTitle.textContent = ui.loginTitle;
@@ -452,6 +485,7 @@ export async function initMonitoring(config) {
   els.exportYear.addEventListener('click', () => exportPdf('year'));
   els.exportMonthPng.addEventListener('click', () => exportPng('month'));
   els.exportYearPng.addEventListener('click', () => exportPng('year'));
+  els.exportReport.addEventListener('click', exportReport);
 
   await loadData();
   refreshYearOptions();
