@@ -8,7 +8,7 @@ import {
 } from './monitoringData.js';
 import {readRemoteData, saveRemoteMonth, checkRemoteAccess} from './monitoringApi.js';
 import {renderMonthGrid, renderLegend, renderCounts, renderCommunityTable, renderYearBody, monthTitle} from './monitoringView.js?v=1.3.3';
-import {buildMonitoringPdf, monitoringFileName} from './monitoringPdf.js?v=1.3.4';
+import {buildMonitoringPdf, monitoringFileName} from './monitoringPdf.js?v=1.3.5';
 
 const $ = id => document.getElementById(id);
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
@@ -385,7 +385,7 @@ export async function initMonitoring(config) {
     if (state.editing && state.dirty) { say('Grave ou cancele a edição antes de exportar o PDF.', true); return; }
     state.busy = true;
     try {
-      if (!state.assets) state.assets = {brand: await loadImageAsset('assets/enaex-white.png')};
+      if (!state.assets) state.assets = {brand: await loadImageAsset(monitoring.pdf.logoAsset)};
       const doc = buildMonitoringPdf(JsPDF, {data: state.data, monitoring, mode, year: state.year, month: state.month, assets: state.assets});
       const fileName = monitoringFileName(monitoring, mode, state.year, state.month);
       doc.save(fileName);

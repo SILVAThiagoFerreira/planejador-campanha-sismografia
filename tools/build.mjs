@@ -12,6 +12,7 @@ const monitoring=config.monitoring;
 if(!monitoring||monitoring.points.length!==7||new Set(monitoring.points).size!==7||monitoring.monthNames.length!==12||!monitoring.api?.saveAction||!monitoring.api?.authAction) throw Error('Configuração de monitoramento inválida.');
 // O PDF do monitoramento lê layout, tamanhos e cores de monitoring.pdf; bloco incompleto interrompe o build.
 if(!monitoring.pdf?.layout||!monitoring.pdf?.sizes||!monitoring.pdf?.colors) throw Error('Configuração de PDF do monitoramento incompleta (monitoring.pdf).');
+if(typeof monitoring.pdf.logoAsset!=='string'||!existsSync(monitoring.pdf.logoAsset)) throw Error('Logo do PDF do monitoramento ausente (monitoring.pdf.logoAsset).');
 // Textos exibidos ao usuário ficam em monitoring.ui; nenhum pode faltar ou estar vazio.
 for(const key of ['sourceText','offlineNotice','loadFailedNotice','editHint','loginTitle','loginButton','editUnavailable','verifying','saveButton','saving','savedToast','saveFailed','cancelled']) {
   if(typeof monitoring.ui?.[key]!=='string'||!monitoring.ui[key].trim()) throw Error(`Texto monitoring.ui.${key} ausente em config.json.`);
