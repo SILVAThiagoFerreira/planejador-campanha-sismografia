@@ -8,7 +8,7 @@ import {
 } from './monitoringData.js';
 import {readRemoteData, saveRemoteMonth, checkRemoteAccess} from './monitoringApi.js';
 import {renderMonthGrid, renderLegend, renderCounts, renderCommunityTable, renderYearBody, monthTitle} from './monitoringView.js?v=1.3.3';
-import {buildMonitoringPdf, monitoringFileName} from './monitoringPdf.js';
+import {buildMonitoringPdf, monitoringFileName} from './monitoringPdf.js?v=1.3.4';
 
 const $ = id => document.getElementById(id);
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
@@ -65,7 +65,7 @@ export async function initMonitoring(config) {
     editToggle: $('mon-edit-toggle'), save: $('mon-save'), cancel: $('mon-cancel'),
     openYear: $('mon-open-year'), exportMonth: $('mon-export-month'), exportYear: $('mon-export-year'),
     loginDialog: $('mon-login-dialog'), loginForm: $('mon-login-form'), loginTitle: $('mon-login-title'),
-    loginHint: $('mon-login-hint'), loginUser: $('mon-login-user'), loginPassword: $('mon-login-password'),
+    loginUser: $('mon-login-user'), loginPassword: $('mon-login-password'),
     loginError: $('mon-login-error'), loginSubmit: $('mon-login-submit'), loginCancel: $('mon-login-cancel'),
     yearDialog: $('mon-year-dialog'), yearTitle: $('mon-year-title'), yearBody: $('mon-year-body'), yearClose: $('mon-year-close'),
     toast: $('toast'),
@@ -401,7 +401,6 @@ export async function initMonitoring(config) {
   // Textos fixos vindos de config.json
   els.sourceLabel.textContent = ui.sourceText;
   els.loginTitle.textContent = ui.loginTitle;
-  els.loginHint.textContent = ui.loginHint;
   els.loginSubmit.textContent = ui.loginButton;
   els.save.textContent = ui.saveButton;
 

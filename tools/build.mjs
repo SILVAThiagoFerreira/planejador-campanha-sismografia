@@ -10,8 +10,10 @@ if(config.schemaVersion!==1||config.communities.length!==7||!config.crs.length) 
 for(const c of config.communities) if(!Number.isFinite(c.lat)||!Number.isFinite(c.lon)) throw Error('Comunidade inválida.');
 const monitoring=config.monitoring;
 if(!monitoring||monitoring.points.length!==7||new Set(monitoring.points).size!==7||monitoring.monthNames.length!==12||!monitoring.api?.saveAction||!monitoring.api?.authAction) throw Error('Configuração de monitoramento inválida.');
+// O PDF do monitoramento lê layout, tamanhos e cores de monitoring.pdf; bloco incompleto interrompe o build.
+if(!monitoring.pdf?.layout||!monitoring.pdf?.sizes||!monitoring.pdf?.colors) throw Error('Configuração de PDF do monitoramento incompleta (monitoring.pdf).');
 // Textos exibidos ao usuário ficam em monitoring.ui; nenhum pode faltar ou estar vazio.
-for(const key of ['sourceText','offlineNotice','loadFailedNotice','editHint','loginTitle','loginHint','loginButton','editUnavailable','verifying','saveButton','saving','savedToast','saveFailed','cancelled']) {
+for(const key of ['sourceText','offlineNotice','loadFailedNotice','editHint','loginTitle','loginButton','editUnavailable','verifying','saveButton','saving','savedToast','saveFailed','cancelled']) {
   if(typeof monitoring.ui?.[key]!=='string'||!monitoring.ui[key].trim()) throw Error(`Texto monitoring.ui.${key} ausente em config.json.`);
 }
 // O snapshot do monitoramento, quando existir, precisa atender ao contrato da aplicação.

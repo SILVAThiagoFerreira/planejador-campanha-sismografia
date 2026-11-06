@@ -1,172 +1,247 @@
 // Exportação PDF do monitoramento (jsPDF, A4 paisagem, vetorial e selecionável).
-// Mês: uma página com grade, legenda, contagens e tabela por comunidade.
+// Mês: uma página com a grade (Gantt), legenda, contagens e tabela por comunidade.
 // Ano: uma página por mês e uma página de resumo anual.
+// Medidas, tamanhos e cores vêm de monitoring.pdf e monitoring.colors (config.json).
+// Chave ausente interrompe a exportação; não há valores padrão silenciosos.
 import {cellState, monthSummary, monthView, yearSummary} from './monitoringData.js';
 import {pdfSafeText} from './reportPdf.js';
 import {monthTitle} from './monitoringView.js';
 
+const SIZE_KEYS = ['brand', 'brandSubtitle', 'title', 'subtitle', 'label', 'blockTitle', 'cell', 'smallCell', 'tableHeader', 'kpiLabel', 'kpiValue', 'footer', 'warning'];
+const LAYOUT_KEYS = ['headerHeight', 'logoHeight', 'titleY', 'subtitleY', 'gridTop', 'labelWidth', 'blastRowHeight', 'dayRowHeight', 'pointRowHeight',
+  'sectionGap', 'columnGap', 'legendWidth', 'legendRowHeight', 'kpiWidth', 'kpiHeight', 'kpiGap', 'communityRowHeight', 'footerY', 'warningY',
+  'yearTableTop', 'yearHeaderHeight', 'yearRowHeight', 'yearMonthWidth', 'yearBlastWidth', 'yearMonitoringWidth'];
+const PDF_COLOR_KEYS = ['ink', 'muted', 'white', 'headerSubtle', 'cardFill', 'totalFill', 'warning'];
+const GRID_COLOR_KEYS = ['header', 'headerText', 'monitored', 'monitoredText', 'notInMonth', 'blastMark', 'grid'];
+/** Entrelinha relativa ao tamanho da fonte. */
+const LINE_HEIGHT = 1.25;
+/** Deslocamento da linha de base para centralizar maiúsculas numa caixa (fração do tamanho). */
+const CAP_CENTER = 0.36;
+
 const hexRgb = hex => {
+  if (typeof hex !== 'string' || !/^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(hex)) throw new Error(`Cor inválida em config.json: ${hex}.`);
   const full = hex.length === 4 ? `#${[...hex.slice(1)].map(c => c + c).join('')}` : hex;
   return [parseInt(full.slice(1, 3), 16), parseInt(full.slice(3, 5), 16), parseInt(full.slice(5, 7), 16)];
 };
-const PAGE_W = 842, PAGE_H = 595;
-const INK = [38, 52, 65], MUTED = [99, 113, 128], WHITE = [255, 255, 255];
+
+/** Valor obrigatório de config.json; ausência lança erro com o caminho da chave. */
+function need(source, key, path) {
+  const value = source?.[key];
+  if (value === undefined || value === null || value === '') throw new Error(`Configuração ausente em config.json: ${path}.${key}.`);
+  return value;
+}
+
+/** Lê e valida monitoring.pdf e as cores da grade (monitoring.colors); cores saem em RGB. */
+function pdfSettings(monitoring) {
+  const pdf = need(monitoring, 'pdf', 'monitoring');
+  const pick = (group, keys) => {
+    const values = need(pdf, group, 'monitoring.pdf');
+    return Object.fromEntries(keys.map(key => [key, need(values, key, `monitoring.pdf.${group}`)]));
+  };
+  const shared = need(monitoring, 'colors', 'monitoring');
+  const hex = {...pick('colors', PDF_COLOR_KEYS), ...Object.fromEntries(GRID_COLOR_KEYS.map(k => [k, need(shared, k, 'monitoring.colors')]))};
+  return {
+    font: need(pdf, 'fontFamily', 'monitoring.pdf'),
+    margin: need(pdf, 'margin', 'monitoring.pdf'),
+    sizes: pick('sizes', SIZE_KEYS),
+    layout: pick('layout', LAYOUT_KEYS),
+    colors: Object.fromEntries(Object.entries(hex).map(([k, v]) => [k, hexRgb(v)])),
+  };
+}
+
+/**
+ * Colunas do bloco inferior do mês (legenda, contagens e tabela por comunidade), em pontos.
+ * A tabela ocupa o que sobra da largura útil, então as três colunas nunca se sobrepõem.
+ */
+export function monthBottomColumns(monitoring, pageWidth) {
+  const {margin, layout: L} = pdfSettings(monitoring);
+  const kpiX = margin + L.legendWidth + L.columnGap;
+  const communityX = kpiX + L.kpiWidth + L.columnGap;
+  return {
+    legend: {x: margin, w: L.legendWidth},
+    kpi: {x: kpiX, w: L.kpiWidth},
+    community: {x: communityX, w: pageWidth - margin - communityX},
+  };
+}
 
 /**
  * Constrói o documento. `JsPDF` é o construtor do jsPDF; `assets.brand` = {src, format, width, height} (logotipo da faixa).
  */
 export function buildMonitoringPdf(JsPDF, {data, monitoring, mode, year, month, assets}) {
+  const {font, margin, sizes: S, layout: L, colors: C} = pdfSettings(monitoring);
+  const cells = monitoring.layout;
+  const labels = monitoring.labels;
   const doc = new JsPDF({orientation: 'landscape', unit: 'pt', format: 'a4', compress: true});
-  const font = monitoring.pdf.fontFamily;
-  const margin = monitoring.pdf.margin;
-  const colors = monitoring.colors;
+  const PAGE_W = doc.internal.pageSize.getWidth(), PAGE_H = doc.internal.pageSize.getHeight();
+  const contentW = PAGE_W - 2 * margin;
+
   const setFont = (size, bold = false) => { doc.setFont(font, bold ? 'bold' : 'normal'); doc.setFontSize(size); };
-  const fill = c => doc.setFillColor(...c);
-  const draw = c => doc.setDrawColor(...c);
-  const text = (str, x, y, {size = 9, bold = false, color = INK, align = 'left'} = {}) => {
+  const text = (str, x, y, {size = S.cell, bold = false, color = C.ink, align = 'left'} = {}) => {
     setFont(size, bold);
     doc.setTextColor(...color);
     doc.text(pdfSafeText(String(str)), x, y, {align});
   };
-  const cellText = (str, x, y, w, h, opts) => text(str, x + w / 2, y + h / 2 + opts.size * 0.36, {...opts, align: 'center'});
+  const wrap = (str, width, size, bold = false) => { setFont(size, bold); return doc.splitTextToSize(pdfSafeText(String(str)), width); };
+  const step = size => size * LINE_HEIGHT;
+  /** Texto de uma ou mais linhas, centralizado verticalmente numa caixa. */
+  const boxText = (lines, x, y, w, h, {size = S.cell, bold = false, color = C.ink, align = 'center'} = {}) => {
+    const first = y + h / 2 - ((lines.length - 1) * step(size)) / 2 + size * CAP_CENTER;
+    const anchor = align === 'center' ? x + w / 2 : align === 'right' ? x + w : x;
+    lines.forEach((line, i) => text(line, anchor, first + i * step(size), {size, bold, color, align}));
+  };
+  const vcenter = (y, h, size) => y + h / 2 + size * CAP_CENTER;
   const rect = (x, y, w, h, fillColor, strokeColor = null) => {
-    if (fillColor) { fill(fillColor); }
-    if (strokeColor) { draw(strokeColor); doc.setLineWidth(0.5); }
+    if (fillColor) doc.setFillColor(...fillColor);
+    if (strokeColor) { doc.setDrawColor(...strokeColor); doc.setLineWidth(0.5); }
     doc.rect(x, y, w, h, fillColor && strokeColor ? 'FD' : fillColor ? 'F' : 'S');
   };
-  const footer = (pageLabel) => {
-    text(`Fonte: ${monitoring.source.fileName}`, margin, PAGE_H - 14, {size: 7, color: MUTED});
-    text(pageLabel, PAGE_W - margin, PAGE_H - 14, {size: 7, color: MUTED, align: 'right'});
+  const footer = pageLabel => {
+    text(`Fonte: ${monitoring.source.fileName}`, margin, PAGE_H - L.footerY, {size: S.footer, color: C.muted});
+    text(pageLabel, PAGE_W - margin, PAGE_H - L.footerY, {size: S.footer, color: C.muted, align: 'right'});
   };
   const header = (titleLine, subtitle) => {
-    rect(0, 0, PAGE_W, 44, hexRgb(colors.header));
+    rect(0, 0, PAGE_W, L.headerHeight, C.header);
     if (assets?.brand) {
-      const h = 22, w = assets.brand.width * (h / assets.brand.height);
-      doc.addImage(assets.brand.src, assets.brand.format, margin, (44 - h) / 2, w, h, undefined, 'FAST');
+      const h = L.logoHeight, w = assets.brand.width * (h / assets.brand.height);
+      doc.addImage(assets.brand.src, assets.brand.format, margin, (L.headerHeight - h) / 2, w, h, undefined, 'FAST');
     }
-    text(monitoring.title, PAGE_W - margin, 19, {size: 12, bold: true, color: WHITE, align: 'right'});
-    text(monitoring.subtitle, PAGE_W - margin, 32, {size: 8, color: [200, 205, 210], align: 'right'});
-    text(titleLine, margin, 66, {size: 16, bold: true});
-    text(subtitle, margin, 80, {size: 8, color: MUTED});
+    text(monitoring.title, PAGE_W - margin, L.headerHeight * 0.44, {size: S.brand, bold: true, color: C.white, align: 'right'});
+    text(monitoring.subtitle, PAGE_W - margin, L.headerHeight * 0.74, {size: S.brandSubtitle, color: C.headerSubtle, align: 'right'});
+    text(titleLine, margin, L.titleY, {size: S.title, bold: true});
+    text(subtitle, margin, L.subtitleY, {size: S.subtitle, color: C.muted});
   };
 
   const drawMonth = (monthNumber, pageNo) => {
     const view = monthView(data, year, monthNumber, monitoring);
     const summary = monthSummary(view, monitoring);
-    const dayCount = monitoring.layout.dayCount;
+    const pageLabel = `${monthTitle(monitoring, monthNumber)} ${year}`;
     if (pageNo > 1) doc.addPage('a4', 'landscape');
-    header(`${monthTitle(monitoring, monthNumber)} ${year}`, `${monitoring.labels.tableTitle}`);
-    const labelW = 190;
-    const dayW = (PAGE_W - 2 * margin - labelW) / dayCount;
-    const top = 92, blastH = 18, dayH = 16, rowH = 20;
-    const gridColor = hexRgb(colors.grid);
-    // Linha de desmontes.
-    text(monitoring.labels.pointHeader, margin + 6, top + blastH / 2 + 3, {size: 8, bold: true});
-    rect(margin, top, labelW, blastH, null, gridColor);
-    for (let d = 1; d <= dayCount; d++) {
+    header(pageLabel, labels.tableTitle);
+
+    // Grade: linha dos desmontes (D), faixa escura com o rótulo e os dias, uma linha por ponto.
+    const labelW = L.labelWidth, dayW = (contentW - labelW) / cells.dayCount;
+    const top = L.gridTop, dayTop = top + L.blastRowHeight, pointsTop = dayTop + L.dayRowHeight;
+    rect(margin, top, labelW, L.blastRowHeight, null, C.grid);
+    rect(margin, dayTop, labelW, L.dayRowHeight, C.header, C.grid);
+    boxText([labels.pointHeader], margin + 6, dayTop, labelW - 6, L.dayRowHeight, {size: S.label, bold: true, color: C.headerText, align: 'left'});
+    for (let d = 1; d <= cells.dayCount; d++) {
       const x = margin + labelW + (d - 1) * dayW;
-      rect(x, top, dayW, blastH, null, gridColor);
-      if (view.desmontes.has(d)) cellText(monitoring.layout.dayMarker, x, top, dayW, blastH, {size: 8, bold: true, color: hexRgb(colors.blastMark)});
+      rect(x, top, dayW, L.blastRowHeight, null, C.grid);
+      if (view.desmontes.has(d)) boxText([cells.dayMarker], x, top, dayW, L.blastRowHeight, {size: S.cell, bold: true, color: C.blastMark});
+      rect(x, dayTop, dayW, L.dayRowHeight, C.header, C.grid);
+      boxText([String(d)], x, dayTop, dayW, L.dayRowHeight, {size: S.smallCell, bold: true, color: C.headerText});
     }
-    // Números dos dias.
-    const dayTop = top + blastH;
-    rect(margin, dayTop, labelW, dayH, hexRgb(colors.header));
-    for (let d = 1; d <= dayCount; d++) {
-      const x = margin + labelW + (d - 1) * dayW;
-      rect(x, dayTop, dayW, dayH, hexRgb(colors.header), gridColor);
-      cellText(String(d), x, dayTop, dayW, dayH, {size: 7, bold: true, color: hexRgb(colors.headerText)});
-    }
-    // Pontos.
     monitoring.points.forEach((name, k) => {
-      const y = dayTop + dayH + k * rowH;
-      rect(margin, y, labelW, rowH, null, gridColor);
-      text(name, margin + 6, y + rowH / 2 + 3, {size: 8});
-      for (let d = 1; d <= dayCount; d++) {
+      const y = pointsTop + k * L.pointRowHeight, h = L.pointRowHeight;
+      rect(margin, y, labelW, h, null, C.grid);
+      text(name, margin + 6, vcenter(y, h, S.cell));
+      for (let d = 1; d <= cells.dayCount; d++) {
         const x = margin + labelW + (d - 1) * dayW;
         const state = cellState(view, name, d);
         if (state === 'M') {
-          rect(x, y, dayW, rowH, hexRgb(colors.monitored), gridColor);
-          cellText(monitoring.layout.monitoredMarker, x, y, dayW, rowH, {size: 8, bold: true, color: hexRgb(colors.monitoredText)});
+          rect(x, y, dayW, h, C.monitored, C.grid);
+          boxText([cells.monitoredMarker], x, y, dayW, h, {size: S.cell, bold: true, color: C.monitoredText});
         } else if (state === 'N') {
-          rect(x, y, dayW, rowH, hexRgb(colors.notInMonth), gridColor);
-          cellText(monitoring.layout.notInMonthMarker, x, y, dayW, rowH, {size: 7, bold: false, color: INK});
+          rect(x, y, dayW, h, C.notInMonth, C.grid);
+          boxText([cells.notInMonthMarker], x, y, dayW, h, {size: S.smallCell, color: C.ink});
         } else {
-          rect(x, y, dayW, rowH, null, gridColor);
+          rect(x, y, dayW, h, null, C.grid);
         }
       }
     });
-    // Blocos abaixo da grade: legenda, contagens e tabela por comunidade.
-    const blockTop = dayTop + dayH + monitoring.points.length * rowH + 22;
-    const l = monitoring.labels;
-    text(l.legendTitle, margin, blockTop, {size: 9, bold: true});
+
+    // Abaixo da grade: legenda, contagens do mês (cartões) e tabela por comunidade, lado a lado.
+    const cols = monthBottomColumns(monitoring, PAGE_W);
+    const blockTop = pointsTop + monitoring.points.length * L.pointRowHeight + L.sectionGap;
+    const swatch = 13, legendTextX = cols.legend.x + swatch + 6, legendTextW = cols.legend.w - swatch - 6;
+    text(labels.legendTitle, cols.legend.x, blockTop + 9, {size: S.blockTitle, bold: true});
     const legend = [
-      [null, l.blankLegend],
-      [{fill: colors.monitored, mark: monitoring.layout.monitoredMarker, color: colors.monitoredText}, l.monitoredLegend],
-      [{fill: colors.notInMonth, mark: monitoring.layout.notInMonthMarker, color: colors.header}, l.notInMonthLegend],
-      [{fill: null, mark: monitoring.layout.dayMarker, color: colors.blastMark}, l.blastLegend],
+      [null, labels.blankLegend],
+      [{fill: C.monitored, mark: cells.monitoredMarker, color: C.monitoredText}, labels.monitoredLegend],
+      [{fill: C.notInMonth, mark: cells.notInMonthMarker, color: C.header}, labels.notInMonthLegend],
+      [{fill: null, mark: cells.dayMarker, color: C.blastMark}, labels.blastLegend],
     ];
-    legend.forEach(([sw, label], i) => {
-      const y = blockTop + 10 + i * 17;
-      rect(margin, y, 13, 13, sw?.fill ? hexRgb(sw.fill) : null, gridColor);
-      if (sw) cellText(sw.mark, margin, y, 13, 13, {size: 7, bold: true, color: hexRgb(sw.color)});
-      text(label, margin + 20, y + 9.5, {size: 8});
-    });
-    const countsX = 330;
-    text(l.desmontesCount, countsX, blockTop, {size: 9, bold: true});
-    text(String(summary.desmontes), countsX, blockTop + 26, {size: 20, bold: true, color: hexRgb(colors.header)});
-    text(l.monitoringCount, countsX + 150, blockTop, {size: 9, bold: true});
-    text(String(summary.monitoramentos), countsX + 150, blockTop + 26, {size: 20, bold: true, color: hexRgb(colors.header)});
-    const tableX = 560, tableW = PAGE_W - margin - tableX, rowsTop = blockTop + 10;
-    text(l.communityTable, tableX, blockTop, {size: 9, bold: true});
-    monitoring.points.forEach((name, k) => {
-      const y = rowsTop + k * 14;
-      rect(tableX, y, tableW, 14, null, gridColor);
-      text(name, tableX + 5, y + 10, {size: 8});
-      text(String(summary.perPoint[name]), tableX + tableW - 5, y + 10, {size: 8, bold: true, align: 'right'});
-    });
-    const totalY = rowsTop + monitoring.points.length * 14;
-    rect(tableX, totalY, tableW, 14, hexRgb(colors.header));
-    text('Total', tableX + 5, totalY + 10, {size: 8, bold: true, color: WHITE});
-    text(String(summary.monitoramentos), tableX + tableW - 5, totalY + 10, {size: 8, bold: true, color: WHITE, align: 'right'});
-    if (!view.hasRecord) {
-      text('Sem dados de monitoramento para este mês na planilha; a grade mostra apenas o calendário.', margin, PAGE_H - 34, {size: 8, color: [139, 62, 0]});
+    let ly = blockTop + 16;
+    for (const [sw, label] of legend) {
+      const lines = wrap(label, legendTextW, S.label);
+      rect(cols.legend.x, ly, swatch, swatch, sw?.fill ?? null, C.grid);
+      if (sw) boxText([sw.mark], cols.legend.x, ly, swatch, swatch, {size: S.smallCell, bold: true, color: sw.color});
+      lines.forEach((line, i) => text(line, legendTextX, ly + swatch / 2 + S.label * CAP_CENTER + i * step(S.label)));
+      ly += Math.max(L.legendRowHeight, lines.length * step(S.label) + 4);
     }
-    footer(`${monthTitle(monitoring, monthNumber)} ${year}`);
+
+    const kpi = (index, label, value) => {
+      const x = cols.kpi.x, w = cols.kpi.w, h = L.kpiHeight, y = blockTop + index * (h + L.kpiGap);
+      rect(x, y, w, h, C.cardFill);
+      rect(x, y, 3, h, C.header);
+      wrap(label, w - 24, S.kpiLabel, true).forEach((line, i) => text(line, x + 14, y + 16 + i * step(S.kpiLabel), {size: S.kpiLabel, bold: true, color: C.muted}));
+      text(String(value), x + 14, y + h - 14, {size: S.kpiValue, bold: true, color: C.header});
+    };
+    kpi(0, labels.desmontesCount, summary.desmontes);
+    kpi(1, labels.monitoringCount, summary.monitoramentos);
+
+    const cw = cols.community;
+    const titleLines = wrap(labels.communityTable, cw.w - 12, S.blockTitle, true);
+    titleLines.forEach((line, i) => text(line, cw.x + 6, blockTop + 9 + i * step(S.blockTitle), {size: S.blockTitle, bold: true}));
+    const rowsTop = blockTop + 16 + (titleLines.length - 1) * step(S.blockTitle);
+    monitoring.points.forEach((name, k) => {
+      const y = rowsTop + k * L.communityRowHeight, h = L.communityRowHeight;
+      rect(cw.x, y, cw.w, h, null, C.grid);
+      text(name, cw.x + 6, vcenter(y, h, S.cell));
+      text(String(summary.perPoint[name]), cw.x + cw.w - 6, vcenter(y, h, S.cell), {bold: true, align: 'right'});
+    });
+    const totalY = rowsTop + monitoring.points.length * L.communityRowHeight;
+    rect(cw.x, totalY, cw.w, L.communityRowHeight, C.header);
+    text('Total', cw.x + 6, vcenter(totalY, L.communityRowHeight, S.cell), {bold: true, color: C.white});
+    text(String(summary.monitoramentos), cw.x + cw.w - 6, vcenter(totalY, L.communityRowHeight, S.cell), {bold: true, color: C.white, align: 'right'});
+
+    if (!view.hasRecord) {
+      text('Sem dados de monitoramento para este mês na planilha; a grade mostra apenas o calendário.', margin, PAGE_H - L.warningY, {size: S.warning, color: C.warning});
+    }
+    footer(pageLabel);
+  };
+
+  const drawSummary = () => {
+    doc.addPage('a4', 'landscape');
+    header(`Resumo anual ${year}`, 'Desmontes e monitoramentos por mês e por ponto');
+    const {months, totals} = yearSummary(data, year, monitoring);
+    const fixed = [
+      {label: 'Mês', w: L.yearMonthWidth},
+      {label: 'Desmontes', w: L.yearBlastWidth},
+      {label: 'Monitoramentos', w: L.yearMonitoringWidth},
+    ];
+    const pointW = (contentW - fixed.reduce((sum, c) => sum + c.w, 0)) / monitoring.points.length;
+    const cols = [...fixed, ...monitoring.points.map(n => ({label: n.replace(/^Comunidade /, ''), w: pointW}))];
+    const top = L.yearTableTop, headH = L.yearHeaderHeight, rowH = L.yearRowHeight;
+    let x = margin;
+    for (const c of cols) {
+      rect(x, top, c.w, headH, C.header, C.grid);
+      boxText(wrap(c.label, c.w - 8, S.tableHeader, true), x, top, c.w, headH, {size: S.tableHeader, bold: true, color: C.headerText});
+      x += c.w;
+    }
+    const rows = [
+      ...months.map(r => [monthTitle(monitoring, r.month), r.desmontes, r.monitoramentos, ...monitoring.points.map(n => r.perPoint[n])]),
+      ['Total', totals.desmontes, totals.monitoramentos, ...monitoring.points.map(n => totals.perPoint[n])],
+    ];
+    rows.forEach((row, i) => {
+      const y = top + headH + i * rowH, isTotal = i === rows.length - 1;
+      let cx = margin;
+      row.forEach((value, j) => {
+        const w = cols[j].w;
+        rect(cx, y, w, rowH, isTotal ? C.totalFill : null, C.grid);
+        if (j === 0) text(value, cx + 6, vcenter(y, rowH, S.cell), {bold: isTotal});
+        else boxText([String(value)], cx, y, w, rowH, {bold: isTotal});
+        cx += w;
+      });
+    });
+    footer(`Resumo anual ${year}`);
   };
 
   if (mode === 'month') {
     drawMonth(month, 1);
   } else {
     for (let m = 1; m <= 12; m++) drawMonth(m, m);
-    // Página de resumo anual.
-    doc.addPage('a4', 'landscape');
-    header(`Resumo anual ${year}`, 'Desmontes e monitoramentos por mês e por ponto');
-    const {months, totals} = yearSummary(data, year, monitoring);
-    const cols = [{label: 'Mês', w: 150}, {label: 'Desmontes', w: 80}, {label: 'Monitoramentos', w: 110}];
-    const pointW = (PAGE_W - 2 * margin - 340) / monitoring.points.length;
-    const top = 100, rowH = 19;
-    let x = margin;
-    const headerCells = [...cols, ...monitoring.points.map(n => ({label: n.replace(/^Comunidade /, ''), w: pointW}))];
-    for (const c of headerCells) {
-      rect(x, top, c.w, 26, hexRgb(colors.header), hexRgb(colors.grid));
-      cellText(c.label, x, top, c.w, 26, {size: 7.5, bold: true, color: hexRgb(colors.headerText)});
-      x += c.w;
-    }
-    const rowsOf = [...months.map(r => [monthTitle(monitoring, r.month), r.desmontes, r.monitoramentos, ...monitoring.points.map(n => r.perPoint[n])]),
-      ['Total', totals.desmontes, totals.monitoramentos, ...monitoring.points.map(n => totals.perPoint[n])]];
-    rowsOf.forEach((row, i) => {
-      const y = top + 26 + i * rowH;
-      const isTotal = i === rowsOf.length - 1;
-      let cx = margin;
-      row.forEach((value, j) => {
-        const w = headerCells[j].w;
-        rect(cx, y, w, rowH, isTotal ? [236, 240, 242] : null, hexRgb(colors.grid));
-        if (j === 0) text(value, cx + 6, y + rowH / 2 + 3, {size: 8, bold: isTotal});
-        else cellText(String(value), cx, y, w, rowH, {size: 8, bold: isTotal});
-        cx += w;
-      });
-    });
-    footer(`Resumo anual ${year}`);
+    drawSummary();
   }
   doc.setProperties({title: mode === 'month' ? `${monitoring.title} - ${monthTitle(monitoring, month)} ${year}` : `${monitoring.title} - ${year}`, author: 'Enaex Brasil', subject: monitoring.subtitle});
   return doc;

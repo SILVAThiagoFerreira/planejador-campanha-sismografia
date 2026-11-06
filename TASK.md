@@ -42,3 +42,10 @@ Refatoração do relatório: layout único em src/reportLayout.js, prévia/PNG/D
 - [ ] Trocar a senha inicial (admin) antes de uso real: gerarHashSenha() e ADMIN_PASSWORD_SHA256. O padrão "admin" está no código; sem a troca, qualquer pessoa que leia o repositório entra como administrador.
 - [ ] Decidir se os nomes dos pontos do config.json devem seguir a planilha ("Comunidade Pau Ferro", "Comunidade Pichilinga"), já adotados aqui.
 - [ ] Corrigir na planilha original as anomalias listadas (março e agosto de 2025; N ausente em 29/02/2025).
+
+## Limpeza de textos e Gantt em PDF — 2026-11-06
+
+- [x] Página do planejador sem parágrafos de instrução (painel, áreas, direção, monitoramento, mensagem, projeto, mapa, cenários, relatório, rodapé e carregamento). Rótulos, títulos, estados vazios curtos, avisos de fonte e mensagens de validação mantidos. Relatório (PDF, DOCX, PNG, TXT) inalterado.
+- [x] PDF do Gantt (mês e ano) redesenhado: legenda, cartões de contagem e tabela por comunidade lado a lado, sem sobreposição; nomes do resumo anual quebram em linhas. Medidas, tamanhos e cores em `monitoring.pdf` (config.json). Dados e rótulos da tabela inalterados.
+- [x] Configuração: `monitoring.pdf.layout`, `sizes` e `colors`; build valida o bloco. `monitoring.ui.loginHint` removido (diálogo de login sem texto de apoio).
+- [x] Testes em tests/monitoringPdf.test.js (uma página por mês, 13 no ano, colunas sem sobreposição, chave ausente recusada, textos removidos da página).
