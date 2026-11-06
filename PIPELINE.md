@@ -19,7 +19,7 @@ Horário inicial: 12:00. Responsável inicial: Setor Técnico de Operações - E
 ## Monitoramento sismográfico — 2026-10-27
 
 1. Importação (offline): planilha .xlsx exportada do Drive -> `npm run import:gantt -- arquivo.xlsx` -> valida o contrato e grava data/monitoramento.json. Anomalias do layout são impressas e gravadas no snapshot; a execução falha se faltar a linha de dias ou o cabeçalho de mês.
-2. Build: `npm run build` valida o bloco monitoring de config.json (inclui `monitoring.pdf`: layout, tamanhos e cores) e, se existir, o snapshot.
+2. Build: `npm run build` valida o bloco monitoring de config.json (inclui `monitoring.pdf`: layout, tamanhos e cores; e `monitoring.png`: largura não abaixo do mínimo) e, se existir, o snapshot.
 3. Navegador: lê a API (GET ?action=read); sem conexão ou sem apiUrl, usa a última cópia publicada com aviso neutro (motivo só no log); valida o schema; calcula contagens e N pelo calendário real.
 4. Edição: "Editar dados" abre o diálogo de login; POST {action:"auth"} confirma o acesso. Só então alterna D e M no rascunho. Credenciais ficam em memória (variável), nunca em armazenamento do navegador.
 5. Salvar: POST {action:"save"} com as credenciais da sessão (sem novo pedido de senha). Se o servidor recusar (code "auth" ou "locked"), o diálogo volta a abrir e o rascunho é mantido.

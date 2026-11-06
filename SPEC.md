@@ -46,3 +46,15 @@ Importação: `npm run import:gantt -- "planilha.xlsx"` converte as abas de ano 
 Página: saíram os parágrafos de instrução e as legendas redundantes (painel de configuração, áreas, direção, monitoramento, mensagem, projeto, mapa, cenários, relatório, rodapé e carregamento). Ficam rótulos, títulos, estados vazios curtos, avisos de fonte e de conexão e todas as mensagens de validação. Saíram também a nota de direção de saída (azimute, sem modelo de propagação) e a nota de método dos cenários; o critério de cada cenário continua no cartão. O relatório exportado não muda.
 
 PDF do Gantt (mês): uma página A4 paisagem sobre fundo branco. Faixa vermelha fina no topo; logotipo Enaex pequeno à esquerda (`monitoring.pdf.logoAsset`); título do mês em vermelho `#B5121B`, com subtítulo cinza. A grade usa só filetes finos e marcas em pílulas: D vermelho na linha de desmontes; M em cinza-grafite e N em cinza claro nas células. A legenda fica numa única linha abaixo da grade. Abaixo, à esquerda, os dois números do mês com traço vermelho de acento; à direita, a tabela por comunidade com filetes e total. Ano: uma página por mês e uma de resumo, com filetes horizontais e nomes de pontos quebrados em linhas no cabeçalho. Dados, textos e regras de célula (M, N, D) não mudam. Paleta da identidade Enaex, conforme VISUAL_STANDARD do hub: vermelho `#E20613` como acento e cinzas `#38424B`, `#4A4F55`, `#8A8F96`, `#E3E3E3`. Medidas, tamanhos, cores e caminho do logo vêm de `monitoring.pdf`; chave ausente, cor inválida ou logo inexistente interrompe a exportação ou o build com o caminho da chave.
+
+## Exportação PNG 4K do Gantt — 2026-11-06
+
+Escopo: além do PDF, o Gantt sai como imagem em alta resolução. Botões "Exportar mês (PNG 4K)" e "Exportar ano (PNG 4K)" na seção de monitoramento.
+
+Formato: PNG RGB com fundo branco. Largura `monitoring.png.widthPx` (3840 px), que não pode ser menor que `monitoring.png.minWidthPx` (3840 px, mínimo da exigência 4K). Altura = largura × proporção da página A4 paisagem do layout (2715 px para 3840 px de largura). Proporção, layout, cores, textos e dados são os mesmos do PDF.
+
+Renderização: vetorial em canvas. A mesma lista de operações do PDF (src/monitoringGantt.js) é desenhada direto na resolução final; nenhuma imagem pequena é ampliada. O logotipo é a cópia já existente em `assets/enaex-brasil.png` (400 px), reduzida para o tamanho do layout. Métricas de texto vêm do jsPDF (Arial e Helvetica têm as mesmas medidas), então o PNG e o PDF quebram linhas e posicionam textos igual.
+
+Arquivos: mês gera um PNG `monitoramento-AAAA-MM-4k.png`. Ano gera um ZIP `monitoramento-AAAA-anual-4k.zip` com os 12 PNG mensais (`monitoramento-AAAA-MM-4k.png`) e o resumo (`monitoramento-AAAA-resumo-4k.png`). O ZIP usa JSZip já vendorizado (vendor/jszip.min.js, também usado pelo DOCX): nenhuma dependência nova.
+
+Validação: o build recusa `monitoring.png` com `widthPx` menor que `minWidthPx`, e a exportação recusa o mesmo caso antes de renderizar. Logo ou fonte ausentes interrompem a exportação com o caminho da chave.

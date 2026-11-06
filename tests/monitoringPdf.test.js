@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {buildMonitoringPdf, monthBlockColumns} from '../src/monitoringPdf.js';
+import {buildMonitoringPdf} from '../src/monitoringPdf.js';
+import {monthBlockColumns} from '../src/monitoringGantt.js';
 
 const config = JSON.parse(fs.readFileSync(new URL('../config.json', import.meta.url), 'utf8'));
 const monitoring = config.monitoring;

@@ -301,6 +301,14 @@
         "yearBlastWidth": 80,
         "yearMonitoringWidth": 110
       }
+    },
+    "png": {
+      "widthPx": 3840,
+      "minWidthPx": 3840,
+      "fontStack": "Arial, Helvetica, sans-serif",
+      "fileName": "monitoramento-{year}-{month}-4k.png",
+      "yearFileName": "monitoramento-{year}-anual-4k.zip",
+      "summaryFileName": "monitoramento-{year}-resumo-4k.png"
     }
   },
   "paths": {

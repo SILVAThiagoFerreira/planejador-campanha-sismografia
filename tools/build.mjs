@@ -13,6 +13,9 @@ if(!monitoring||monitoring.points.length!==7||new Set(monitoring.points).size!==
 // O PDF do monitoramento lê layout, tamanhos e cores de monitoring.pdf; bloco incompleto interrompe o build.
 if(!monitoring.pdf?.layout||!monitoring.pdf?.sizes||!monitoring.pdf?.colors) throw Error('Configuração de PDF do monitoramento incompleta (monitoring.pdf).');
 if(typeof monitoring.pdf.logoAsset!=='string'||!existsSync(monitoring.pdf.logoAsset)) throw Error('Logo do PDF do monitoramento ausente (monitoring.pdf.logoAsset).');
+// PNG 4K do Gantt: largura em monitoring.png.widthPx nunca abaixo de minWidthPx (3840 px na especificação).
+const png=monitoring.png;
+if(!png||!Number.isInteger(png.widthPx)||!Number.isInteger(png.minWidthPx)||png.widthPx<png.minWidthPx||!png.fontStack||!png.fileName||!png.yearFileName||!png.summaryFileName) throw Error('Configuração de PNG do monitoramento inválida (monitoring.png: widthPx não pode ser menor que minWidthPx).');
 // Textos exibidos ao usuário ficam em monitoring.ui; nenhum pode faltar ou estar vazio.
 for(const key of ['sourceText','offlineNotice','loadFailedNotice','editHint','loginTitle','loginButton','editUnavailable','verifying','saveButton','saving','savedToast','saveFailed','cancelled']) {
   if(typeof monitoring.ui?.[key]!=='string'||!monitoring.ui[key].trim()) throw Error(`Texto monitoring.ui.${key} ausente em config.json.`);
