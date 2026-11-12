@@ -14,12 +14,12 @@ export function createCampaignMap(elementId, configuration={}) {
  const overlays=L.featureGroup().addTo(map);
  let data={polygons:[],communities:[],origin:null,radius:0,selectedIds:[]}, tileLayer=null, basemap='satellite', tileErrors=0;
  const palette={area:'#fa1232',circle:'#06d9e8',selected:'#fa1232',fixed:'#ffbf2f',available:'#254354',direction:'#ffca28',...(configuration.visual?.mapColors || {})};
- function reportStatus(message){if(status)status.textContent=message;}
+ function reportStatus(message){if(status){status.textContent=message;status.hidden=!message;}}
  function setBasemap(mode){basemap=mode;if(tileLayer){map.removeLayer(tileLayer);tileLayer=null;}if(mode==='satellite'){
   tileErrors=0;tileLayer=L.tileLayer(config.tileUrl || 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:config.maxZoom || 20,attribution:config.attribution || 'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',crossOrigin:'anonymous'});
   tileLayer.on('tileerror',()=>{tileErrors++;reportStatus('Falha ao carregar parte do satélite. Verifique sua conexão ou selecione “Mapa sem imagem”.');});
-  tileLayer.on('load',()=>{if(!tileErrors)reportStatus('Satélite Esri World Imagery · Consulte a data da imagem antes de decisões em campo.');});tileLayer.addTo(map);
- }else reportStatus('Mapa vetorial sem imagem de satélite. Geometrias e distâncias preservadas.');}
+  tileLayer.on('load',()=>{if(!tileErrors)reportStatus('');});tileLayer.addTo(map);
+ }else reportStatus('');}
  function update(next){data={...data,...next};overlays.clearLayers();const selected=new Set(data.selectedIds || []);
   for(const polygon of data.polygons || []){const pts=coordinates(polygon);if(!pts.length)continue;L.polygon(pts.map(([lon,lat])=>[lat,lon]),{color:palette.area,weight:2,fillOpacity:.15}).bindTooltip(escapeHtml(polygon.name || polygon.id || 'Área de desmonte')).addTo(overlays);
    const az=direction(polygon);if(az!==null&&az!==undefined&&Number.isFinite(Number(az))){const center=average(pts),end=destination(...center,Number(az),Math.max(200,Number(data.radius || data.origin?.radius || 0)*.8));L.polyline([[center[1],center[0]],[end[1],end[0]]],{color:palette.direction,weight:3}).addTo(overlays);L.marker([end[1],end[0]],{interactive:false,icon:L.divIcon({className:'',html:`<span class="map-direction-arrow" style="display:block;transform:rotate(${Number(az)}deg)">↑</span>`,iconSize:[24,30],iconAnchor:[12,18]})}).addTo(overlays);}}

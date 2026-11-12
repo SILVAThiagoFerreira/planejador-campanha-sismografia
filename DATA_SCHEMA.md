@@ -4,9 +4,9 @@ config.json: schemaVersion, version, title, defaults, crs[], communities[], vali
 
 data/manifest.json (gerado): schemaVersion, version, configPath, configSha256. Não editar manualmente.
 
-Área: id, name, layer, vertices[{x,y}], direction (azimute graus ou null), source (nome DXF). Coordenadas UTM em metros.
+Área: id, name (editável pelo usuário; sem vazio, aparado nas pontas e com até `validation.maxLabelLength` caracteres, regra em src/areaNames.js), layer, vertices[{x,y}], direction (azimute graus ou null), source (nome DXF). Coordenadas UTM em metros.
 
-Linha de pré-corte: id, name, layer, vertices[{x,y}] (no mínimo dois; comprimento ≥ validation.minLineLengthMeters), source (nome DXF). Não tem área, direção nem centróide.
+Linha de pré-corte: id, name (mesma regra de nome da área), layer, vertices[{x,y}] (no mínimo dois; comprimento ≥ validation.minLineLengthMeters), source (nome DXF). Não tem área, direção nem centróide.
 
 Comunidade: id, name, lat, lon (graus decimais), enabled (boolean), fixed (boolean) e priority (número positivo). `fixed=true` obriga o ponto a integrar todos os cenários e o ponto continua contando na quantidade total de instrumentos. Projetos antigos sem `fixed` são migrados para `false`. Coordenadas fornecidas em graus e minutos decimais são convertidas sem reinterpretar minutos como segundos.
 
