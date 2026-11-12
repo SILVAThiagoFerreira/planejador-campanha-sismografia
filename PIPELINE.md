@@ -41,3 +41,10 @@ Horário inicial: 12:00. Responsável inicial: Setor Técnico de Operações - E
 2. Nome válido: é aparado e gravado no estado. `persist()` salva antes de qualquer recálculo, então o nome fica salvo mesmo com o formulário incompleto (`calculate()` não grava nesse caso). Com plano, `calculate()` atualiza prévia e mapa; sem plano, `mapUpdate()` atualiza os rótulos do mapa. Enter confirma no keydown sem enviar o formulário. Nome inválido: mensagem de erro, campo volta ao nome anterior, nada é gravado.
 3. Projeto JSON: `validateProject` (src/project.js) recusa nome vazio ou acima do limite e aparam os nomes válidos antes de aplicar.
 4. Testes: tests/areaNames.test.js (regra, validação de projeto, renomeação preservada ao reabrir) e tests/pageCleanup.test.js (textos removidos e campos de nome presentes).
+
+## Direções no relatório — 2026-11-12
+
+1. `layoutReport` (src/reportLayout.js) confere `report.maxDirectionRows` antes de desenhar: inteiro maior que zero, senão recusa com a causa.
+2. O bloco "Direcionamento informado" usa o nome completo da área; `text()` quebra a linha dentro da coluna. Nada é cortado.
+3. Além do limite, a última linha aponta para o projeto JSON. O mesmo layout alimenta prévia, PNG, DOCX (canvas) e PDF vetorial.
+4. Testes: tests/reports.test.js cobre nome longo inteiro, resumo com o projeto JSON e limite ausente recusado.

@@ -117,3 +117,13 @@ Página: saíram o rodapé "Enaex Brasil · Planejador de Campanha de Sismografi
 Relatórios não mudaram: PDF, DOCX, PNG e TXT do planejador, prévia do relatório, PDF/PNG do Gantt e relatório de apresentação continuam com o mesmo layout. Os rótulos do monitoramento que também saem nas exportações (`monitoring.labels` em config.json) não foram alterados.
 
 Versões de cache: app.js 1.6.0 e styles.css 1.3.5; project.js, map.js e areaNames.js 1.3.7.
+
+## Direções no relatório sem corte — 2026-11-12
+
+Nome de área no bloco "Direcionamento informado" aparece inteiro. Antes era cortado em 39 caracteres com reticências (valor fixo no código, fora de config.json). Agora o nome quebra em linhas dentro da coluna do relatório, como os demais textos. Limitação: uma palavra sem espaços mais larga que a coluna não quebra e pode passar da margem.
+
+O bloco mostra até `report.maxDirectionRows` áreas (config.json, 4). A ausência desse valor, ou um valor que não seja inteiro maior que zero, recusa o relatório com a causa; não há mais valor padrão no código. Quando há mais áreas, a última linha diz "+ N áreas. Relação completa de direções no projeto JSON." (o texto antigo citava a mensagem TXT, que no modelo padrão não lista áreas). O modelo do WhatsApp lista áreas apenas se o usuário incluir o campo `{areas}`.
+
+Valem para prévia, PDF, DOCX e PNG. Testes: tests/reports.test.js (nome longo inteiro, resumo com o projeto JSON, limite ausente recusado).
+
+Versões de cache: reportLayout.js, reportPdf.js e reports.js em 1.3.7 (reports.js 1.2.1 e docx.js 1.2.1 nas importações); app.js 1.6.2.

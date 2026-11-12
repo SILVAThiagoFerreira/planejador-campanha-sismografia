@@ -98,6 +98,29 @@ test('coordinates in the report are shown without thousands separator, quantitie
   assert.equal(number(8930441.2703,4),'8.930.441,2703');
 });
 
+test('nome longo de área aparece inteiro no bloco de direções, sem reticências',()=>{
+  const longName='Desmonte 12-11 setor norte leste ZETA-UNICO-FIM';
+  const withLongName={...coordinateData,plan:{...coordinateData.plan,polygons:[{name:longName,azimuth:45}]}};
+  const layout=layoutReport(withLongName,{measure:fakeMeasure,imageSize:key=>({width:testImages[key].width,height:testImages[key].height})});
+  const texts=layout.ops.filter(op=>op.t==='text').map(op=>op.str);
+  assert.ok(texts.some(s=>s.includes('ZETA-UNICO-FIM')),'fim do nome aparece no relatório');
+  assert.ok(!texts.some(s=>s.includes('…')),'nenhum nome é cortado com reticências');
+});
+
+test('mais áreas que maxDirectionRows: o resumo aponta para o projeto JSON, sem citar o TXT',()=>{
+  const polygons=Array.from({length:5},(_,i)=>({name:`Área ${i+1}`,azimuth:i*10}));
+  const many={...coordinateData,plan:{...coordinateData.plan,polygons}};
+  const layout=layoutReport(many,{measure:fakeMeasure,imageSize:key=>({width:testImages[key].width,height:testImages[key].height})});
+  const all=layout.ops.filter(op=>op.t==='text').map(op=>op.str).join('\n');
+  assert.ok(all.includes('+ 1 áreas. Relação completa de direções no projeto JSON.'),'resumo aponta para o projeto JSON');
+  assert.ok(!all.includes('mensagem TXT'),'o TXT padrão não lista áreas');
+});
+
+test('maxDirectionRows ausente em config.json recusa o relatório, sem valor padrão silencioso',()=>{
+  const noLimit={...coordinateData,config:{...config,report:{...config.report,maxDirectionRows:undefined}}};
+  assert.throws(()=>layoutReport(noLimit,{measure:fakeMeasure,imageSize:()=>({width:1,height:1})}),/maxDirectionRows/);
+});
+
 test('report layout writes coordinates as text and only brand, logo and map are images',()=>{
   const layout=layoutReport(coordinateData,{measure:fakeMeasure,imageSize:key=>({width:testImages[key].width,height:testImages[key].height})});
   const texts=layout.ops.filter(op=>op.t==='text').map(op=>op.str);
