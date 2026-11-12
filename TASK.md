@@ -64,3 +64,15 @@ Refatoração do relatório: layout único em src/reportLayout.js, prévia/PNG/D
 - [ ] Confirmar a tradução do rodapé ("ESTRITAMENTE PRIVADO E CONFIDENCIAL") e a exceção de dois logotipos por página (VISUAL_STANDARD pede um logo por página).
 - [ ] O dashboard não tem filtro de pontos/comunidades; a capa informa os 7 pontos. Se o filtro for criado, o relatório precisa aceitar o subconjunto.
 - Versões de cache: monitoringGantt, monitoringPdf, monitoringPng, monitoringReportConfig e monitoringReportPdf em 1.5.0; controlador 1.5.0; app.js 1.5.0 (index.html).
+
+## Renomear áreas e limpeza da página — 2026-11-12
+
+- [x] Renomear áreas e linhas de pré-corte importadas direto na lista (campo editável, confirmado com Enter ou ao sair do campo). Regra em src/areaNames.js; limite em config.validation.maxLabelLength; nome vazio ou longo demais é recusado com a causa. O nome vai para a lista de direções do relatório (prévia, PDF, DOCX e PNG), tooltip do mapa e projeto salvo.
+- [x] Projeto: nomes de área e linha validados e aparados em validateProject. Testes em tests/areaNames.test.js.
+- [x] Página limpa: rodapé, rótulos de seção repetidos, título "Três cenários. Uma campanha." (agora "Cenários"), frases de satélite e de modo vetorial no mapa, frase de critério dos cartões e explicação de ponto fixo repetida em cada comunidade. Relatórios, exportações e rótulos do monitoramento usados nelas não mudaram. Testes em tests/pageCleanup.test.js.
+- [x] Correções da revisão de código e do QA (2026-11-12): renomear grava sempre (inclusive com formulário incompleto); Enter confirma sem enviar o formulário e não apaga a mensagem de erro; linhas sem plano atualizam o rótulo no mapa; o navegador não corta mais o nome (maxlength removido, a regra recusa com a causa); campo de nome com 16 px no celular; erro de projeto aponta a área pela posição.
+- [ ] Relatório (fora desta entrega, depende de decisão): nomes de área acima de 42 caracteres são cortados em src/reportLayout.js:178, e a frase "Relação completa de direções ... na mensagem TXT" (src/reportLayout.js:180) não é verdadeira, porque o modelo do WhatsApp não lista áreas. Corrigir exige mexer nos relatórios.
+- [ ] Nome padrão das áreas importadas do DXF é camada mais número (ex.: "DEMONSTRACAO_A 1", src/dxf.js:47), já existente. Agora o usuário renomeia; decidir se o padrão muda.
+- [ ] Decidir se os rótulos da legenda do monitoramento devem ser encurtados ("Não houveram desmontes nesta data / Este ponto não foi monitorado", "Quantos desmontes houveram no mês?"). São os mesmos rótulos do PDF/PNG do Gantt (`monitoring.labels` em config.json), então não foram alterados; a grafia "houveram" também está nesses rótulos.
+- [ ] Decidir se a data da imagem de satélite deve voltar na tela (removida do mapa; a atribuição do Esri continua no controle do Leaflet).
+- Versões de cache: app.js 1.6.0 e styles.css 1.3.5; project.js, map.js e areaNames.js 1.3.7.

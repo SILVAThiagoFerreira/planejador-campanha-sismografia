@@ -34,3 +34,10 @@ Horário inicial: 12:00. Responsável inicial: Setor Técnico de Operações - E
 3. Montagem: `layoutReport` (src/monitoringReportPdf.js) gera as operações das três páginas a partir de `monthView`, `monthSummary` e `yearSummary`, os mesmos dados do dashboard. Não grava nada.
 4. Desenho: `drawOpsPdf` escreve o PDF vetorial; `doc.save` entrega o arquivo ao navegador. Registra evento "export" no log.
 5. Build: `npm run build` valida `monitoring.report` e os logotipos antes da publicação; `npm test` cobre tests/monitoringReport.test.js.
+
+## Renomeação de áreas — 2026-11-12
+
+1. Lista de áreas: cada área e linha tem um campo de nome (`data-rename` e `data-rename-line`). Ao confirmar, `renameItem` (app.js) chama `validateAreaName` (src/areaNames.js) com `config.validation.maxLabelLength`.
+2. Nome válido: é aparado e gravado no estado. `persist()` salva antes de qualquer recálculo, então o nome fica salvo mesmo com o formulário incompleto (`calculate()` não grava nesse caso). Com plano, `calculate()` atualiza prévia e mapa; sem plano, `mapUpdate()` atualiza os rótulos do mapa. Enter confirma no keydown sem enviar o formulário. Nome inválido: mensagem de erro, campo volta ao nome anterior, nada é gravado.
+3. Projeto JSON: `validateProject` (src/project.js) recusa nome vazio ou acima do limite e aparam os nomes válidos antes de aplicar.
+4. Testes: tests/areaNames.test.js (regra, validação de projeto, renomeação preservada ao reabrir) e tests/pageCleanup.test.js (textos removidos e campos de nome presentes).

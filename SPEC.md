@@ -107,3 +107,13 @@ Configuração e validação: bloco `monitoring.report` em config.json (página,
 Módulos: `src/monitoringReportPdf.js` monta as páginas como lista de operações de desenho (mesma base do Gantt) e gera o jsPDF. Reutiliza `painter` e `measureWith` de `src/monitoringGantt.js`, `drawOpsPdf` de `src/monitoringPdf.js` e `monthView`, `monthSummary` e `cellState` de `src/monitoringData.js`. Os dados são os mesmos do dashboard; o relatório não grava nada.
 
 Testes: `tests/monitoringReport.test.js` (configuração, páginas, contagens, filtros, limites da página e nome do arquivo).
+
+## Renomear áreas importadas e limpeza da página — 2026-11-12
+
+Renomear: cada área e cada linha de pré-corte importada tem um campo com o nome na lista de "Áreas de desmonte". O usuário digita o nome que quiser; o nome é aparado nas pontas e confirmado ao sair do campo ou com Enter. Nome vazio ou com mais de `validation.maxLabelLength` caracteres (100, config.json) é recusado com a causa e o campo volta ao nome anterior; nada é gravado. O nome novo vai para a lista de direções do relatório (prévia, PDF, DOCX e PNG), para o tooltip do mapa e para o projeto salvo. O TXT do WhatsApp não lista áreas. Renomear não altera geometria nem cálculo. Projeto importado com nome vazio ou acima do limite é recusado, com a posição da área ou linha (ex.: "Nome de área 2 inválido"); nomes válidos são carregados aparados. A regra fica em src/areaNames.js (`validateAreaName`), usada pela tela e pela validação do projeto.
+
+Página: saíram o rodapé "Enaex Brasil · Planejador de Campanha de Sismografia", os rótulos de seção "Situação espacial do desmonte", "Comparação de alternativas", "Documento da campanha" e "Monitoramento sismográfico", o título "Três cenários. Uma campanha." (agora "Cenários"), a frase de data da imagem de satélite e a frase do modo vetorial (o status do mapa fica oculto quando vazio; falhas de satélite continuam visíveis), a frase "Combinação definida pelo critério." dos cartões (a linha "Mesmos pontos do cenário ..." só aparece quando há coincidência) e a explicação "Incluir em todos os cenários" repetida em cada comunidade (fica no título do rótulo e para o leitor de tela). Mantidos: rótulo "Configuração da campanha", avisos de fonte e de conexão, mensagens de validação, legenda do mapa e atribuição do Esri no controle do Leaflet.
+
+Relatórios não mudaram: PDF, DOCX, PNG e TXT do planejador, prévia do relatório, PDF/PNG do Gantt e relatório de apresentação continuam com o mesmo layout. Os rótulos do monitoramento que também saem nas exportações (`monitoring.labels` em config.json) não foram alterados.
+
+Versões de cache: app.js 1.6.0 e styles.css 1.3.5; project.js, map.js e areaNames.js 1.3.7.
