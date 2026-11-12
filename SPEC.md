@@ -127,3 +127,9 @@ O bloco mostra até `report.maxDirectionRows` áreas (config.json, 4). A ausênc
 Valem para prévia, PDF, DOCX e PNG. Testes: tests/reports.test.js (nome longo inteiro, resumo com o projeto JSON, limite ausente recusado).
 
 Versões de cache: reportLayout.js, reportPdf.js e reports.js em 1.3.7 (reports.js 1.2.1 e docx.js 1.2.1 nas importações); app.js 1.6.2.
+
+## Responsável no rodapé à direita — 2026-11-12
+
+O nome do responsável pelo monitoramento no rodapé escuro do relatório fica alinhado à direita, na margem direita do relatório (`report.margin`). Antes ficava à esquerda, ao lado do logotipo. O layout usa `textRight` (src/reportLayout.js), que quebra linhas do mesmo jeito que `text()`. Vale para prévia, PNG, DOCX e PDF. Teste em tests/reports.test.js (termina na margem direita).
+
+Versões de cache: reportLayout.js, reportPdf.js e reports.js em 1.3.8 (reports.js e docx.js em 1.2.2 nas importações); app.js 1.6.3.

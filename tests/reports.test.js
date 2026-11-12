@@ -121,6 +121,14 @@ test('maxDirectionRows ausente em config.json recusa o relatório, sem valor pad
   assert.throws(()=>layoutReport(noLimit,{measure:fakeMeasure,imageSize:()=>({width:1,height:1})}),/maxDirectionRows/);
 });
 
+test('responsável do rodapé alinhado à direita, na margem do relatório',()=>{
+  const layout=layoutReport(coordinateData,{measure:fakeMeasure,imageSize:key=>({width:testImages[key].width,height:testImages[key].height})});
+  const op=layout.ops.find(o=>o.t==='text'&&o.str==='Equipe técnica');
+  assert.ok(op,'responsável aparece no rodapé');
+  const right=op.x+fakeMeasure(op.str,op.size,op.bold);
+  assert.ok(Math.abs(right-(layout.width-coordinateData.config.report.margin))<0.01,'termina na margem direita');
+});
+
 test('report layout writes coordinates as text and only brand, logo and map are images',()=>{
   const layout=layoutReport(coordinateData,{measure:fakeMeasure,imageSize:key=>({width:testImages[key].width,height:testImages[key].height})});
   const texts=layout.ops.filter(op=>op.t==='text').map(op=>op.str);

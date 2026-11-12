@@ -104,6 +104,12 @@ export function layoutReport(data, {measure, imageSize}) {
     for (const line of wrapped(str, px, bold, width)) { ops.push({ t: 'text', x, y, str: line, size: px, color, bold }); y += step; }
     return y;
   }
+  // Mesmo que text(), mas cada linha termina na coordenada "right" (alinhamento à direita).
+  function textRight(str, right, y, width, size = 18, color = style.ink, bold = false, lineHeight = 1.35) {
+    const px = size * unit, step = px * lineHeight;
+    for (const line of wrapped(str, px, bold, width)) { ops.push({ t: 'text', x: right - measure(line, px, bold), y, str: line, size: px, color, bold }); y += step; }
+    return y;
+  }
   function heading(str, x, y, width = col) { return text(str, x, y, width, 20, style.accent, true) + 9 * unit; }
   function table(headers, rows, x, y, widths, bodySize = 17) {
     const total = widths.reduce((a, b) => a + b, 0);
@@ -187,6 +193,7 @@ export function layoutReport(data, {measure, imageSize}) {
   ops.push({ t: 'rect', x: 0, y: footerTop, w: W, h: style.footerHeight, fill: style.ink });
   const logoBox = style.footerLogoBox;
   image('footerLogo', logoBox.x * unit, footerTop + logoBox.y * unit, logoBox.width * unit, logoBox.height * unit, 'contain');
-  text(meta.responsible || config.defaults.responsible, W * .23, footerTop + 27 * unit, W * .71, 16, '#fff');
+  // Responsável alinhado à direita, na margem do relatório; o logotipo fica à esquerda.
+  textRight(meta.responsible || config.defaults.responsible, W - m, footerTop + 27 * unit, W - m - W * .23, 16, '#fff');
   return { width: W, height: H, ops };
 }

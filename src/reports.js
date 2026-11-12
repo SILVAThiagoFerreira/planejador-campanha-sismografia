@@ -1,7 +1,7 @@
 /** Browser-only report orchestration: prévia/PNG em canvas, PDF vetorial e mensagem. Layout em reportLayout.js; geometria em core.js. */
 import {number, coordinateNumber, coordinateDMM, reportDate, reportNotes, validateReportData} from './reportFormat.js';
-import {layoutReport, situationBlock} from './reportLayout.js?v=1.3.7';
-import {buildReportPdf} from './reportPdf.js?v=1.3.7';
+import {layoutReport, situationBlock} from './reportLayout.js?v=1.3.8';
+import {buildReportPdf} from './reportPdf.js?v=1.3.8';
 export {coordinateDMM, coordinateNumber, reportNotes, situationBlock};
 
 export function buildWhatsAppMessage(data, template) {
