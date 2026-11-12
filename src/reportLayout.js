@@ -81,6 +81,8 @@ function distanceDiagramOps(data, dw, dh, measure) {
 export function layoutReport(data, {measure, imageSize}) {
   validateReportData(data);
   const { config, meta, plan, scenario } = data, style = config.report;
+  // Limite de linhas do bloco de direções vem só de config.json; sem valor válido o relatório não é gerado.
+  if (!Number.isInteger(style.maxDirectionRows) || style.maxDirectionRows < 1) throw new Error('Configuração report.maxDirectionRows ausente ou inválida em config.json: informe um inteiro maior que zero.');
   const W = style.width, H = style.height, m = style.margin;
   const unit = W / 1240, gap = W * .028, col = (W - m * 2 - gap) / 2, right = m + col + gap;
   const ops = [];
@@ -175,9 +177,10 @@ export function layoutReport(data, {measure, imageSize}) {
   const notes = reportNotes(meta.notes, 'Confirmar acesso, autorização de instalação e acoplamento dos instrumentos antes da campanha.');
   if (notes) ry = text(notes, right, ry, col, 17) + 20 * unit;
   ry = heading('DIRECIONAMENTO INFORMADO', right, ry);
-  const directionLimit = style.maxDirectionRows || 4;
-  const directions = (plan.polygons || []).slice(0, directionLimit).map(p => `${p.name.length > 42 ? p.name.slice(0, 39) + '…' : p.name}: ${p.azimuth === null || p.azimuth === undefined ? 'não informado' : `${number(p.azimuth, 0)}°`}`);
-  if ((plan.polygons || []).length > directionLimit) directions.push(`+ ${plan.polygons.length - directionLimit} áreas. Relação completa de direções no projeto JSON e na mensagem TXT.`);
+  const directionLimit = style.maxDirectionRows;
+  // O nome completo da área quebra em linhas dentro da coluna (text); nunca é cortado.
+  const directions = (plan.polygons || []).slice(0, directionLimit).map(p => `${p.name}: ${p.azimuth === null || p.azimuth === undefined ? 'não informado' : `${number(p.azimuth, 0)}°`}`);
+  if ((plan.polygons || []).length > directionLimit) directions.push(`+ ${plan.polygons.length - directionLimit} áreas. Relação completa de direções no projeto JSON.`);
   ry = text(directions.join('\n') || 'Não informado', right, ry, col, 16) + 16 * unit;
   const footerTop = H - style.footerHeight;
   if (Math.max(y, ry) > footerTop - 36 * unit) throw new Error('O conteúdo excede a página. Reduza as observações ou os nomes das áreas para exportar sem cortes.');
