@@ -30,7 +30,7 @@ test('WhatsApp omits the demonstration notice from observations',()=>{
 
 test('WhatsApp padrão: título de campanha com a data e sem bloco de observações',()=>{
   const message=buildWhatsAppMessage(data);
-  assert.match(message,/^\*Campanha de Sismografia Planejada \| Desmonte [^*]+\*/);
+  assert.match(message,/^\*CAMPANHA SISMOGRÁFICA PLANEJADA \| Desmonte [^*]+\*/);
   assert.doesNotMatch(message,/OBSERVAÇÕES|Acesso confirmado|Confirmar acesso/);
   assert.match(message,/Responsável: Equipe técnica/);
 });
