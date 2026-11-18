@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "1.1.6",
+  "version": "1.1.7",
   "title": "Planejador de campanha de sismografia",
   "defaults": {
     "operation": "MINA SERROTE - MINERAÇÃO VALE VERDE",
@@ -159,6 +159,16 @@
     "mapColors": {
       "fixed": "#ffbf2f",
       "line": "#ff7f0e"
+    },
+    "areaIcon": {
+      "size": 40,
+      "padding": 4,
+      "maxPoints": 400,
+      "color": "#fa1232",
+      "fillOpacity": 0.16,
+      "strokeWidth": 1.6,
+      "lineStrokeWidth": 2,
+      "lineDash": "4 2"
     }
   },
   "monitoring": {
@@ -435,6 +445,21 @@
         "footer": "ESTRITAMENTE PRIVADO E CONFIDENCIAL"
       }
     }
+  },
+  "surface": {
+    "enabled": true,
+    "source": {
+      "crs": "EPSG:29194",
+      "crsName": "SAD69 / UTM zone 24S",
+      "definition": "+proj=utm +zone=24 +south +ellps=aust_SA +towgs84=-57,1,-41,0,0,0,0 +units=m +no_defs",
+      "maxSourceBytes": 262144000
+    },
+    "targetCrs": "EPSG:31984",
+    "imagePath": "assets/superficie/superficie-mina.png",
+    "metadataPath": "data/superficie.json",
+    "hillshade": {"azimuthDegrees": 315, "altitudeDegrees": 45, "zFactor": 1},
+    "palette": {"shadeDark": "#1c2834", "shadeLight": "#5b6f80", "gamma": 1, "nodata": "#253442"},
+    "footprint": {"maxResidualMeters": 0.05}
   },
   "paths": {
     "manifest": "data/manifest.json",

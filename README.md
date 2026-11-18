@@ -33,3 +33,8 @@ Horário inicial: 12:00. Responsável inicial: Setor Técnico de Operações - E
 Logo da aplicação atualizado com VISUAL/logo.png fornecido pelo usuário, copiado sem alteração para assets/planejador-logo.png. Aplicado ao cabeçalho, carregamento, favicon e ícone Apple; caminho visual.logo no config.json.
 
 PDF: textos, tabelas e esquema de distâncias são vetoriais e selecionáveis; mapa e logotipos são imagens. Fonte padrão do PDF em config.json (report.pdfFontFamily).
+
+## Superfície georreferenciada da mina
+`config.json` tem o bloco `surface`: o esquema de distâncias do relatório usa uma superfície sombreada (relevo) da mina como fundo, na mesma escala dos pontos, recortada ao retângulo do esquema. Onde a superfície não existe, o fundo escuro continua. Para gerar a superfície a partir de um GeoTIFF local: `npm run build:superficie -- "caminho/arquivo.tif"`. O TIF não é copiado para o repositório; o comando grava `assets/superficie/superficie-mina.png` e `data/superficie.json`, e o build confere ambos (tamanho e hash). `surface.enabled: false` remove a superfície do relatório. A transformação de datum (SAD69 do TIF para o CRS do projeto) vem de `surface.source.definition`. A cor de NoData vem de `surface.palette.nodata` (igual ao fundo do esquema).
+
+As miniaturas das áreas e linhas importadas (lista "Áreas de desmonte") usam `visual.areaIcon` (tamanho, margem, máximo de pontos, cor, opacidade, espessura e tracejado da linha); a cor da linha vem de `visual.mapColors.line`. Valores inválidos impedem a inicialização da aplicação, com a causa exibida.
