@@ -186,3 +186,34 @@ test('mine surface sits above the schematic background, clipped to the diagram, 
   assert.ok(op.w>0&&op.h>0,'a superfície tem área positiva no esquema');
   assert.throws(()=>layoutReport({...data,surface:{bounds:{minX:2,minY:0,maxX:1,maxY:1}}},{measure:fakeMeasure,imageSize:images}),/superfície da mina inválidos/);
 });
+
+test('schematic title comes from config and the grid is a faint white mesh at a fixed metre spacing',()=>{
+  const images=key=>({width:testImages[key]?.width??1,height:testImages[key]?.height??1});
+  const layout=layoutReport(data,{measure:fakeMeasure,imageSize:images});
+  const texts=layout.ops.filter(op=>op.t==='text').map(op=>op.str);
+  assert.ok(texts.includes(config.report.schematicTitle),'o título do esquema vem de report.schematicTitle');
+  assert.ok(!texts.some(str=>str.includes('DISTÂNCIAS À ORIGEM')),'o título antigo saiu do esquema');
+  const grid=config.report.schematicGrid;
+  const mesh=layout.ops.filter(op=>op.t==='line'&&op.alpha===grid.opacity);
+  // A espessura é escalada junto com o esquema; por isso só se confere que é positiva.
+  assert.ok(mesh.length>0&&mesh.every(op=>op.color===grid.color&&op.lw>0),'a malha usa a cor e a opacidade da configuração, com espessura positiva');
+  const verticals=mesh.filter(op=>op.x1===op.x2).map(op=>op.x1).sort((a,b)=>a-b);
+  const horizontals=mesh.filter(op=>op.y1===op.y2).map(op=>op.y1).sort((a,b)=>a-b);
+  assert.ok(verticals.length>=2&&horizontals.length>=2,'a malha tem linhas nos dois sentidos');
+  const gaps=[...verticals.slice(1).map((x,i)=>x-verticals[i]),...horizontals.slice(1).map((y,i)=>y-horizontals[i])];
+  assert.ok(gaps.every(g=>Math.abs(g-gaps[0])<1e-6),'espaçamento uniforme da malha');
+  // A malha fica acima do fundo e abaixo dos pontos e rótulos.
+  const background=layout.ops.findIndex(op=>op.t==='rect'&&op.fill===config.report.ink);
+  const firstMesh=layout.ops.indexOf(mesh[0]);
+  const firstPoint=layout.ops.findIndex(op=>op.t==='circle');
+  assert.ok(background<firstMesh&&firstMesh<firstPoint,'a malha fica entre o fundo e os pontos');
+});
+
+test('schematic title and grid are required in config.json; invalid values are refused with the cause',()=>{
+  const images=key=>({width:1,height:1});
+  const run=report=>layoutReport({...data,config:{...config,report:{...config.report,...report}}},{measure:fakeMeasure,imageSize:images});
+  assert.throws(()=>run({schematicTitle:''}),/schematicTitle/);
+  assert.throws(()=>run({schematicGrid:undefined}),/schematicGrid/);
+  assert.throws(()=>run({schematicGrid:{...config.report.schematicGrid,spacingMeters:0}}),/schematicGrid/);
+  assert.throws(()=>run({schematicGrid:{...config.report.schematicGrid,opacity:1.5}}),/schematicGrid/);
+});

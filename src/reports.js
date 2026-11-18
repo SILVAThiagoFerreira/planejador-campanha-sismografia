@@ -1,7 +1,7 @@
 /** Browser-only report orchestration: prévia/PNG em canvas, PDF vetorial e mensagem. Layout em reportLayout.js; geometria em core.js. */
 import {number, coordinateNumber, coordinateDMM, reportDate, reportNotes, validateReportData} from './reportFormat.js';
-import {layoutReport, situationBlock} from './reportLayout.js?v=1.3.9';
-import {buildReportPdf} from './reportPdf.js?v=1.3.9';
+import {layoutReport, situationBlock} from './reportLayout.js?v=1.3.10';
+import {buildReportPdf} from './reportPdf.js?v=1.3.10';
 import {footprintInCrs, validateSurfaceMetadata} from './superficie.js?v=1.0.0';
 export {coordinateDMM, coordinateNumber, reportNotes, situationBlock};
 
@@ -89,7 +89,8 @@ function drawLayoutToCanvas(layout, images, scale) {
       if (op.fill) { ctx.fillStyle = op.fill; ctx.fillRect(op.x, op.y, op.w, op.h); }
       if (op.stroke) { ctx.strokeStyle = op.stroke; ctx.lineWidth = op.lw; ctx.strokeRect(op.x, op.y, op.w, op.h); }
     } else if (op.t === 'line') {
-      ctx.strokeStyle = op.color; ctx.lineWidth = op.lw; ctx.beginPath(); ctx.moveTo(op.x1, op.y1); ctx.lineTo(op.x2, op.y2); ctx.stroke();
+      // alpha opcional (malha do esquema): ausente vale opacidade total.
+      ctx.globalAlpha = op.alpha ?? 1; ctx.strokeStyle = op.color; ctx.lineWidth = op.lw; ctx.beginPath(); ctx.moveTo(op.x1, op.y1); ctx.lineTo(op.x2, op.y2); ctx.stroke(); ctx.globalAlpha = 1;
     } else if (op.t === 'circle') {
       ctx.fillStyle = op.fill; ctx.beginPath(); ctx.arc(op.x, op.y, op.r, 0, Math.PI * 2); ctx.fill();
     } else if (op.t === 'text') {

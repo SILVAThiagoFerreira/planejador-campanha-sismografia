@@ -82,7 +82,7 @@ Refatoração do relatório: layout único em src/reportLayout.js, prévia/PNG/D
 - [x] Superfície da mina (TIF de referência) como fundo do esquema de distâncias, em prévia, PNG, DOCX e PDF (SPEC.md, PIPELINE.md, DATA_SCHEMA.md).
 - [x] Leitor GeoTIFF próprio (tools/lib/geotiff.mjs, sem dependência nova), validado contra o TIF real: todos os pixels batem com a leitura do PIL.
 - [x] Transformação SAD69 para SIRGAS 2000 com o datum do próprio TIF; limites conferidos como retângulo alinhado.
-- [x] Testes: tests/superficie.test.js (17) e tests/reports.test.js (ordem de desenho e recorte). `npm test`: 151 de 151.
+- [x] Testes: tests/superficie.test.js (17) e tests/reports.test.js (ordem de desenho e recorte). `npm test`: 153 de 153.
 - [x] Fundo da página branco (`--bg`); o relatório não mudou.
 - [x] Ícone SVG da forma de cada área e linha importada, na lista "Áreas de desmonte" (src/areaIcon.js), com tamanho, cores e amostragem em `visual.areaIcon`, validados na inicialização.
 - [ ] Confirmar o datum do levantamento: o TIF declara SAD69 com −57,1,−41; o IBGE usa −66,87,4,37,−38,52 (diferença de 3,2 m em X e 0,8 m em Y). Conferir com um elemento conhecido (divisa da DXF sobre a cava) antes de uso operacional.
@@ -90,4 +90,5 @@ Refatoração do relatório: layout único em src/reportLayout.js, prévia/PNG/D
 - [ ] Publicação: o relevo sombreado do TIF (sem cotas absolutas) vai ao Pages junto com o restante, como pedido nesta entrega. Confirmar se o levantamento pode ser público; se não puder, remover `assets/superficie/` e `data/superficie.json` e definir `surface.enabled` como falso.
 - [ ] Nodata: 422.767 pixels (17%) do TIF não têm dado; ficam com a cor de `surface.palette.nodata` (fundo do esquema). Confirmar se é a área fora da cava ou falha de exportação.
 - [x] Build da superfície: a zona UTM é conferida pela região de validação; PNG e JSON são gravados por arquivo temporário; geometria, datum, paleta e sombreamento divergentes são recusados.
-- Versões de cache: app.js 1.6.5, index.html, styles.css 1.3.8, reports.js 1.2.4, reportLayout.js e reportPdf.js 1.3.9, docx.js 1.2.3, areaIcon.js 1.1.0, superficie.js 1.0.0; config.json versão 1.1.7.
+- [x] Esquema com título "ESQUEMA CALCULADO EM PLANTA" (`report.schematicTitle`) e malha de linhas finas brancas transparentes a cada 500 m (`report.schematicGrid`), em prévia, PNG, DOCX e PDF.
+- Versões de cache: app.js 1.6.6, index.html, styles.css 1.3.8, reports.js 1.2.5, reportLayout.js e reportPdf.js 1.3.10, docx.js 1.2.4, areaIcon.js 1.1.0, superficie.js 1.0.0; config.json versão 1.1.8.

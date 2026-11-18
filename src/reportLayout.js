@@ -52,6 +52,19 @@ function distanceDiagramOps(data, dw, dh, measure) {
     const left = px(b.minX), right = px(b.maxX), top = py(b.maxY), bottom = py(b.minY);
     ops.push({ t: 'image', key: 'surface', x: left, y: top, w: right - left, h: bottom - top, clip: { x: 0, y: 0, w: dw, h: dh } });
   }
+  // Malha de linhas finas em intervalos de metros do projeto (config.report.schematicGrid), sobre o fundo e a superfície.
+  const grid = data.config.report.schematicGrid;
+  const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+  const worldX = x => cx + (x - dw / 2) / scale, worldY = y => cy - (y - dh / 2) / scale;
+  const sp = grid.spacingMeters;
+  for (let k = Math.ceil(worldX(0) / sp); k * sp <= worldX(dw); k++) {
+    const x = px(k * sp);
+    ops.push({ t: 'line', x1: x, y1: 0, x2: x, y2: dh, color: grid.color, lw: grid.lineWidth, alpha: grid.opacity });
+  }
+  for (let k = Math.ceil(worldY(dh) / sp); k * sp <= worldY(0); k++) {
+    const y = py(k * sp);
+    ops.push({ t: 'line', x1: 0, y1: y, x2: dw, y2: y, color: grid.color, lw: grid.lineWidth, alpha: grid.opacity });
+  }
   const selected = new Set(scenario.points.map(p => p.id));
   const ox = px(plan.origin.x), oy = py(plan.origin.y);
   // Texto com linha de base "middle" (como no canvas original), convertido para posição pelo topo.
@@ -80,7 +93,7 @@ function distanceDiagramOps(data, dw, dh, measure) {
   ops.push({ t: 'line', x1: arrowX, y1: northY + northSize * .45, x2: arrowX, y2: northY - northSize * .45, color: '#ffffff', lw: 1.2 });
   ops.push({ t: 'line', x1: arrowX, y1: northY - northSize * .45, x2: arrowX - northSize * .22, y2: northY - northSize * .1, color: '#ffffff', lw: 1.2 });
   ops.push({ t: 'line', x1: arrowX, y1: northY - northSize * .45, x2: arrowX + northSize * .22, y2: northY - northSize * .1, color: '#ffffff', lw: 1.2 });
-  label('DISTÂNCIAS À ORIGEM · ESQUEMA EM PLANTA', dw * .04, dh * .95, dw * .017, '#ffffff', false, false);
+  label(style.schematicTitle, dw * .04, dh * .95, dw * .017, '#ffffff', false, false);
   return ops;
 }
 
@@ -95,6 +108,12 @@ export function layoutReport(data, {measure, imageSize}) {
   const { config, meta, plan, scenario } = data, style = config.report;
   // Limite de linhas do bloco de direções vem só de config.json; sem valor válido o relatório não é gerado.
   if (!Number.isInteger(style.maxDirectionRows) || style.maxDirectionRows < 1) throw new Error('Configuração report.maxDirectionRows ausente ou inválida em config.json: informe um inteiro maior que zero.');
+  // Título e malha do esquema vêm só de config.json; valor ausente ou inválido recusa o relatório com a causa.
+  if (typeof style.schematicTitle !== 'string' || !style.schematicTitle.trim()) throw new Error('Configuração report.schematicTitle ausente em config.json.');
+  const grid = style.schematicGrid;
+  if (!grid || !(grid.spacingMeters > 0) || !(grid.lineWidth > 0) || !(grid.opacity >= 0 && grid.opacity <= 1) || !/^#[0-9a-fA-F]{6}$/.test(grid.color ?? '')) {
+    throw new Error('Configuração report.schematicGrid ausente ou inválida em config.json (spacingMeters > 0, lineWidth > 0, opacity entre 0 e 1, color #RRGGBB).');
+  }
   const W = style.width, H = style.height, m = style.margin;
   const unit = W / 1240, gap = W * .028, col = (W - m * 2 - gap) / 2, right = m + col + gap;
   const ops = [];

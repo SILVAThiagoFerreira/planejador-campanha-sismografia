@@ -2,7 +2,7 @@
  * Gerador de PDF vetorial do relatório: textos, tabelas e fios são escritos com jsPDF
  * (texto selecionável e pesquisável); apenas mapa e logotipos são imagens.
  */
-import {layoutReport} from './reportLayout.js?v=1.3.9';
+import {layoutReport} from './reportLayout.js?v=1.3.10';
 
 /** Distância do topo do corpo da fonte até a linha de base (métrica Helvetica/Arial), em múltiplos do tamanho. */
 const ASCENT = 0.905;
@@ -43,7 +43,11 @@ export function buildReportPdf(data, JsPDF, images, {compress = true} = {}) {
       if (op.fill) { doc.setFillColor(...rgb(op.fill)); doc.rect(op.x * k, op.y * k, op.w * k, op.h * k, 'F'); }
       if (op.stroke) { doc.setDrawColor(...rgb(op.stroke)); doc.setLineWidth(op.lw * k); doc.rect(op.x * k, op.y * k, op.w * k, op.h * k, 'S'); }
     } else if (op.t === 'line') {
+      // alpha opcional (malha do esquema) vira estado gráfico de opacidade; ausente vale opacidade total.
+      const alpha = op.alpha ?? 1;
+      if (alpha !== 1) doc.setGState(new doc.GState({opacity: alpha}));
       doc.setDrawColor(...rgb(op.color)); doc.setLineWidth(op.lw * k); doc.line(op.x1 * k, op.y1 * k, op.x2 * k, op.y2 * k);
+      if (alpha !== 1) doc.setGState(new doc.GState({opacity: 1}));
     } else if (op.t === 'circle') {
       doc.setFillColor(...rgb(op.fill)); doc.circle(op.x * k, op.y * k, op.r * k, 'F');
     } else if (op.t === 'text') {
