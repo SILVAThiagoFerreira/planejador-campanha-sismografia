@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "kind": "superficie-mina",
+  "generatedAt": "2026-11-18T19:34:56.298Z",
+  "source": {
+    "fileName": "20261116_Mina_Bruta_1x1.tif",
+    "sha256": "00f4c82e92a70e2b5bad983f7c51936ac8f75314247467c499078c7f0ec5cd8e",
+    "crs": "EPSG:29194",
+    "definition": "+proj=utm +zone=24 +south +ellps=aust_SA +towgs84=-57,1,-41,0,0,0,0 +units=m +no_defs",
+    "width": 1299,
+    "height": 1906,
+    "pixelSizeMeters": 1,
+    "nodataPixels": 422767
+  },
+  "crs": "EPSG:31984",
+  "bounds": {
+    "minX": 748135.4740916869,
+    "minY": 8928879.893135702,
+    "maxX": 749434.4775908147,
+    "maxY": 8930785.897859644
+  },
+  "datumShiftMeters": {
+    "dx": -34.518,
+    "dy": -44.105
+  },
+  "method": {
+    "hillshade": {
+      "azimuthDegrees": 315,
+      "altitudeDegrees": 45,
+      "zFactor": 1
+    },
+    "palette": {
+      "shadeDark": "#1c2834",
+      "shadeLight": "#5b6f80",
+      "gamma": 1,
+      "nodata": "#253442"
+    }
+  },
+  "image": {
+    "path": "assets/superficie/superficie-mina.png",
+    "format": "PNG",
+    "width": 1299,
+    "height": 1906,
+    "bytes": 1419548,
+    "sha256": "def4b969cd6991d0a818540005f2362f948f3b4cd32ced42ae6c190c189e6f20"
+  }
+}

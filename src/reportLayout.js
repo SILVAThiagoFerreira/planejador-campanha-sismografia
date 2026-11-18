@@ -26,6 +26,8 @@ function transformOp(op, bx, by, k) {
   for (const key of ['x', 'x1', 'x2']) if (key in out) out[key] = bx + out[key] * k;
   for (const key of ['y', 'y1', 'y2']) if (key in out) out[key] = by + out[key] * k;
   for (const key of ['w', 'h', 'size', 'lw', 'r']) if (key in out) out[key] = out[key] * k;
+  // Recorte de imagem (superfície) também vive no sistema local e precisa acompanhar a escala.
+  if (out.clip) out.clip = { x: bx + out.clip.x * k, y: by + out.clip.y * k, w: out.clip.w * k, h: out.clip.h * k };
   return out;
 }
 
@@ -40,6 +42,16 @@ function distanceDiagramOps(data, dw, dh, measure) {
   const scale = Math.min(dw * .60 / Math.max(1, maxX - minX), dh * .64 / Math.max(1, maxY - minY));
   const px = x => dw / 2 + (x - (minX + maxX) / 2) * scale;
   const py = y => dh / 2 - (y - (minY + maxY) / 2) * scale;
+  // Superfície georreferenciada da mina: mesma escala dos pontos, recortada ao retângulo do esquema.
+  // Onde a superfície não existe, o fundo escuro do esquema continua visível.
+  if (data.surface) {
+    const b = data.surface.bounds;
+    if (!b || ![b.minX, b.minY, b.maxX, b.maxY].every(Number.isFinite) || b.maxX <= b.minX || b.maxY <= b.minY) {
+      throw new Error('Limites da superfície da mina inválidos para o esquema de distâncias.');
+    }
+    const left = px(b.minX), right = px(b.maxX), top = py(b.maxY), bottom = py(b.minY);
+    ops.push({ t: 'image', key: 'surface', x: left, y: top, w: right - left, h: bottom - top, clip: { x: 0, y: 0, w: dw, h: dh } });
+  }
   const selected = new Set(scenario.points.map(p => p.id));
   const ox = px(plan.origin.x), oy = py(plan.origin.y);
   // Texto com linha de base "middle" (como no canvas original), convertido para posição pelo topo.

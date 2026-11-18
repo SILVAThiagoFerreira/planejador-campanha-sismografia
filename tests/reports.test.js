@@ -166,3 +166,23 @@ test('PDF requires the configured font and layout rejects a missing scenario',as
   assert.throws(()=>buildReportPdf(noFont,jsPDF,testImages),/report\.pdfFontFamily/);
   assert.throws(()=>layoutReport({...coordinateData,scenario:{...coordinateData.scenario,points:[]}},{measure:fakeMeasure,imageSize:()=>({width:1,height:1})}),/cenário/);
 });
+
+test('mine surface sits above the schematic background, clipped to the diagram, and invalid bounds are refused',()=>{
+  const col=(config.report.width-config.report.margin*2-config.report.width*.028)/2;
+  const bounds={minX:748135.47,minY:8928879.89,maxX:749434.48,maxY:8930785.9};
+  const images=key=>({width:testImages[key]?.width??1,height:testImages[key]?.height??1});
+  const plain=layoutReport(data,{measure:fakeMeasure,imageSize:images});
+  assert.equal(plain.ops.some(op=>op.t==='image'&&op.key==='surface'),false,'sem superfície não há imagem do esquema');
+  const layout=layoutReport({...data,surface:{bounds}},{measure:fakeMeasure,imageSize:images});
+  const surfaceIndex=layout.ops.findIndex(op=>op.t==='image'&&op.key==='surface');
+  assert.ok(surfaceIndex>0,'a superfície existe no layout');
+  const firstLine=layout.ops.findIndex(op=>op.t==='line');
+  const op=layout.ops[surfaceIndex];
+  const block=situationBlock(config.report,col);
+  const background=layout.ops[surfaceIndex-1];
+  assert.ok(background.t==='rect'&&background.fill===config.report.ink&&Math.abs(background.w-block.width)<1e-6,'o fundo escuro do esquema vem imediatamente antes da superfície');
+  assert.ok(surfaceIndex<firstLine,'a superfície fica sob as linhas e os rótulos do esquema');
+  assert.ok(Math.abs(op.clip.w-block.width)<1e-6&&Math.abs(op.clip.h-block.height)<1e-6,'o recorte é o retângulo do esquema, já escalado');
+  assert.ok(op.w>0&&op.h>0,'a superfície tem área positiva no esquema');
+  assert.throws(()=>layoutReport({...data,surface:{bounds:{minX:2,minY:0,maxX:1,maxY:1}}},{measure:fakeMeasure,imageSize:images}),/superfície da mina inválidos/);
+});

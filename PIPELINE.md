@@ -48,3 +48,11 @@ Horário inicial: 12:00. Responsável inicial: Setor Técnico de Operações - E
 2. O bloco "Direcionamento informado" usa o nome completo da área; `text()` quebra a linha dentro da coluna. Nada é cortado.
 3. Além do limite, a última linha aponta para o projeto JSON. O mesmo layout alimenta prévia, PNG, DOCX (canvas) e PDF vetorial.
 4. Testes: tests/reports.test.js cobre nome longo inteiro, resumo com o projeto JSON e limite ausente recusado.
+
+## Superfície georreferenciada — 2026-11-18
+1. Geração (offline, uma vez por levantamento): `npm run build:superficie -- "arquivo.tif"` (tools/build-superficie.mjs). Lê o GeoTIFF com tools/lib/geotiff.mjs (LZW, deflate ou sem compressão; float32; predictor 1), confere o CRS de origem com `surface.source.crs`, transforma os cantos para `surface.targetCrs` e exige geometria retangular dentro de `surface.footprint.maxResidualMeters` e confere que os quatro cantos caem dentro de `config.validation.regionBounds` (lon/lat via proj4), para recusar zona UTM errada.
+2. Sombreamento e PNG: tools/lib/hillshade.mjs (Horn, luz de `surface.hillshade`) gera índices: 0 para NoData e 1 a 255 para pixels válidos; tools/lib/png.mjs grava PNG indexado com filtros adaptativos. NoData usa a cor `surface.palette.nodata`, igual ao fundo do esquema.
+3. Metadados: data/superficie.json é validado por src/superficie.js antes da gravação; nenhuma escrita parcial: PNG e JSON são gravados como `.tmp` e renomeados só no fim. O caminho do TIF não entra no arquivo; só o nome do arquivo e o SHA-256.
+4. Build: `npm run build` valida `surface` e, se ativa, confere PNG e metadados (tamanho e hash).
+5. Relatório: `prepareReport` (src/reports.js) carrega `data/superficie.json` e a imagem, leva os limites para o CRS do projeto (`meta.crsId`, passado só em reportData) e entrega `surface` ao layout. Prévia, PNG, DOCX e PDF usam o mesmo caminho.
+6. Testes: tests/superficie.test.js (LZW, blocos e faixas, big-endian, PixelIsPoint, rejeições, sombreamento, NoData, PNG com filtros desfeitos e CRC, validação, transformação SAD69 para SIRGAS) e tests/reports.test.js (ordem de desenho e recorte).

@@ -77,3 +77,17 @@ Refatoração do relatório: layout único em src/reportLayout.js, prévia/PNG/D
 - [ ] Decidir se os rótulos da legenda do monitoramento devem ser encurtados ("Não houveram desmontes nesta data / Este ponto não foi monitorado", "Quantos desmontes houveram no mês?"). São os mesmos rótulos do PDF/PNG do Gantt (`monitoring.labels` em config.json), então não foram alterados; a grafia "houveram" também está nesses rótulos.
 - [ ] Decidir se a data da imagem de satélite deve voltar na tela (removida do mapa; a atribuição do Esri continua no controle do Leaflet).
 - Versões de cache: app.js 1.6.0 e styles.css 1.3.5; project.js, map.js e areaNames.js 1.3.7.
+
+## Superfície georreferenciada e ícones de área — 2026-11-18
+- [x] Superfície da mina (TIF de referência) como fundo do esquema de distâncias, em prévia, PNG, DOCX e PDF (SPEC.md, PIPELINE.md, DATA_SCHEMA.md).
+- [x] Leitor GeoTIFF próprio (tools/lib/geotiff.mjs, sem dependência nova), validado contra o TIF real: todos os pixels batem com a leitura do PIL.
+- [x] Transformação SAD69 para SIRGAS 2000 com o datum do próprio TIF; limites conferidos como retângulo alinhado.
+- [x] Testes: tests/superficie.test.js (17) e tests/reports.test.js (ordem de desenho e recorte). `npm test`: 151 de 151.
+- [x] Fundo da página branco (`--bg`); o relatório não mudou.
+- [x] Ícone SVG da forma de cada área e linha importada, na lista "Áreas de desmonte" (src/areaIcon.js), com tamanho, cores e amostragem em `visual.areaIcon`, validados na inicialização.
+- [ ] Confirmar o datum do levantamento: o TIF declara SAD69 com −57,1,−41; o IBGE usa −66,87,4,37,−38,52 (diferença de 3,2 m em X e 0,8 m em Y). Conferir com um elemento conhecido (divisa da DXF sobre a cava) antes de uso operacional.
+- [ ] Cobertura: o TIF cobre ~1,3 × 1,9 km em torno da origem. Os pontos de monitoramento do exemplo ficam a 1,4–4,5 km e ficam fora da superfície. Se houver levantamento maior, rodar `npm run build:superficie` com ele.
+- [ ] Publicação: o relevo sombreado do TIF (sem cotas absolutas) vai ao Pages junto com o restante, como pedido nesta entrega. Confirmar se o levantamento pode ser público; se não puder, remover `assets/superficie/` e `data/superficie.json` e definir `surface.enabled` como falso.
+- [ ] Nodata: 422.767 pixels (17%) do TIF não têm dado; ficam com a cor de `surface.palette.nodata` (fundo do esquema). Confirmar se é a área fora da cava ou falha de exportação.
+- [x] Build da superfície: a zona UTM é conferida pela região de validação; PNG e JSON são gravados por arquivo temporário; geometria, datum, paleta e sombreamento divergentes são recusados.
+- Versões de cache: app.js 1.6.5, index.html, styles.css 1.3.8, reports.js 1.2.4, reportLayout.js e reportPdf.js 1.3.9, docx.js 1.2.3, areaIcon.js 1.1.0, superficie.js 1.0.0; config.json versão 1.1.7.

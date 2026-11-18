@@ -3,6 +3,7 @@ import {existsSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {validateMonitoringData} from '../src/monitoringData.js';
 import {reportSettings} from '../src/monitoringReportConfig.js';
+import {validateSurfaceConfig, validateSurfaceMetadata} from '../src/superficie.js';
 // Hash the canonical LF representation so Windows checkouts and the Pages Linux
 // runner produce the same stable manifest.
 const raw=(await readFile('config.json','utf8')).replace(/\r\n/g,'\n');
@@ -25,6 +26,16 @@ for(const key of ['sourceText','offlineNotice','loadFailedNotice','editHint','lo
 }
 // O snapshot do monitoramento, quando existir, precisa atender ao contrato da aplicação.
 if(existsSync(monitoring.snapshotPath)){validateMonitoringData(JSON.parse(await readFile(monitoring.snapshotPath,'utf8')),monitoring);}
+// Superfície georreferenciada (config.surface): bloco válido sempre; quando ativa, o PNG e data/superficie.json gerados
+// por npm run build:superficie precisam existir, conferir com a configuração e ter o mesmo hash e tamanho da imagem.
+validateSurfaceConfig(config);
+if(config.surface.enabled){
+  if(!existsSync(config.surface.metadataPath)||!existsSync(config.surface.imagePath)) throw Error('Superfície da mina ausente (data/superficie.json e assets/superficie). Gere com npm run build:superficie -- "arquivo.tif".');
+  const surfaceMeta=JSON.parse(await readFile(config.surface.metadataPath,'utf8'));
+  validateSurfaceMetadata(surfaceMeta,config);
+  const imageBytes=await readFile(config.surface.imagePath);
+  if(imageBytes.length!==surfaceMeta.image.bytes||createHash('sha256').update(imageBytes).digest('hex')!==surfaceMeta.image.sha256) throw Error('PNG da superfície não confere com data/superficie.json (tamanho ou hash).');
+}
 await mkdir('vendor',{recursive:true}); await mkdir('data',{recursive:true});
 for(const [from,to] of [['leaflet/dist/leaflet.js','leaflet.js'],['leaflet/dist/leaflet.css','leaflet.css'],['leaflet/dist/images','images'],['proj4/dist/proj4.js','proj4.js'],['jspdf/dist/jspdf.umd.min.js','jspdf.umd.min.js'],['leaflet/LICENSE','leaflet-LICENSE'],['proj4/LICENSE.md','proj4-LICENSE.md'],['jspdf/LICENSE','jspdf-LICENSE']]) await cp(`node_modules/${from}`,`vendor/${to}`,{recursive:true});
 await cp('node_modules/jszip/dist/jszip.min.js','vendor/jszip.min.js');

@@ -56,3 +56,22 @@ Payload de verificação de acesso (`POST apiUrl`, text/plain): `{action: "auth"
 Payload de gravação (`POST apiUrl`, text/plain): `{action: "save", user, password, year, month, desmontes: [dias], points: {nome: [dias]}}`. Resposta: `{ok, message, code?, data?}`.
 
 Campo `code` (ausente em sucesso): `"auth"` = usuário ou senha incorretos; `"locked"` = muitas tentativas (5 falhas em 10 min por usuário). A aplicação usa o code para decidir se volta ao diálogo de login. Credenciais nunca são persistidas pela aplicação.
+
+## Superfície da mina — data/superficie.json (gerado em 2026-11-18)
+Gerado por `npm run build:superficie`; validado por src/superficie.js (`validateSurfaceMetadata`) no build e no relatório. Não editar manualmente.
+
+```json
+{
+  "schemaVersion": 1,
+  "kind": "superficie-mina",
+  "generatedAt": "2026-11-18T19:14:17.184Z",
+  "source": {"fileName": "20261116_Mina_Bruta_1x1.tif", "sha256": "…64 hex…", "crs": "EPSG:29194", "definition": "+proj=utm +zone=24 +south +ellps=aust_SA +towgs84=-57,1,-41,0,0,0,0 +units=m +no_defs", "width": 1299, "height": 1906, "pixelSizeMeters": 1, "nodataPixels": 422767},
+  "crs": "EPSG:31984",
+  "bounds": {"minX": 748135.474, "minY": 8928879.893, "maxX": 749434.478, "maxY": 8930785.898},
+  "datumShiftMeters": {"dx": -34.518, "dy": -44.105},
+  "method": {"hillshade": {"azimuthDegrees": 315, "altitudeDegrees": 45, "zFactor": 1}, "palette": {"shadeDark": "#1c2834", "shadeLight": "#5b6f80", "gamma": 1, "nodata": "#253442"}},
+  "image": {"path": "assets/superficie/superficie-mina.png", "format": "PNG", "width": 1299, "height": 1906, "bytes": 1419548, "sha256": "…64 hex…"}
+}
+```
+
+Regras: `crs` igual a `surface.targetCrs`; `source.crs` igual a `surface.source.crs` e `source.definition` igual a `surface.source.definition`; `method.hillshade` e `method.palette` (inclusive `nodata`) iguais à configuração usada para gerar o PNG; `bounds` com minX < maxX e minY < maxY; a área em metros (maxX − minX, maxY − minY) bate com `image.width` e `image.height` vezes o pixel, dentro de `surface.footprint.maxResidualMeters`. O caminho do TIF de origem nunca é gravado. Cotas absolutas não são gravadas (só o relevo sombreado).

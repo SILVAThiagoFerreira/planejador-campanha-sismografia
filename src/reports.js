@@ -1,7 +1,8 @@
 /** Browser-only report orchestration: prévia/PNG em canvas, PDF vetorial e mensagem. Layout em reportLayout.js; geometria em core.js. */
 import {number, coordinateNumber, coordinateDMM, reportDate, reportNotes, validateReportData} from './reportFormat.js';
-import {layoutReport, situationBlock} from './reportLayout.js?v=1.3.8';
-import {buildReportPdf} from './reportPdf.js?v=1.3.8';
+import {layoutReport, situationBlock} from './reportLayout.js?v=1.3.9';
+import {buildReportPdf} from './reportPdf.js?v=1.3.9';
+import {footprintInCrs, validateSurfaceMetadata} from './superficie.js?v=1.0.0';
 export {coordinateDMM, coordinateNumber, reportNotes, situationBlock};
 
 export function buildWhatsAppMessage(data, template) {
@@ -23,10 +24,11 @@ export function buildWhatsAppMessage(data, template) {
     return fields[key];
   }).trim();
 }
-function loadImage(url) {
+/** Carrega uma imagem; `label` nomeia o recurso na mensagem de erro (ex.: identidade visual ou superfície da mina). */
+function loadImage(url, label = 'a identidade visual do relatório') {
   return new Promise((resolve, reject) => {
     const img = new Image(); img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('Não foi possível carregar a identidade visual do relatório.'));
+    img.onerror = () => reject(new Error(`Não foi possível carregar ${label}.`));
     img.src = new URL(url, document.baseURI).href;
   });
 }
@@ -40,6 +42,37 @@ export async function loadReportImages(data) {
   };
   if (data.mapCanvas) images.map = { src: data.mapCanvas, width: data.mapCanvas.width, height: data.mapCanvas.height, format: 'PNG' };
   return images;
+}
+/**
+ * Superfície georreferenciada da mina para o esquema de distâncias: metadados validados, PNG e limites
+ * levados para a CRS do projeto. Devolve null quando surface.enabled é falso.
+ */
+export async function loadSituationSurface(data) {
+  const surface = data.config.surface;
+  if (!surface) throw new Error('Bloco surface ausente em config.json.');
+  if (!surface.enabled) return null;
+  if (!data.meta?.crsId) throw new Error('CRS do projeto ausente: a superfície da mina não pode ser posicionada.');
+  const meta = await fetch(surface.metadataPath, { cache: 'no-cache' }).then(r => {
+    if (!r.ok) throw new Error('Superfície da mina indisponível (data/superficie.json).');
+    return r.json();
+  });
+  validateSurfaceMetadata(meta, data.config);
+  const img = await loadImage(surface.imagePath, 'a superfície da mina');
+  if (img.naturalWidth !== meta.image.width || img.naturalHeight !== meta.image.height) {
+    throw new Error('A imagem da superfície não confere com data/superficie.json.');
+  }
+  return {
+    layout: { bounds: footprintInCrs(meta.bounds, meta.crs, data.meta.crsId, globalThis.proj4) },
+    image: { src: img, width: img.naturalWidth, height: img.naturalHeight, format: 'PNG' },
+  };
+}
+/** Dados e imagens completos do relatório (inclui a superfície quando ativa). Usado por prévia, PNG, DOCX e PDF. */
+export async function prepareReport(data) {
+  validateReportData(data);
+  const images = await loadReportImages(data);
+  const surface = await loadSituationSurface(data);
+  if (!surface) return { data, images };
+  return { data: { ...data, surface: surface.layout }, images: { ...images, surface: surface.image } };
 }
 /** Medição de texto com a mesma fonte do canvas de desenho. */
 function canvasMeasure(fontFamily) {
@@ -74,8 +107,9 @@ export async function renderReport(data) {
   validateReportData(data);
   const style = data.config.report;
   if (document.fonts?.ready) await document.fonts.ready;
-  const images = await loadReportImages(data);
-  const layout = layoutReport(data, { measure: canvasMeasure(style.fontFamily), imageSize: key => ({ width: images[key].width, height: images[key].height }) });
+  const prepared = await prepareReport(data);
+  const { images } = prepared;
+  const layout = layoutReport(prepared.data, { measure: canvasMeasure(style.fontFamily), imageSize: key => ({ width: images[key].width, height: images[key].height }) });
   return drawLayoutToCanvas({ ...layout, fontFamily: style.fontFamily }, images, style.scale);
 }
 export function downloadBlob(blob, filename) {
@@ -92,6 +126,7 @@ export async function exportReport(data, format='pdf') {
   if(format!=='pdf')throw new Error('Formato de exportação não suportado.');
   const Constructor=globalThis.jspdf?.jsPDF;
   if(!Constructor)throw new Error('Biblioteca PDF indisponível. Recarregue a página.');
-  const pdf=buildReportPdf(data,Constructor,await loadReportImages(data));
+  const prepared=await prepareReport(data);
+  const pdf=buildReportPdf(prepared.data,Constructor,prepared.images);
   const blob=pdf.output('blob');downloadBlob(blob,`${name}.pdf`);return {blob,filename:`${name}.pdf`};
 }
