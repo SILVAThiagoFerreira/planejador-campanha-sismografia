@@ -7,7 +7,7 @@ const config = JSON.parse(fs.readFileSync(new URL('../config.json', import.meta.
 
 test('modelo padrão do WhatsApp usa o título novo e não tem bloco de observações', () => {
   const template = config.report.whatsappTemplate;
-  assert.ok(template.startsWith('*CAMPANHA SISMOGRÁFICA PLANEJADA | Desmonte {data}*\n'));
+  assert.ok(template.startsWith('*CAMPANHA SISMOGRÁFICA PLANEJADA | DESMONTE {data}*\n'));
   assert.ok(!template.includes('OBSERVAÇÕES') && !template.includes('{observacoes}'));
   assert.ok(template.endsWith('Responsável: {responsavel}'));
 });
@@ -24,7 +24,7 @@ test('campanha salva com o modelo padrão anterior passa a usar o padrão atual;
 
 test('o padrão atual não aparece na lista de modelos substituídos, e todos os anteriores migram', () => {
   assert.ok(!config.report.supersededWhatsappTemplates.includes(config.report.whatsappTemplate));
-  assert.equal(config.report.supersededWhatsappTemplates.length, 2, 'modelo SISMOGRAFIA e modelo "Campanha de Sismografia Planejada"');
+  assert.equal(config.report.supersededWhatsappTemplates.length, 3, 'modelo SISMOGRAFIA, "Campanha de Sismografia Planejada" e "CAMPANHA SISMOGRÁFICA PLANEJADA | Desmonte"');
   for (const old of config.report.supersededWhatsappTemplates) {
     assert.equal(withCurrentMessageTemplate({messageTemplate: old}, config.report).messageTemplate, config.report.whatsappTemplate);
   }
