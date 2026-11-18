@@ -24,10 +24,17 @@ test('campanha salva com o modelo padrão anterior passa a usar o padrão atual;
 
 test('o padrão atual não aparece na lista de modelos substituídos, e todos os anteriores migram', () => {
   assert.ok(!config.report.supersededWhatsappTemplates.includes(config.report.whatsappTemplate));
-  assert.equal(config.report.supersededWhatsappTemplates.length, 3, 'modelo SISMOGRAFIA, "Campanha de Sismografia Planejada" e "CAMPANHA SISMOGRÁFICA PLANEJADA | Desmonte"');
+  assert.equal(config.report.supersededWhatsappTemplates.length, 4, 'modelo SISMOGRAFIA com poligonais, modelo SISMOGRAFIA com áreas, "Campanha de Sismografia Planejada" e "CAMPANHA SISMOGRÁFICA PLANEJADA | Desmonte"');
   for (const old of config.report.supersededWhatsappTemplates) {
     assert.equal(withCurrentMessageTemplate({messageTemplate: old}, config.report).messageTemplate, config.report.whatsappTemplate);
   }
+});
+
+test('modelo original de 05/09/2026 ("poligonais importadas") continua em navegadores antigos e é trocado pelo padrão atual', () => {
+  const original = config.report.supersededWhatsappTemplates.find(t => t.includes('poligonais importadas'));
+  assert.ok(original, 'a lista guarda o modelo original');
+  assert.ok(original.startsWith('*SISMOGRAFIA | DESMONTE {data}*\n') && original.includes('*OBSERVAÇÕES*\n{observacoes}'));
+  assert.equal(withCurrentMessageTemplate({messageTemplate: original}, config.report).messageTemplate, config.report.whatsappTemplate);
 });
 
 test('ausência da lista de modelos substituídos recusa a leitura, sem lista vazia assumida', () => {
