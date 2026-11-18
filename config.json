@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "1.1.10",
+  "version": "1.1.11",
   "title": "Planejador de campanha de sismografia",
   "defaults": {
     "operation": "MINA SERROTE - MINERAÇÃO VALE VERDE",
@@ -148,8 +148,8 @@
       "heightRatio": 0.72,
       "diagramWidth": 1100
     },
-    "whatsappTemplate": "*CAMPANHA SISMOGRÁFICA PLANEJADA | Desmonte {data}*\n\n*{operacao}*\nRegião: {regiao}\nHorário: {horario}\nCampanha com {quantidade} sismógrafo(s) — cenário {cenario}.\n\n*ORIGEM DO DESMONTE*\nCentro do círculo envolvente das áreas e linhas de pré-corte importadas.\nLatitude: {latitude}\nLongitude: {longitude}\nUTM — Zona {zona} Sul\nNorte (Y): {norte} m\nLeste (X): {leste} m\n\n*MONITORAMENTO PROPOSTO*\n{pontos}\n\nResponsável: {responsavel}",
-    "supersededWhatsappTemplates": ["*SISMOGRAFIA | DESMONTE {data}*\n\n*{operacao}*\nRegião: {regiao}\nHorário: {horario}\nCampanha com {quantidade} sismógrafo(s) — cenário {cenario}.\n\n*ORIGEM DO DESMONTE*\nCentro do círculo envolvente das áreas e linhas de pré-corte importadas.\nLatitude: {latitude}\nLongitude: {longitude}\nUTM — Zona {zona} Sul\nNorte (Y): {norte} m\nLeste (X): {leste} m\n\n*MONITORAMENTO PROPOSTO*\n{pontos}\n\n*OBSERVAÇÕES*\n{observacoes}\n\nResponsável: {responsavel}", "*Campanha de Sismografia Planejada | Desmonte {data}*\n\n*{operacao}*\nRegião: {regiao}\nHorário: {horario}\nCampanha com {quantidade} sismógrafo(s) — cenário {cenario}.\n\n*ORIGEM DO DESMONTE*\nCentro do círculo envolvente das áreas e linhas de pré-corte importadas.\nLatitude: {latitude}\nLongitude: {longitude}\nUTM — Zona {zona} Sul\nNorte (Y): {norte} m\nLeste (X): {leste} m\n\n*MONITORAMENTO PROPOSTO*\n{pontos}\n\nResponsável: {responsavel}"],
+    "whatsappTemplate": "*CAMPANHA SISMOGRÁFICA PLANEJADA | DESMONTE {data}*\n\n*{operacao}*\nRegião: {regiao}\nHorário: {horario}\nCampanha com {quantidade} sismógrafo(s) — cenário {cenario}.\n\n*ORIGEM DO DESMONTE*\nCentro do círculo envolvente das áreas e linhas de pré-corte importadas.\nLatitude: {latitude}\nLongitude: {longitude}\nUTM — Zona {zona} Sul\nNorte (Y): {norte} m\nLeste (X): {leste} m\n\n*MONITORAMENTO PROPOSTO*\n{pontos}\n\nResponsável: {responsavel}",
+    "supersededWhatsappTemplates": ["*SISMOGRAFIA | DESMONTE {data}*\n\n*{operacao}*\nRegião: {regiao}\nHorário: {horario}\nCampanha com {quantidade} sismógrafo(s) — cenário {cenario}.\n\n*ORIGEM DO DESMONTE*\nCentro do círculo envolvente das áreas e linhas de pré-corte importadas.\nLatitude: {latitude}\nLongitude: {longitude}\nUTM — Zona {zona} Sul\nNorte (Y): {norte} m\nLeste (X): {leste} m\n\n*MONITORAMENTO PROPOSTO*\n{pontos}\n\n*OBSERVAÇÕES*\n{observacoes}\n\nResponsável: {responsavel}", "*Campanha de Sismografia Planejada | Desmonte {data}*\n\n*{operacao}*\nRegião: {regiao}\nHorário: {horario}\nCampanha com {quantidade} sismógrafo(s) — cenário {cenario}.\n\n*ORIGEM DO DESMONTE*\nCentro do círculo envolvente das áreas e linhas de pré-corte importadas.\nLatitude: {latitude}\nLongitude: {longitude}\nUTM — Zona {zona} Sul\nNorte (Y): {norte} m\nLeste (X): {leste} m\n\n*MONITORAMENTO PROPOSTO*\n{pontos}\n\nResponsável: {responsavel}", "*CAMPANHA SISMOGRÁFICA PLANEJADA | Desmonte {data}*\n\n*{operacao}*\nRegião: {regiao}\nHorário: {horario}\nCampanha com {quantidade} sismógrafo(s) — cenário {cenario}.\n\n*ORIGEM DO DESMONTE*\nCentro do círculo envolvente das áreas e linhas de pré-corte importadas.\nLatitude: {latitude}\nLongitude: {longitude}\nUTM — Zona {zona} Sul\nNorte (Y): {norte} m\nLeste (X): {leste} m\n\n*MONITORAMENTO PROPOSTO*\n{pontos}\n\nResponsável: {responsavel}"],
     "footerLogoAsset": "assets/enaex-white.png",
     "footerLogoBox": {
       "x": 24,
