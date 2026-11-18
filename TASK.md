@@ -91,4 +91,5 @@ Refatoração do relatório: layout único em src/reportLayout.js, prévia/PNG/D
 - [ ] Nodata: 422.767 pixels (17%) do TIF não têm dado; ficam com a cor de `surface.palette.nodata` (fundo do esquema). Confirmar se é a área fora da cava ou falha de exportação.
 - [x] Build da superfície: a zona UTM é conferida pela região de validação; PNG e JSON são gravados por arquivo temporário; geometria, datum, paleta e sombreamento divergentes são recusados.
 - [x] Esquema com título "ESQUEMA CALCULADO EM PLANTA" (`report.schematicTitle`) e malha de linhas finas brancas transparentes a cada 500 m (`report.schematicGrid`), em prévia, PNG, DOCX e PDF.
-- Versões de cache: app.js 1.6.6, index.html, styles.css 1.3.8, reports.js 1.2.5, reportLayout.js e reportPdf.js 1.3.10, docx.js 1.2.4, areaIcon.js 1.1.0, superficie.js 1.0.0; config.json versão 1.1.8.
+- [x] Modelo do WhatsApp com o título "Campanha de Sismografia Planejada | Desmonte {data}" e sem observações; modelos padrão anteriores são trocados ao restaurar ou importar (src/whatsappTemplate.js). O relatório não muda.
+- Versões de cache: app.js 1.6.7, index.html, styles.css 1.3.8, reports.js 1.2.5, reportLayout.js e reportPdf.js 1.3.10, docx.js 1.2.4, areaIcon.js 1.1.0, superficie.js 1.0.0, whatsappTemplate.js 1.0.0; config.json versão 1.1.9.

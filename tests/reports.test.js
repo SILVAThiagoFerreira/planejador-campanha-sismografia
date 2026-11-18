@@ -28,6 +28,13 @@ test('WhatsApp omits the demonstration notice from observations',()=>{
   assert.doesNotMatch(message,/DEMONSTRAÇÃO|fictícias/i);
 });
 
+test('WhatsApp padrão: título de campanha com a data e sem bloco de observações',()=>{
+  const message=buildWhatsAppMessage(data);
+  assert.match(message,/^\*Campanha de Sismografia Planejada \| Desmonte [^*]+\*/);
+  assert.doesNotMatch(message,/OBSERVAÇÕES|Acesso confirmado|Confirmar acesso/);
+  assert.match(message,/Responsável: Equipe técnica/);
+});
+
 test('WhatsApp template renders date, DMM, UTM and selected point',()=>{
   const message=buildWhatsAppMessage(data,'{data}|{latitude}|{longitude}|{norte}|{leste}|{quantidade}|{pontos}|{areas}');
   assert.match(message,/04\/09\/2026\|009 40\.216 S\|036 43\.812 W/);

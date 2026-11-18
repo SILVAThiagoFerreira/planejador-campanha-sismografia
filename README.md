@@ -39,4 +39,6 @@ PDF: textos, tabelas e esquema de distâncias são vetoriais e selecionáveis; m
 
 As miniaturas das áreas e linhas importadas (lista "Áreas de desmonte") usam `visual.areaIcon` (tamanho, margem, máximo de pontos, cor, opacidade, espessura e tracejado da linha); a cor da linha vem de `visual.mapColors.line`. Valores inválidos impedem a inicialização da aplicação, com a causa exibida.
 
+O modelo do WhatsApp (`report.whatsappTemplate`) traz o título "Campanha de Sismografia Planejada | Desmonte {data}" e não inclui observações. Os modelos padrão anteriores listados em `report.supersededWhatsappTemplates` são trocados pelo atual ao restaurar uma campanha salva ou importar um projeto.
+
 O título do esquema vem de `report.schematicTitle`, e a malha de linhas finas brancas transparentes de `report.schematicGrid` (`spacingMeters`, `lineWidth`, `color`, `opacity`). Valor ausente ou inválido recusa o relatório com a causa.
