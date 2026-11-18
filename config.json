@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "1.1.7",
+  "version": "1.1.8",
   "title": "Planejador de campanha de sismografia",
   "defaults": {
     "operation": "MINA SERROTE - MINERAÇÃO VALE VERDE",
@@ -137,6 +137,13 @@
     "headerHeight": 208,
     "footerHeight": 80,
     "maxDirectionRows": 4,
+    "schematicTitle": "ESQUEMA CALCULADO EM PLANTA",
+    "schematicGrid": {
+      "spacingMeters": 500,
+      "lineWidth": 0.6,
+      "color": "#ffffff",
+      "opacity": 0.14
+    },
     "situationBlock": {
       "heightRatio": 0.72,
       "diagramWidth": 1100
