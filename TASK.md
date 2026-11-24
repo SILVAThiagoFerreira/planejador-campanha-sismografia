@@ -31,7 +31,7 @@ Refatoração do relatório: layout único em src/reportLayout.js, prévia/PNG/D
 - [x] Suíte completa: 178/178 passam.
 - [x] Plano de furos real PP691126 (pasta 20261124): contorno de 552 vértices pelo método da LIB; 38 registros repetidos unidos; 265 furos internos ficam dentro, sem entrar na área; 2 furos (2015, 2020) a menos de 0,5 m da curva, avisados.
 - [x] Decisão do usuário (2026-11-24): aceitar o contato no furo 2020 do REG641126. Dois contornos externos podem se tocar em um furo; o aviso informa o furo. O REG importa como 4 contornos: principal (26 furos de borda, 208 vértices), bloco de 14 furos (112 vértices), e dois pequenos de 6 e 4 furos (48 e 32 vértices), que se tocam no 2020.
-- [ ] Conferir com o usuário se os dois contornos pequenos do REG (6 e 4 furos) são blocos reais. Se não forem, o plano precisa de revisão.
+- [x] Confirmado pelo usuário (2026-11-24): os dois contornos pequenos do REG (6 e 4 furos) são blocos reais.
 - [ ] Projeto salvo no navegador pode manter o contorno antigo do PP (89 vértices, versão anterior); remover ou usar "Limpar campanha" antes de importar de novo.
 - [ ] Verificação no navegador com os arquivos reais (cópia temporária fora do repositório) ainda não feita.
 
