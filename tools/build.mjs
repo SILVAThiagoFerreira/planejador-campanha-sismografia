@@ -5,6 +5,7 @@ import {validateMonitoringData} from '../src/monitoringData.js';
 import {reportSettings} from '../src/monitoringReportConfig.js';
 import {validateSurfaceConfig, validateSurfaceMetadata} from '../src/superficie.js';
 import {validateHoleSettings} from '../src/holes.js';
+import {validateCommunicationSettings} from '../src/communication.js';
 // Hash the canonical LF representation so Windows checkouts and the Pages Linux
 // runner produce the same stable manifest.
 const raw=(await readFile('config.json','utf8')).replace(/\r\n/g,'\n');
@@ -32,6 +33,8 @@ if(existsSync(monitoring.snapshotPath)){validateMonitoringData(JSON.parse(await 
 validateSurfaceConfig(config);
 // Contorno de furos (config.holes): bloco completo e valores válidos; a aplicação confere o mesmo bloco ao iniciar.
 validateHoleSettings(config.holes);
+// TXT de comunicação (report.communication): saudação, fuso, horas e modelos completos; a aplicação confere ao iniciar.
+validateCommunicationSettings(config.report.communication);
 if(config.surface.enabled){
   if(!existsSync(config.surface.metadataPath)||!existsSync(config.surface.imagePath)) throw Error('Superfície da mina ausente (data/superficie.json e assets/superficie). Gere com npm run build:superficie -- "arquivo.tif".');
   const surfaceMeta=JSON.parse(await readFile(config.surface.metadataPath,'utf8'));

@@ -16,6 +16,8 @@ Projeto exportado: schemaVersion, savedAt, crs, meta, polygons, lines, communiti
 
 DOCX/PDF/PNG: relatório do cenário selecionado, nome ENAEX-SMP-AAAAMMDD-cenario-N. O DOCX é OOXML válido com a página A4 renderizada preservando a aparência do relatório. TXT: mensagem UTF-8 customizada para o cenário atual, sem envio automático. Logs JSON: eventos com timestamp, tipo e descrição.
 
+TXT de comunicação: mensagem UTF-8 sem coordenadas, sem UTM, distâncias, responsável e observações. Conteúdo: saudação do horário (Bom dia, Boa tarde ou Boa noite, pelo fuso e horas de `report.communication`), linha de título com a data DD/MM/AAAA e a lista numerada dos locais do cenário selecionado. Nome: `AAAAMMDD-COMUNICACAO-cenario-N.txt`. Gerado sob demanda, sem envio automático e sem gravação no projeto JSON ou no navegador.
+
 
 ## Monitoramento sismográfico — data/monitoramento.json (2026-10-27)
 
