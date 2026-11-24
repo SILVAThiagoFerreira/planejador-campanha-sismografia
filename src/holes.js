@@ -10,8 +10,9 @@ import {isSimplePolygon} from './geometry.js?v=1.3.6';
 //   vazios dentro dele são ignorados e os furos em volta deles são internos.
 // - Curva suave: Catmull-Rom centrípeta fechada passando exatamente por cada furo de borda, com
 //   samplesPerSegment pontos por trecho. Cada furo de borda é um vértice da curva.
-// - Recusas com a causa, sem preenchimento silencioso: furo de encontro (dois anéis tocam no mesmo furo),
-//   anel externo que não é simples, curvas que se cruzam, e furo interno que não está dentro de nenhuma curva.
+// - Contato entre contornos: dois contornos externos podem tocar no mesmo furo (aceito e avisado).
+// - Recusas com a causa, sem preenchimento silencioso: vazio que toca outro anel, anel externo que não é
+//   simples, curvas que se cruzam, e furo interno que não está dentro de nenhuma curva.
 // - Aviso: furo interno a menos de interiorWarnMeters da curva (possível furo na divisa; não é corrigido).
 const REQUIRED_STRINGS=['collarLayer','labelLayer','contourName'];
 const REQUIRED_NUMBERS=['labelMaxOffsetMeters','labelAlignToleranceMeters','duplicateToleranceMeters','minSpacingMeters','interiorWarnMeters'];
@@ -143,6 +144,8 @@ function smoothClosedCurve(points,samples){
 export function contoursFromHoles(holes,settings,label='Furos'){
   const alpha=settings.alphaMeters;
   const alphaText=String(alpha).replace('.',',');
+  // Centro médio de um anel (lista de índices de furos).
+  const centreOf=ring=>({x:ring.reduce((s,i)=>s+holes[i].x,0)/ring.length,y:ring.reduce((s,i)=>s+holes[i].y,0)/ring.length});
   for(let i=0;i<holes.length;i++)for(let j=i+1;j<holes.length;j++)if(pointsDistance(holes[i],holes[j])<1e-6)throw new Error(`${label}: furos sobrepostos (${holes[i].label??`registro ${i+1}`} e ${holes[j].label??`registro ${j+1}`}).`);
   // Triângulos de Delaunay com raio circunscrito menor que alpha, em sentido anti-horário.
   const triangles=delaunayTriangles(holes)
@@ -168,24 +171,35 @@ export function contoursFromHoles(holes,settings,label='Furos'){
       regions.get(root).push([a,b]);
     }
   });
-  const contours=[];const onRing=new Map();
+  // Anéis de cada região: um anel dentro de outro maior da mesma região é vazio; os demais são contornos externos.
+  // Dois contornos externos podem tocar no mesmo furo (contato aceito pelo usuário e avisado). Vazio que toca
+  // outro anel é recusado: o método não fecha contorno em vértice de encontro com vazio.
+  const contours=[];const ringCount=new Map();const voidRings=[];
   let index=0;
   for(const directed of regions.values()){
     index++;
     const rings=boundaryRings(directed,holes,`${label}, região ${index}`);
-    for(const ring of rings)for(const v of ring)onRing.set(v,(onRing.get(v)||0)+1);
-    const sized=rings.map(ring=>({ring,area:Math.abs(signedArea(ring.map(i=>holes[i])))})).sort((x,y)=>y.area-x.area);
-    const outer=sized[0].ring.map(i=>holes[i]);
-    for(const other of sized.slice(1)){
-      const centre={x:other.ring.reduce((s,i)=>s+holes[i].x,0)/other.ring.length,y:other.ring.reduce((s,i)=>s+holes[i].y,0)/other.ring.length};
-      if(!insidePolygon(centre,outer))throw new Error(`${label}, região ${index}: vazio fora do contorno externo; revise os furos desse trecho.`);
+    for(const ring of rings)for(const v of ring)ringCount.set(v,(ringCount.get(v)||0)+1);
+    const sized=rings.map(ring=>({ring,area:Math.abs(signedArea(ring.map(i=>holes[i])))}));
+    for(const item of sized){
+      const enclosed=sized.some(other=>other!==item&&other.area>item.area&&insidePolygon(centreOf(item.ring),other.ring.map(i=>holes[i])));
+      if(enclosed){voidRings.push(item.ring);continue;}
+      const outer=item.ring.map(i=>holes[i]);
+      if(!isSimplePolygon(outer))throw new Error(`${label}, região ${index}: contorno com auto-interseção; revise os furos desse trecho.`);
+      contours.push({holes:outer,outer,region:index});
     }
-    if(!isSimplePolygon(outer))throw new Error(`${label}, região ${index}: contorno com auto-interseção; revise os furos desse trecho.`);
-    contours.push({holes:sized[0].ring.map(i=>holes[i]),outer});
   }
-  // Furo de encontro: aparece em mais de um anel (ou duas vezes no mesmo). A regra não fecha contorno nele.
-  const pinch=[...onRing].filter(([,n])=>n>1).map(([v])=>holes[v].label??`registro ${v+1}`);
-  if(pinch.length)throw new Error(`${label}: furo(s) ${pinch.slice(0,10).join(', ')} são o único contato entre dois anéis de furos; o método não fecha contorno em vértice de encontro. Revise os furos desse trecho.`);
+  // Cada vazio deve ficar dentro de algum contorno externo e não pode tocar outro anel.
+  for(const ring of voidRings){
+    const centre=centreOf(ring);
+    if(!contours.some(c=>insidePolygon(centre,c.outer)))throw new Error(`${label}: vazio fora do contorno externo; revise os furos desse trecho.`);
+    const touching=ring.filter(v=>ringCount.get(v)>1);
+    if(touching.length)throw new Error(`${label}: furo(s) ${touching.slice(0,10).map(v=>holes[v].label??`registro ${v+1}`).join(', ')} são contato entre um vazio e outro anel; o método não fecha contorno nesse vértice. Revise os furos desse trecho.`);
+  }
+  // Contatos entre contornos externos: furo compartilhado por dois ou mais contornos. Aceitos e avisados.
+  const contactCount=new Map();
+  for(const c of contours)for(const h of c.holes){const v=holes.indexOf(h);contactCount.set(v,(contactCount.get(v)||0)+1);}
+  const contacts=[...contactCount].filter(([,n])=>n>1).map(([v])=>holes[v].label??`registro ${v+1}`);
   // Curva suave de cada contorno externo.
   const samples=settings.samplesPerSegment;
   const built=contours.map(c=>{
@@ -215,6 +229,7 @@ export function contoursFromHoles(holes,settings,label='Furos'){
     throw new Error(`${label}: ${missing.length} furo(s) fora de contorno fechado (${names}${missing.length>10?' …':''}). Nenhum anel de borda os envolve; trechos de furos em linha aberta não formam contorno.`);
   }
   const warnings=[];
+  if(contacts.length)warnings.push(`${label}: furo(s) ${contacts.slice(0,10).join(', ')} são contato entre dois contornos; os contornos se tocam nesse furo (aceito).`);
   if(near.length)warnings.push(`${label}: ${near.length} furo(s) interno(s) a menos de ${String(settings.interiorWarnMeters).replace('.',',')} m da curva (${near.slice(0,10).join(', ')}${near.length>10?' …':''}); pode haver furo na divisa. Não foi corrigido.`);
   built.sort((a,b)=>b.vertices.length-a.vertices.length);
   return {contours:built.map(({vertices,area,holes:ring})=>({vertices,area,holes:ring})),excluded:interior.length,warnings};

@@ -1,5 +1,5 @@
 import {validatePolygons,validateLines} from './validation.js?v=1.3.6';
-import {holesFromRecords} from './holes.js?v=1.1.0';
+import {holesFromRecords} from './holes.js?v=1.1.1';
 // holes: bloco "holes" de config.json. Obrigatório quando o arquivo traz centros de furos (POINT na camada
 // de furos); sem ele o arquivo é recusado, sem suposição. Quando há centros, o contorno vem deles (src/holes.js).
 export function parseDXF(text,limits={},holes=null){

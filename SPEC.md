@@ -34,11 +34,12 @@ Regras do modo furos:
 - Número do furo: um TEXT na camada de rótulos, até `holes.labelMaxOffsetMeters` (1 m) acima do centro e alinhado em X dentro de `holes.labelAlignToleranceMeters` (0,05 m). Só vale se houver um único texto distinto perto do centro; caso contrário o furo fica sem rótulo.
 - Registros repetidos: dois centros a menos de `holes.minSpacingMeters` (0,5 m) são unidos; dois centros com o mesmo rótulo a até `holes.duplicateToleranceMeters` (1 m) também são unidos. O aviso conta os registros unidos.
 - Método: o mesmo de REPORTS\Delimitação - LIB (gerar_contorno_furos.py), aplicado aos centros já unidos. Triangulação de Delaunay (src/delaunay.js, sem dependência). Só triângulos com raio do círculo circunscrito menor que `holes.alphaMeters` (4,5 m) formam a malha; lacunas maiores ficam de fora.
-- Região: triângulos que compartilham aresta. Em cada região, o anel externo é o de maior área; os demais anéis são vazios e não entram no contorno. Um anel de borda de outra região não pode se cruzar com o contorno (recusado se acontecer).
+- Região: triângulos que compartilham aresta. Em cada região, anel que fica dentro de outro anel maior da mesma região é vazio e não entra no contorno; os demais anéis são contornos externos.
+- Contato entre contornos: dois contornos externos podem tocar no mesmo furo. Isso é aceito e avisado (decisão do usuário, 2026-11-24, para o furo 2020 do REG641126). As curvas podem tocar nesse furo, mas não podem se cruzar.
 - Curva: Catmull-Rom centrípeta fechada passando exatamente por cada furo de borda, com `holes.samplesPerSegment` (8) pontos por trecho. Cada furo de borda é um vértice da curva. O contorno é a curva, não o polígono de furos.
 - Contorno vira área fechada, com nome `holes.contourName` mais número e camada `holes.collarLayer`; passa pela validação comum de áreas. Quando a região tem mais de um contorno externo, cada um vira uma área.
 - Aviso: furo interno a menos de `holes.interiorWarnMeters` (0,5 m) da curva é listado, como possível furo na divisa; não é corrigido.
-- Recusas com a causa, sem preenchimento: (a) furo fora de qualquer contorno (por exemplo, ponta de uma fileira aberta); (b) furo de encontro, em que dois anéis de furos tocam no mesmo furo; o método não fecha contorno nesse vértice; (c) anel externo ou curva com auto-interseção; (d) dois contornos que se cruzam; (e) vazio fora do contorno externo.
+- Recusas com a causa, sem preenchimento: (a) furo fora de qualquer contorno (por exemplo, ponta de uma fileira aberta); (b) vazio que toca outro anel, porque o método não fecha contorno nesse vértice; (c) anel externo ou curva com auto-interseção; (d) dois contornos que se cruzam; (e) vazio fora de todo contorno externo.
 - Furo interno é o que não está em anel de borda. Os internos dentro de uma curva não entram na área; a contagem vai para o aviso.
 - Nenhum valor de tolerância é fixo no código; todos vêm do bloco `holes`, validado na inicialização e no build.
 

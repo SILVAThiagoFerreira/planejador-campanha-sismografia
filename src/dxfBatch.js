@@ -1,4 +1,4 @@
-import { parseDXF } from './dxf.js?v=1.3.8';
+import { parseDXF } from './dxf.js?v=1.3.9';
 // Importa um lote de arquivos DXF arquivo a arquivo. Cada arquivo válido vai para "accepted";
 // cada arquivo recusado vai para "refused" com a causa. Quem chama aplica apenas os aceitos,
 // assim um arquivo recusado nunca altera o projeto nem some sem explicação.

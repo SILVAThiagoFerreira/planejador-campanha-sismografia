@@ -226,3 +226,17 @@ test('texto de rótulo em outra camada não altera os números dos furos', ()=>{
   assert.equal(result.polygons.length,1);
   assert.equal(result.polygons[0].vertices.length,perimeterOfGrid(4,4)*SAMPLES);
 });
+
+test('dois contornos externos podem tocar no mesmo furo: aceito e avisado, sem cruzamento', ()=>{
+  // Layout sintético de 6 furos: dois anéis (4 e 3 furos) têm o furo 2 em comum.
+  const holes=[{x:3,y:0,label:'1'},{x:2,y:6,label:'2'},{x:4,y:2,label:'3'},{x:2,y:10,label:'4'},{x:1,y:7,label:'5'},{x:1,y:11,label:'6'}];
+  const {contours,warnings}=contoursFromHoles(holes,settings);
+  assert.equal(contours.length,2);
+  assert.deepEqual(contours.map(c=>c.holes.map(h=>h.label).sort()),[['2','4','5','6'],['1','2','3']]);
+  assert.match(warnings.join(' '),/furo\(s\) 2 são contato entre dois contornos/);
+});
+
+test('vazio que toca outro anel é recusado com a causa: a regra não fecha contorno nesse vértice', ()=>{
+  const holes=[{x:5,y:11,label:'1'},{x:6,y:0,label:'2'},{x:5,y:1,label:'3'},{x:12,y:4,label:'4'},{x:4,y:9,label:'5'},{x:11,y:8,label:'6'},{x:10,y:0,label:'7'},{x:7,y:1,label:'8'},{x:1,y:5,label:'9'},{x:0,y:8,label:'10'}];
+  assert.throws(()=>contoursFromHoles(holes,settings),/furo\(s\) 6 são contato entre um vazio e outro anel/);
+});
