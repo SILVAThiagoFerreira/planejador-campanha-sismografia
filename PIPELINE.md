@@ -58,3 +58,8 @@ Horário inicial: 12:00. Responsável inicial: Setor Técnico de Operações - E
 6. Testes: tests/superficie.test.js (LZW, blocos e faixas, big-endian, PixelIsPoint, rejeições, sombreamento, NoData, PNG com filtros desfeitos e CRC, validação, transformação SAD69 para SIRGAS) e tests/reports.test.js (ordem de desenho e recorte, título e malha vindos de config.json, recusa de valores inválidos).
 7. Malha e título do esquema: `layoutReport` confere `report.schematicTitle` e `report.schematicGrid` antes de desenhar; a malha usa `alpha` nas operações de linha, aplicado no canvas (`globalAlpha`) e no PDF (`GState` de opacidade).
 8. Modelo do WhatsApp: ao abrir a página com campanha salva, restaurar a campanha ou importar um projeto, `withCurrentMessageTemplate` (src/whatsappTemplate.js) troca um dos modelos listados em `report.supersededWhatsappTemplates` pelo padrão atual; `buildWhatsAppMessage` (src/reports.js) monta a mensagem com o modelo da campanha.
+
+## TXT de comunicação — 2026-11-24
+1. Validação: `validateCommunicationSettings` (src/communication.js) confere `report.communication` no build (tools/build.mjs) e na inicialização da aplicação (app.js); falha interrompe com a causa.
+2. Exportação: o botão "TXT de comunicação" chama `buildCommunicationMessage` com o cenário selecionado e o horário do clique. `greetingFor` escolhe a saudação no fuso configurado. Os locais são os pontos do cenário; nenhuma coordenada entra no texto. `communicationFileName` monta o nome. O evento "export" vai para o log.
+3. Prévia: a mesma função preenche o campo somente leitura abaixo do modelo do WhatsApp a cada prévia (cálculo, troca de cenário ou de base do mapa); a saudação do campo é a do momento da prévia.

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "1.1.14",
+  "version": "1.1.15",
   "title": "Planejador de campanha de sismografia",
   "defaults": {
     "operation": "MINA SERROTE - MINERAÇÃO VALE VERDE",
@@ -162,6 +162,19 @@
     },
     "whatsappTemplate": "*CAMPANHA SISMOGRÁFICA PLANEJADA | DESMONTE {data}*\n\n*{operacao}*\nRegião: {regiao}\nHorário: {horario}\nCampanha com {quantidade} sismógrafo(s) — cenário {cenario}.\n\n*ORIGEM DO DESMONTE*\nCentro do círculo envolvente das áreas e linhas de pré-corte importadas.\nLatitude: {latitude}\nLongitude: {longitude}\nUTM — Zona {zona} Sul\nNorte (Y): {norte} m\nLeste (X): {leste} m\n\n*MONITORAMENTO PROPOSTO*\n{pontos}\n\nResponsável: {responsavel}",
     "supersededWhatsappTemplates": ["*SISMOGRAFIA | DESMONTE {data}*\n\n*{operacao}*\nRegião: {regiao}\nHorário: {horario}\nCampanha com {quantidade} sismógrafo(s) — cenário {cenario}.\n\n*ORIGEM DO DESMONTE*\nCentro do círculo envolvente das áreas e linhas de pré-corte importadas.\nLatitude: {latitude}\nLongitude: {longitude}\nUTM — Zona {zona} Sul\nNorte (Y): {norte} m\nLeste (X): {leste} m\n\n*MONITORAMENTO PROPOSTO*\n{pontos}\n\n*OBSERVAÇÕES*\n{observacoes}\n\nResponsável: {responsavel}", "*Campanha de Sismografia Planejada | Desmonte {data}*\n\n*{operacao}*\nRegião: {regiao}\nHorário: {horario}\nCampanha com {quantidade} sismógrafo(s) — cenário {cenario}.\n\n*ORIGEM DO DESMONTE*\nCentro do círculo envolvente das áreas e linhas de pré-corte importadas.\nLatitude: {latitude}\nLongitude: {longitude}\nUTM — Zona {zona} Sul\nNorte (Y): {norte} m\nLeste (X): {leste} m\n\n*MONITORAMENTO PROPOSTO*\n{pontos}\n\nResponsável: {responsavel}", "*CAMPANHA SISMOGRÁFICA PLANEJADA | Desmonte {data}*\n\n*{operacao}*\nRegião: {regiao}\nHorário: {horario}\nCampanha com {quantidade} sismógrafo(s) — cenário {cenario}.\n\n*ORIGEM DO DESMONTE*\nCentro do círculo envolvente das áreas e linhas de pré-corte importadas.\nLatitude: {latitude}\nLongitude: {longitude}\nUTM — Zona {zona} Sul\nNorte (Y): {norte} m\nLeste (X): {leste} m\n\n*MONITORAMENTO PROPOSTO*\n{pontos}\n\nResponsável: {responsavel}", "*SISMOGRAFIA | DESMONTE {data}*\n\n*{operacao}*\nRegião: {regiao}\nHorário: {horario}\nCampanha com {quantidade} sismógrafo(s) — cenário {cenario}.\n\n*ORIGEM DO DESMONTE*\nCentro do círculo envolvente das poligonais importadas.\nLatitude: {latitude}\nLongitude: {longitude}\nUTM — Zona {zona} Sul\nNorte (Y): {norte} m\nLeste (X): {leste} m\n\n*MONITORAMENTO PROPOSTO*\n{pontos}\n\n*OBSERVAÇÕES*\n{observacoes}\n\nResponsável: {responsavel}"],
+    "communication": {
+      "fileName": "{data}-COMUNICACAO-cenario-{cenario}.txt",
+      "timeZone": "America/Fortaleza",
+      "nightUntilHour": 5,
+      "morningUntilHour": 12,
+      "afternoonUntilHour": 18,
+      "greetings": {
+        "morning": "Bom dia",
+        "afternoon": "Boa tarde",
+        "evening": "Boa noite"
+      },
+      "template": "{saudacao}!\n\n*Locais de monitoramento - {data}*\n{locais}"
+    },
     "footerLogoAsset": "assets/enaex-white.png",
     "footerLogoBox": {
       "x": 24,

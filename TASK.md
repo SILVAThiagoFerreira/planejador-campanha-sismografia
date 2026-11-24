@@ -107,3 +107,10 @@ Refatoração do relatório: layout único em src/reportLayout.js, prévia/PNG/D
 - [x] Modelo do WhatsApp com o título "CAMPANHA SISMOGRÁFICA PLANEJADA | DESMONTE {data}" e sem observações; botão "Restaurar modelo padrão" no campo do WhatsApp; modelos padrão anteriores são trocados ao restaurar ou importar (src/whatsappTemplate.js). O relatório não muda.
 - [x] Modelo original de 05/09/2026 ("*SISMOGRAFIA | DESMONTE*", "poligonais importadas", com OBSERVAÇÕES) incluído em `report.supersededWhatsappTemplates`. Campanhas salvas com ele passam a usar o padrão atual ao abrir a página; o TXT exportado em 19/11/2026 veio desse modelo.
 - Versões de cache: app.js 1.6.8, index.html, styles.css 1.3.8, reports.js 1.2.5, reportLayout.js e reportPdf.js 1.3.10, docx.js 1.2.4, areaIcon.js 1.1.0, superficie.js 1.0.0, whatsappTemplate.js 1.0.0; config.json versão 1.1.12.
+
+## TXT de comunicação — 2026-11-24
+- [x] Segundo TXT, sem coordenadas, com saudação pelo horário (bom dia, boa tarde, boa noite) e os locais de monitoramento do cenário selecionado. Regras em SPEC.md, seção "TXT de comunicação".
+- [x] Bloco `report.communication` em config.json (fuso, horas das saudações, textos, modelo e nome do arquivo), validado no build e na inicialização; módulo src/communication.js.
+- [x] Botão "TXT de comunicação" na seção do relatório e campo de prévia em "Mensagem da campanha". TXT do WhatsApp, relatórios e projeto JSON não mudam.
+- [x] Testes em tests/communication.test.js (faixas de horário, fuso, ausência de coordenadas, validação de configuração e do nome do arquivo).
+- Versões de cache: app.js 1.7.0 (index.html), communication.js 1.0.0; config.json versão 1.1.15. Revisão independente (2026-11-24): chaves desconhecidas, nome de arquivo e campo vazio passam a ser recusados (tests/communication.test.js).
