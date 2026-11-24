@@ -25,6 +25,20 @@ O PDF é montado com jsPDF a partir do mesmo layout usado na prévia (src/report
 
 Lote: cada arquivo é validado separadamente. Os arquivos válidos são importados; os recusados aparecem no aviso com nome e causa e não alteram o projeto. Cada arquivo aceito é conferido contra o projeto já acumulado (região, raio e regras do cálculo): um arquivo que quebra o cálculo é recusado pelo nome e os demais seguem. Se nenhum arquivo for aceito, a importação é recusada. Avisos e recusas ficam no log (evento "import").
 
+## Arquivo de furos — contorno pelos centros — 2026-11-23
+
+Arquivo de furos de desmonte: POINT na camada `holes.collarLayer` (config.json, "Hole") são os centros dos furos; TEXT na camada `holes.labelLayer` ("Number") traz o número do furo. Quando há ao menos um centro, o arquivo entra no modo furos (src/dxf.js, `parseDXF`), e a lógica fica em src/holes.js. Sem o bloco `holes` válido, a aplicação não inicia e o build para.
+
+Regras do modo furos:
+- Polilinhas abertas (traço de furo real, camada "Real Hole") são ignoradas e contadas em aviso. O contorno vem só dos centros.
+- Número do furo: um TEXT na camada de rótulos, até `holes.labelMaxOffsetMeters` (1 m) acima do centro e alinhado em X dentro de `holes.labelAlignToleranceMeters` (0,05 m). Só vale se houver um único texto distinto perto do centro; caso contrário o furo fica sem rótulo.
+- Registros repetidos: dois centros a menos de `holes.minSpacingMeters` (0,5 m) são unidos; dois centros com o mesmo rótulo a até `holes.duplicateToleranceMeters` (1 m) também são unidos. O aviso conta os registros unidos.
+- Vizinhança: triangulação de Delaunay (src/delaunay.js, sem dependência). Arestas maiores que `holes.maxEdgeMeters` (4,6 m) não formam vizinhança.
+- Contorno: cada região de triângulos conectada vira um anel de borda; o contorno externo é o anel de maior área. Vazios internos não entram no resultado e os furos dentro do contorno não entram nele (o aviso conta esses furos). Triângulos cuja aresta de borda não satisfaz o critério de Gabriel (o círculo de diâmetro da aresta não contém o vértice oposto) são retirados para não cortar canto côncavo, sem deixar furo sem triângulo.
+- Contorno vira área fechada, com nome `holes.contourName` mais número e camada `holes.collarLayer`; passa pela validação comum de áreas.
+- Recusa: furo que não está em nenhum contorno fechado (por exemplo, ponta de uma fileira aberta) faz o arquivo ser recusado com a lista de furos e a causa. Nada é aproveitado em silêncio.
+- Nenhum valor de tolerância é fixo no código; todos vêm do bloco `holes`, validado na inicialização e no build.
+
 ## Linhas de pré-corte — 2026-10-30
 
 Polilinha aberta importada vira linha de pré-corte: vértices e comprimento, sem área, direção ou centróide. A linha entra no cálculo: os vértices das linhas compõem o menor círculo da origem, e a distância à borda de cada comunidade é a menor entre as áreas e as linhas. O comprimento mínimo vem de `validation.minLineLengthMeters` (config.json, 1 m). Linha abaixo do mínimo, com coordenadas inválidas ou com menos de dois vértices é recusada com a causa. Os vértices das linhas são conferidos contra a região configurada, como os das áreas. Um lote só com linhas é aceito sem cálculo, e o aviso pede ao menos uma área fechada. Lote ou projeto só com linhas é conferido do mesmo jeito contra a região, o comprimento mínimo e o limite total de vértices; a mensagem diz se a causa é uma área ou uma linha. O projeto JSON tem o campo `lines`; projetos anteriores sem o campo carregam com lista vazia. No mapa e no PNG, as linhas são tracejadas na cor `visual.mapColors.line`, com item na legenda. Quando a linha fica dentro da área ou sobre a borda, o efeito no cálculo é nulo, porque a menor distância já é a da borda da área.

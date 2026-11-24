@@ -21,6 +21,17 @@ Esquema de distâncias e mapa de satélite da seção "SITUAÇÃO ESPACIAL DO DE
 Refatoração do relatório: layout único em src/reportLayout.js, prévia/PNG/DOCX em canvas (src/reports.js) e PDF vetorial em src/reportPdf.js. Adicionada a chave report.pdfFontFamily em config.json ("helvetica"). Coordenadas UTM sem agrupamento de milhar na prévia, mensagem, relatório e PDF. Testes em tests/reports.test.js cobrem formatação, layout e geração do PDF com jsPDF. Versão de cache dos módulos atualizada para 1.2.0.
 
 
+## Contorno de furos — 2026-11-23
+
+- [x] Arquivo de furos (POINT em `holes.collarLayer`) gera contorno pelos centros; polilinhas abertas "Real Hole" são ignoradas com aviso. Regras em SPEC.md, seção "Arquivo de furos".
+- [x] Módulos src/delaunay.js (Bowyer–Watson, sem dependência) e src/holes.js; parser em src/dxf.js recebe o bloco `holes` pelo lote (src/dxfBatch.js).
+- [x] Configuração do bloco `holes` em config.json, validada na inicialização e no build; versões de cache: dxf.js e dxfBatch.js 1.3.7, app.js 1.6.9, holes.js e delaunay.js 1.0.0, config 1.1.13.
+- [x] Testes com dados sintéticos em tests/holes.test.js (grade, forma L, vazio interno, regiões separadas, furo isolado, linha aberta, sobreposição, rótulos, regras de unir registros, validação de configuração, DXF em modo furos, lote recusado).
+- [x] Suíte completa: 178/178 passam.
+- [x] Plano de furos real (pasta 20261124, arquivo PP): gera um contorno com 89 vértices; 38 registros repetidos unidos; 245 furos internos ficam fora do contorno, como definido.
+- [ ] Decisão do usuário: arquivo REG não fecha um contorno único (uma fileira aberta com ponta no furo 34 e fragmentos). Hoje é recusado com a causa. Opções: (a) importar as fileiras abertas como linhas de pré-corte pelos centros (precisa da ordem); (b) fechar cada fileira com uma corda em área fechada; (c) outra regra.
+- [ ] Verificação no navegador com os arquivos reais (cópia temporária fora do repositório) ainda não feita.
+
 ## Importação DXF por arquivo — 2026-10-30
 
 - [x] Polilinha com último vértice coincidente com o primeiro aceita como área fechada, com aviso (CAD que não grava a flag de fechamento). Tolerância em config.json (`validation.closureToleranceMeters`).
