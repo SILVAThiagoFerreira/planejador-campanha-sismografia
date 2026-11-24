@@ -8,7 +8,8 @@ import {parseDXFBatch} from '../src/dxfBatch.js';
 import {validatePolygons} from '../src/validation.js';
 
 // Dados sintéticos: nenhum plano de furos real de campanha entra no repositório público.
-const settings={collarLayer:'Hole',labelLayer:'Number',labelMaxOffsetMeters:1,labelAlignToleranceMeters:0.05,duplicateToleranceMeters:1,minSpacingMeters:0.5,maxEdgeMeters:4.6,contourName:'Contorno de furos'};
+const settings={collarLayer:'Hole',labelLayer:'Number',labelMaxOffsetMeters:1,labelAlignToleranceMeters:0.05,duplicateToleranceMeters:1,minSpacingMeters:0.5,alphaMeters:4.5,samplesPerSegment:8,interiorWarnMeters:0.5,contourName:'Contorno de furos'};
+const SAMPLES=settings.samplesPerSegment;
 const limits={closureToleranceMeters:0.001,minLineLengthMeters:1,maxVertices:20000,maxPolygons:100,maxFileBytes:20000000};
 const wrap=body=>`0\nSECTION\n2\nENTITIES\n${body}0\nENDSEC\n0\nEOF\n`;
 const pointEntity=(x,y,layer='Hole')=>`0\nPOINT\n8\n${layer}\n10\n${x}\n20\n${y}\n30\n0\n`;
@@ -59,36 +60,33 @@ test('contorno da grade passa por todos os furos da borda e deixa os internos de
   const holes=holeRecords(grid(5,5));
   const {contours,excluded}=contoursFromHoles(holes,settings);
   assert.equal(contours.length,1);
-  assert.equal(contours[0].vertices.length,perimeterOfGrid(5,5));
+  assert.equal(contours[0].holes.length,perimeterOfGrid(5,5));
+  assert.equal(contours[0].vertices.length,perimeterOfGrid(5,5)*SAMPLES);
   assert.equal(excluded,9);
-  // Quadrado de 4 × 3 m de lado: área 144 m².
-  assert.ok(Math.abs(contours[0].area-144)<1e-6);
+  // Cada furo de borda é um vértice exato da curva.
+  for(const h of contours[0].holes)assert.ok(contours[0].vertices.some(v=>Math.abs(v.x-h.x)<1e-9&&Math.abs(v.y-h.y)<1e-9),`furo ${h.label} fora da curva`);
+  // Valor conferido com gerar_contorno_furos.py (mesma curva Catmull-Rom): a curva passa um pouco além dos cantos.
+  assert.ok(Math.abs(contours[0].area-146.9531)<1e-3,`área ${contours[0].area}`);
 });
 
-test('contorno acompanha a borda de um padrão em L: inclui todo furo com vazio ao redor', ()=>{
+test('contorno de padrão em L segue o alpha shape: corta a diagonal do canto côncavo e deixa (6,6) de fora', ()=>{
   const centres=grid(6,6,{skip:(i,j)=>i>=3&&j>=3});
   const holes=holeRecords(centres);
-  const {contours}=contoursFromHoles(holes,settings);
+  const {contours,excluded}=contoursFromHoles(holes,settings);
   assert.equal(contours.length,1);
-  const key=p=>`${Math.round(p.x*100)},${Math.round(p.y*100)}`;
-  const onContour=new Set(contours[0].vertices.map(key));
-  // Esperado: furos com algum vizinho em 8 direções ausente (borda do padrão, inclusive o canto côncavo).
-  const has=(i,j)=>centres.some(c=>c.x===i*3&&c.y===j*3);
-  const expected=new Set();
-  for(const c of centres){
-    const i=c.x/3,j=c.y/3;
-    const full=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]].every(([di,dj])=>has(i+di,j+dj));
-    if(!full)expected.add(key(c));
-  }
-  assert.deepEqual([...onContour].sort(),[...expected].sort());
-  assert.equal(contours[0].vertices.length,expected.size);
+  const key=p=>`${p.x},${p.y}`;
+  // Anel conferido com gerar_contorno_furos.py (mesmos centros): 19 furos de borda.
+  const expected=[[0,0],[0,3],[0,6],[0,9],[0,12],[0,15],[3,0],[3,15],[6,0],[6,9],[6,12],[6,15],[9,0],[9,6],[12,0],[12,6],[15,0],[15,3],[15,6]].map(([x,y])=>`${x},${y}`).sort();
+  assert.deepEqual(contours[0].holes.map(key).sort(),expected);
+  assert.equal(contours[0].vertices.length,expected.length*SAMPLES);
+  assert.equal(excluded,centres.length-expected.length);
 });
 
 test('vazio interno (furo ausente cercado por furos) não entra no contorno externo', ()=>{
   const holes=holeRecords(grid(5,5,{skip:(i,j)=>i===2&&j===2}));
   const {contours,excluded}=contoursFromHoles(holes,settings);
   assert.equal(contours.length,1);
-  assert.equal(contours[0].vertices.length,perimeterOfGrid(5,5));
+  assert.equal(contours[0].holes.length,perimeterOfGrid(5,5));
   assert.equal(excluded,8);
 });
 
@@ -98,7 +96,30 @@ test('regiões separadas viram contornos separados', ()=>{
   const holes=holeRecords([...left,...right]);
   const {contours}=contoursFromHoles(holes,settings);
   assert.equal(contours.length,2);
-  assert.deepEqual(contours.map(c=>c.vertices.length),[12,12]);
+  assert.deepEqual(contours.map(c=>c.holes.length),[12,12]);
+});
+
+test('curva de furos é suave e fica dentro da região: nenhum furo interno fica fora da curva', ()=>{
+  const holes=holeRecords(grid(5,5,{skip:(i,j)=>i===2&&j===2}));
+  const {contours,excluded,warnings}=contoursFromHoles(holes,settings);
+  assert.equal(excluded,8);
+  assert.deepEqual(warnings,[]);
+  // Todo furo interno está dentro da curva externa.
+  const curve=contours[0].vertices;
+  const inside=p=>{let c=false;for(let i=0,j=curve.length-1;i<curve.length;j=i++){const a=curve[i],b=curve[j];if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)c=!c;}return c;};
+  for(const h of holes)if(!contours[0].holes.includes(h))assert.ok(inside(h),`furo ${h.label} fora da curva`);
+});
+
+test('raio do círculo (alphaMeters) separa malha de lacuna: lacuna maior que o raio fica de fora', ()=>{
+  // Dois blocos 4 × 4 (espaçamento 3 m) separados por uma lacuna de 9 m: os triângulos da ponte têm raio de
+  // cerca de 5 m, maior que 4,5 m. (Com lacuna de 6 m, o raio da ponte seria 3,35 m e os blocos se uniriam.)
+  const left=grid(4,4);
+  const right=grid(4,4).map(c=>({x:c.x+18,y:c.y}));
+  const {contours}=contoursFromHoles(holeRecords([...left,...right]),settings);
+  assert.equal(contours.length,2);
+  // Com alpha de 10 m a ponte entra e os dois blocos viram um só contorno.
+  const {contours:joined}=contoursFromHoles(holeRecords([...left,...right]),{...settings,alphaMeters:10});
+  assert.equal(joined.length,1);
 });
 
 test('furo isolado é recusado com a causa e o número do furo', ()=>{
@@ -108,7 +129,7 @@ test('furo isolado é recusado com a causa e o número do furo', ()=>{
 
 test('trecho em linha aberta não forma contorno e é recusado', ()=>{
   const line=Array.from({length:6},(_,i)=>({x:i*2.5,y:0,label:String(i+1)}));
-  assert.throws(()=>contoursFromHoles(line,settings),/nenhum trio de furos vizinhos a até 4,6 m|não formam contorno fechado/);
+  assert.throws(()=>contoursFromHoles(line,settings),/nenhum trio de furos com raio de círculo menor que 4,5 m|não formam contorno fechado/);
 });
 
 test('furos sobrepostos são recusados, sem contorno inventado', ()=>{
@@ -147,7 +168,8 @@ test('contorno com registros repetidos não repete vértices', ()=>{
   const texts=records.map(h=>({x:h.x,y:h.y+0.38,text:h.label}));
   const result=holesFromRecords(collars,texts,settings,'Furos');
   assert.equal(result.merged,1);
-  assert.equal(result.contours[0].vertices.length,perimeterOfGrid(5,5));
+  assert.equal(result.contours[0].holes.length,perimeterOfGrid(5,5));
+  assert.equal(result.contours[0].vertices.length,perimeterOfGrid(5,5)*SAMPLES);
   assert.equal(new Set(result.contours[0].vertices.map(v=>`${v.x},${v.y}`)).size,result.contours[0].vertices.length);
 });
 
@@ -156,9 +178,11 @@ test('bloco holes precisa estar completo e válido; config.json do projeto passa
   assert.doesNotThrow(()=>validateHoleSettings(config.holes));
   assert.throws(()=>validateHoleSettings(undefined),/Bloco "holes" ausente/);
   assert.throws(()=>validateHoleSettings({...settings,collarLayer:''}),/holes\.collarLayer/);
-  assert.throws(()=>validateHoleSettings({...settings,maxEdgeMeters:0}),/holes\.maxEdgeMeters deve ser maior que zero/);
-  const {maxEdgeMeters,...withoutEdge}=settings;
-  assert.throws(()=>validateHoleSettings(withoutEdge),/holes\.maxEdgeMeters ausente/);
+  assert.throws(()=>validateHoleSettings({...settings,alphaMeters:0}),/holes\.alphaMeters deve ser maior que zero/);
+  const {alphaMeters,...withoutAlpha}=settings;
+  assert.throws(()=>validateHoleSettings(withoutAlpha),/holes\.alphaMeters ausente/);
+  assert.throws(()=>validateHoleSettings({...settings,samplesPerSegment:1}),/holes\.samplesPerSegment deve ser inteiro de 2 ou mais/);
+  assert.throws(()=>validateHoleSettings({...settings,interiorWarnMeters:-1}),/holes\.interiorWarnMeters/);
   assert.throws(()=>validateHoleSettings({...settings,duplicateToleranceMeters:-1}),/holes\.duplicateToleranceMeters/);
 });
 
@@ -168,7 +192,7 @@ test('DXF de furos: centros viram um contorno; polilinhas abertas de furos reais
   const result=parseDXF(text,limits,settings);
   assert.equal(result.polygons.length,1);
   assert.equal(result.polygons[0].name,'Contorno de furos 1');
-  assert.equal(result.polygons[0].vertices.length,perimeterOfGrid(5,5));
+  assert.equal(result.polygons[0].vertices.length,perimeterOfGrid(5,5)*SAMPLES);
   assert.equal(result.lines.length,0);
   assert.match(result.warnings.join(' '),/1 polilinha\(s\) aberta\(s\) ignorada\(s\) \(camada Real Hole\)/);
   assert.match(result.warnings.join(' '),/25 centro\(s\)/);
@@ -200,5 +224,5 @@ test('texto de rótulo em outra camada não altera os números dos furos', ()=>{
   const text=wrap(dxfHoles(centres).replace(/\n8\nNumber\n/g,'\n8\nOutra\n'));
   const result=parseDXF(text,limits,settings);
   assert.equal(result.polygons.length,1);
-  assert.equal(result.polygons[0].vertices.length,perimeterOfGrid(4,4));
+  assert.equal(result.polygons[0].vertices.length,perimeterOfGrid(4,4)*SAMPLES);
 });

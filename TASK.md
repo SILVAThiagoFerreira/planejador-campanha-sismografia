@@ -25,11 +25,13 @@ Refatoração do relatório: layout único em src/reportLayout.js, prévia/PNG/D
 
 - [x] Arquivo de furos (POINT em `holes.collarLayer`) gera contorno pelos centros; polilinhas abertas "Real Hole" são ignoradas com aviso. Regras em SPEC.md, seção "Arquivo de furos".
 - [x] Módulos src/delaunay.js (Bowyer–Watson, sem dependência) e src/holes.js; parser em src/dxf.js recebe o bloco `holes` pelo lote (src/dxfBatch.js).
-- [x] Configuração do bloco `holes` em config.json, validada na inicialização e no build; versões de cache: dxf.js e dxfBatch.js 1.3.7, app.js 1.6.9, holes.js e delaunay.js 1.0.0, config 1.1.13.
+- [x] Método trocado para o de REPORTS\Delimitação - LIB (decisão do usuário, 2026-11-24): alpha shape com raio de 4,5 m, curva Catmull-Rom com 8 pontos por trecho, só o anel externo de cada região, vazios ignorados. Substitui a regra de comprimento de aresta com Gabriel, que tinha sido usada antes. Valores conferidos com o script real sobre a grade de teste e sobre PP691126 (552 vértices, 2832,08 m², menor distância interna 0,271 m).
+- [x] Configuração do bloco `holes` em config.json, validada na inicialização e no build; versões de cache: holes.js 1.1.0 (importado por dxf.js e app.js), dxf.js 1.3.8 (importado por dxfBatch.js 1.3.8), app.js 1.6.10, config 1.1.14.
 - [x] Testes com dados sintéticos em tests/holes.test.js (grade, forma L, vazio interno, regiões separadas, furo isolado, linha aberta, sobreposição, rótulos, regras de unir registros, validação de configuração, DXF em modo furos, lote recusado).
 - [x] Suíte completa: 178/178 passam.
-- [x] Plano de furos real (pasta 20261124, arquivo PP): gera um contorno com 89 vértices; 38 registros repetidos unidos; 245 furos internos ficam fora do contorno, como definido.
-- [ ] Decisão do usuário: arquivo REG não fecha um contorno único (uma fileira aberta com ponta no furo 34 e fragmentos). Hoje é recusado com a causa. Opções: (a) importar as fileiras abertas como linhas de pré-corte pelos centros (precisa da ordem); (b) fechar cada fileira com uma corda em área fechada; (c) outra regra.
+- [x] Plano de furos real PP691126 (pasta 20261124): contorno de 552 vértices pelo método da LIB; 38 registros repetidos unidos; 265 furos internos ficam dentro, sem entrar na área; 2 furos (2015, 2020) a menos de 0,5 m da curva, avisados.
+- [ ] Decisão do usuário: REG641126 é recusado porque o furo 2020 é o único contato entre dois anéis (4 e 6 furos). O método da LIB não fecha contorno nesse vértice. Antes, o REG tinha uma fileira aberta com ponta no furo 34; agora o furo 34 está no anel principal. Opções: (a) tratar os dois anéis como contornos que se tocam no furo 2020; (b) revisar o furo 2020 no plano; (c) outra regra.
+- [ ] O REG tem três blocos de furos: o principal (26 furos de borda, área de cerca de 205 m²), um de 14 furos fora dele (cerca de 47 m²) e um de 9 furos que contém o 2020. Se o 2020 for aceito, os blocos principal e de 14 viram contornos separados, como o método da LIB faria com blocos isolados.
 - [ ] Verificação no navegador com os arquivos reais (cópia temporária fora do repositório) ainda não feita.
 
 ## Importação DXF por arquivo — 2026-10-30

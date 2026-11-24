@@ -33,10 +33,13 @@ Regras do modo furos:
 - Polilinhas abertas (traço de furo real, camada "Real Hole") são ignoradas e contadas em aviso. O contorno vem só dos centros.
 - Número do furo: um TEXT na camada de rótulos, até `holes.labelMaxOffsetMeters` (1 m) acima do centro e alinhado em X dentro de `holes.labelAlignToleranceMeters` (0,05 m). Só vale se houver um único texto distinto perto do centro; caso contrário o furo fica sem rótulo.
 - Registros repetidos: dois centros a menos de `holes.minSpacingMeters` (0,5 m) são unidos; dois centros com o mesmo rótulo a até `holes.duplicateToleranceMeters` (1 m) também são unidos. O aviso conta os registros unidos.
-- Vizinhança: triangulação de Delaunay (src/delaunay.js, sem dependência). Arestas maiores que `holes.maxEdgeMeters` (4,6 m) não formam vizinhança.
-- Contorno: cada região de triângulos conectada vira um anel de borda; o contorno externo é o anel de maior área. Vazios internos não entram no resultado e os furos dentro do contorno não entram nele (o aviso conta esses furos). Triângulos cuja aresta de borda não satisfaz o critério de Gabriel (o círculo de diâmetro da aresta não contém o vértice oposto) são retirados para não cortar canto côncavo, sem deixar furo sem triângulo.
-- Contorno vira área fechada, com nome `holes.contourName` mais número e camada `holes.collarLayer`; passa pela validação comum de áreas.
-- Recusa: furo que não está em nenhum contorno fechado (por exemplo, ponta de uma fileira aberta) faz o arquivo ser recusado com a lista de furos e a causa. Nada é aproveitado em silêncio.
+- Método: o mesmo de REPORTS\Delimitação - LIB (gerar_contorno_furos.py), aplicado aos centros já unidos. Triangulação de Delaunay (src/delaunay.js, sem dependência). Só triângulos com raio do círculo circunscrito menor que `holes.alphaMeters` (4,5 m) formam a malha; lacunas maiores ficam de fora.
+- Região: triângulos que compartilham aresta. Em cada região, o anel externo é o de maior área; os demais anéis são vazios e não entram no contorno. Um anel de borda de outra região não pode se cruzar com o contorno (recusado se acontecer).
+- Curva: Catmull-Rom centrípeta fechada passando exatamente por cada furo de borda, com `holes.samplesPerSegment` (8) pontos por trecho. Cada furo de borda é um vértice da curva. O contorno é a curva, não o polígono de furos.
+- Contorno vira área fechada, com nome `holes.contourName` mais número e camada `holes.collarLayer`; passa pela validação comum de áreas. Quando a região tem mais de um contorno externo, cada um vira uma área.
+- Aviso: furo interno a menos de `holes.interiorWarnMeters` (0,5 m) da curva é listado, como possível furo na divisa; não é corrigido.
+- Recusas com a causa, sem preenchimento: (a) furo fora de qualquer contorno (por exemplo, ponta de uma fileira aberta); (b) furo de encontro, em que dois anéis de furos tocam no mesmo furo; o método não fecha contorno nesse vértice; (c) anel externo ou curva com auto-interseção; (d) dois contornos que se cruzam; (e) vazio fora do contorno externo.
+- Furo interno é o que não está em anel de borda. Os internos dentro de uma curva não entram na área; a contagem vai para o aviso.
 - Nenhum valor de tolerância é fixo no código; todos vêm do bloco `holes`, validado na inicialização e no build.
 
 ## Linhas de pré-corte — 2026-10-30

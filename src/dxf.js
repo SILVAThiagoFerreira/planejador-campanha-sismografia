@@ -1,7 +1,7 @@
 import {validatePolygons,validateLines} from './validation.js?v=1.3.6';
-import {holesFromRecords} from './holes.js?v=1.0.0';
+import {holesFromRecords} from './holes.js?v=1.1.0';
 // holes: bloco "holes" de config.json. Obrigatório quando o arquivo traz centros de furos (POINT na camada
-// de furos); sem ele o arquivo é recusado, sem suposição.
+// de furos); sem ele o arquivo é recusado, sem suposição. Quando há centros, o contorno vem deles (src/holes.js).
 export function parseDXF(text,limits={},holes=null){
   if(typeof text!=='string'||text.includes('AutoCAD Binary DXF'))throw new Error('Utilize DXF ASCII. DXF binário não é suportado.');
   if(limits.maxFileBytes&&new TextEncoder().encode(text).byteLength>limits.maxFileBytes)throw new Error(`Arquivo DXF excede ${limits.maxFileBytes} bytes.`);
@@ -63,7 +63,8 @@ export function parseDXF(text,limits={},holes=null){
     const labels=textRecords.filter(t=>t.layer===holes.labelLayer);
     const result=holesFromRecords(collars,labels,holes,'Furos');
     result.contours.forEach((c,i)=>polygons.push({id:`area-${polygons.length+1}`,name:`${holes.contourName} ${i+1}`,layer:collarLayer,vertices:c.vertices,direction:null}));
-    notes.push(`Plano de furos: ${result.centres} centro(s), ${result.merged} registro(s) repetido(s) unido(s), ${result.contours.length} contorno(s); ${result.excluded} furo(s) ficam dentro do contorno e não entram nele.`);
+    notes.push(`Plano de furos: ${result.centres} centro(s), ${result.merged} registro(s) repetido(s) unido(s), ${result.contours.length} contorno(s); ${result.excluded} furo(s) internos ficam dentro do contorno e não entram nele.`);
+    notes.push(...result.warnings);
   }else{
     for(const c of openCandidates){
       openLines.push({id:`linha-${openLines.length+1}`,name:`${c.layer==='0'?'Linha':c.layer} ${openLines.length+1}`,layer:c.layer,vertices:c.vertices});
